@@ -51,20 +51,12 @@
 #define LICZNIK_S2 18   // Numer pinu dla enkodera/licznika S2
 #define LICZNIK_S3 15   // Numer pinu dla enkodera/licznika S3
 #define LICZNIK_S4 16   // Numer pinu dla enkodera/licznika S4
+#define MAX_FILES 100  // Maksymalna liczba plików lub katalogów w tablicy directories
 
-#define MAX_FILES 100
-// Tablica z indeksami i ścieżkami katalogów
-String directories[100];
-String currentDirectory = "/";
-// Licznik katalogów
-int directoryCount = 0;
+int directoryCount = 0; // Licznik katalogów
 int currentFile = 0;  // Numer bieżącego pliku
-bool endOfFile = false; // Flaga końca odtwarzania pliku audio
-File root, myFile;
-String path;
 int currentSelection = 0;  // Numer aktualnie zaznaczonego katalogu
 int firstVisibleLine = 0;  // Numer pierwszej widocznej linii na ekranie OLED z wyborem katalogów odczytanych z karty SD
-const int maxVisibleLines = 5;  // Maksymalna liczba widocznych linii na ekranie OLED
 int button_S1 = 17;  // Przycisk S1 podłączony do pinu 17
 int button_S2 = 18;  // Przycisk S2 podłączony do pinu 18
 int button_S3 = 15;  // Przycisk S3 podłączony do pinu 15
@@ -80,6 +72,9 @@ int licznik_S1 = 0;  // Licznik dla przycisku S1
 int licznik_S2 = 0;  // Licznik dla przycisku S2
 int licznik_S3 = 0;  // Licznik dla przycisku S3
 int licznik_S4 = 0;  // Licznik dla przycisku S4
+int stationsCount = 0;    // Aktualna liczba przechowywanych stacji w tablicy
+int filteredDirectoriesCount = 0; // Deklaracja globalnej zmiennej przechowującej ilość przefiltrowanych folderów
+const int maxVisibleLines = 5;  // Maksymalna liczba widocznych linii na ekranie OLED
 bool button_1 = false;    // Zmienna określająca stan przycisku 1
 bool button_2 = false;    // Zmienna określająca stan przycisku 2
 bool button_3 = false;    // Zmienna określająca stan przycisku 3
@@ -87,8 +82,12 @@ bool button_4 = false;    // Zmienna określająca stan przycisku 4
 bool  button2_isPressed = false;
 bool volume_set = false;    // Zmienna określająca, czy ustawiono poziom głośności.
 bool wifi_config = false;   // Zmienna, która jest ustawiana na true po wykonaniu konfiguracji, aby włączyć moduł Wi-Fi i połączyć się z siecią.
-char stations[MAX_STATIONS][MAX_LINK_LENGTH + 1];   // Tablica przechowująca linki do stacji radiowych (jedna na stację) +1 dla terminatora null.
-int stationsCount = 0;    // Aktualna liczba przechowywanych stacji w tablicy.
+bool endOfFile = false;  // Flaga końca odtwarzania pliku audio
+bool displayActive = false;   // Flaga określająca, czy wyświetlacz jest aktywny.
+bool readyToPlay = false; //Flaga określająca czy można odtworzyć plik
+bool isPlaying = false;
+bool mp3, flac, aac, wav = false;
+
 unsigned long lastDebounceTime_S1 = 0;    // Czas ostatniego debouncingu dla przycisku S1.
 unsigned long lastDebounceTime_S2 = 0;    // Czas ostatniego debouncingu dla przycisku S2.
 unsigned long lastDebounceTime_S3 = 0;    // Czas ostatniego debouncingu dla przycisku S3.
@@ -96,10 +95,10 @@ unsigned long lastDebounceTime_S4 = 0;    // Czas ostatniego debouncingu dla prz
 unsigned long debounceDelay = 200;  // Czas trwania debouncingu w milisekundach.
 unsigned long displayTimeout = 8000;  // Czas wyświetlania komunikatu na ekranie w milisekundach.
 unsigned long displayStartTime = 0;   // Czas rozpoczęcia wyświetlania komunikatu.
-bool displayActive = false;   // Flaga określająca, czy wyświetlacz jest aktywny.
-bool readyToPlay = false; //Flaga określająca czy można odtworzyć plik
-bool isPlaying = false;
-bool mp3, flac, aac, wav = false;
+unsigned long seconds = 0;  // Licznik sekund timera
+
+String directories[MAX_FILES]; // Tablica z indeksami i ścieżkami katalogów
+String currentDirectory = "/";  // Ścieżka bieżącego katalogu
 String station_name;    // Nazwa aktualnie wybranej stacji radiowej.
 String station_data;    // Dodatkowe dane stacji radiowej (jeśli istnieją).
 String bitrateString;         // Zmienna przechowująca informację o bitrate
@@ -107,26 +106,25 @@ String sampleRateString;      // Zmienna przechowująca informację o sample rat
 String bitsPerSampleString;   // Zmienna przechowująca informację o liczbie bitów na próbkę
 String artistString;         // Zmienna przechowująca informację o wykonawcy
 String titleString;      // Zmienna przechowująca informację o tytule utworu
+String path;  // Zmienna przechowująca ścieżkę dostępu do pliku
+File root, myFile;  // Obiekty do obsługi plików na karcie SD
 
 Adafruit_SH1106G display = Adafruit_SH1106G(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);    //Inicjalizacja obiektu wyświetlacza OLED
 ezButton button1(SW_PIN1);  // Utworzenie obiektu przycisku z enkodera 1 ezButton, podłączonego do pinu 4
 ezButton button2(SW_PIN2);  // Utworzenie obiektu przycisku z enkodera 1 ezButton, podłączonego do pinu 1
 Audio audio;               // Obiekt do obsługi funkcji związanych z dźwiękiem i audio
 WiFiMulti wifiMulti;       // Obiekt do obsługi wielu połączeń WiFi
+Ticker timer;  // Obiekt do obsługi timera
 String ssid =     "brakdostepu";
 String password = "malinowykrul1977comeback";
-// Deklaracja globalnej zmiennej przechowującej ilość przefiltrowanych folderów
-int filteredDirectoriesCount = 0;
+char stations[MAX_STATIONS][MAX_LINK_LENGTH + 1];   // Tablica przechowująca linki do stacji radiowych (jedna na stację) +1 dla terminatora null.
 
-Ticker timer;
-unsigned long seconds = 0;
 
 enum MenuOption
 {
   PLAY_FILES,          // Odtwarzacz plików
   INTERNET_RADIO       // Radio internetowe
 };
-
 MenuOption currentOption = INTERNET_RADIO;  // Aktualnie wybrana opcja menu (domyślnie radio internetowe)
 
 bool isAudioFile(const char *filename)
