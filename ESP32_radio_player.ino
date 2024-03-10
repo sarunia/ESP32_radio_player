@@ -457,27 +457,28 @@ void audio_info(const char *info)
   if (String(info).indexOf("MP3Decoder") != -1)
   {
     mp3 = true;
+    flac = false;
   }
   if (String(info).indexOf("FLACDecoder") != -1)
   {
     flac = true;
+    mp3 = false;
   }
-
   
-  for (int y = 37; y <= 54; y++)
+  display.setTextSize(1);
+  display.setTextColor(SH110X_WHITE);
+  
+  for (int y = 45; y <= 54; y++)
   {
-    for (int x = 0; x < 127; x++)
+    for (int x = 0; x < 70; x++)
     {
       display.drawPixel(x, y, SH110X_BLACK);
     }
   }
 
 
-  display.setTextSize(1);
-  display.setTextColor(SH110X_WHITE);
   display.setCursor(0, 37);
-  display.println(sampleRateString.substring(1) + "Hz" + "  " + bitsPerSampleString + "bits");
-  /*if (mp3 == true)
+  if (mp3 == true)
   {
     mp3 = false;
     display.println(sampleRateString.substring(1) + "Hz" + "  " + bitsPerSampleString + "bits   MP3");
@@ -486,7 +487,7 @@ void audio_info(const char *info)
   {
     flac = false;
     display.println(sampleRateString.substring(1) + "Hz" + "  " + bitsPerSampleString + "bits  FLAC");
-  }*/
+  }
 
   display.setCursor(0, 46);
   display.println(bitrateString.substring(1) + "b/s");
