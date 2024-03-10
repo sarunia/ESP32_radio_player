@@ -9,8 +9,8 @@
 #include <ezButton.h>  // Biblioteka do obsługi enkodera z przyciskiem
 #include <HTTPClient.h>   //Biblioteka do wykonywania żądań HTTP
 #include <EEPROM.h>   //Biblioteka do obsługi pamięci EEPROM
-#include <Ticker.h>
-#include <algorithm>
+#include <Ticker.h>          // Mechanizm tickera (do odświeżania)
+#include <algorithm>         // Standardowa biblioteka C++ do manipulacji danymi
 
 #define SD_CS         47  // Pin CS (Chip Select) do komunikacji z kartą SD, wybierany jako interfejs SPI
 #define SPI_MOSI      48  // Pin MOSI (Master Out Slave In) dla interfejsu SPI
@@ -132,7 +132,7 @@ MenuOption currentOption = INTERNET_RADIO;  // Aktualnie wybrana opcja menu (dom
 bool isAudioFile(const char *filename)
 {
   // Dodaj więcej rozszerzeń plików audio, jeśli to konieczne
-  return (strstr(filename, ".mp3") || strstr(filename, ".wav") || strstr(filename, ".flac"));
+  return (strstr(filename, ".mp3") || strstr(filename, ".wav") || strstr(filename, ".flac") || strstr(filename, ".ape"));
 }
 
 //Funkcja odpowiedzialna za zapisywanie informacji o stacji do pamięci EEPROM.
@@ -554,6 +554,8 @@ void audio_id3data(const char *info)
   titleString = titleString.substring(0, std::min(42, static_cast<int>(titleString.length())));
   display.println(titleString);
   display.display();
+  // Ustaw timer, aby wywoływał funkcję updateTimer co sekundę
+  timer.attach(1, updateTimer);
 }
 
 
@@ -792,8 +794,6 @@ void playFromSelectedFolder(int folderIndex)
     audio.connecttoFS(SD, fullPath.c_str());
 
     isPlaying = true;
-    // Ustaw timer, aby wywoływał funkcję updateTimer co sekundę
-    timer.attach(1, updateTimer);
     // Oczekuj, aż odtwarzanie się zakończy
     while (isPlaying)
     {
