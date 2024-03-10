@@ -132,7 +132,7 @@ MenuOption currentOption = INTERNET_RADIO;  // Aktualnie wybrana opcja menu (dom
 bool isAudioFile(const char *filename)
 {
   // Dodaj więcej rozszerzeń plików audio, jeśli to konieczne
-  return (strstr(filename, ".mp3") || strstr(filename, ".wav") || strstr(filename, ".flac") || strstr(filename, ".ape"));
+  return (strstr(filename, ".mp3") || strstr(filename, ".wav") || strstr(filename, ".flac"));
 }
 
 //Funkcja odpowiedzialna za zapisywanie informacji o stacji do pamięci EEPROM.
