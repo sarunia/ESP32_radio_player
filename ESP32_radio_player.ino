@@ -9,8 +9,8 @@
 #include <ezButton.h>  // Biblioteka do obsługi enkodera z przyciskiem
 #include <HTTPClient.h>   //Biblioteka do wykonywania żądań HTTP
 #include <EEPROM.h>   //Biblioteka do obsługi pamięci EEPROM
-#include <Ticker.h>          // Mechanizm tickera (do odświeżania)
-#include <algorithm>         // Standardowa biblioteka C++ do manipulacji danymi
+#include <Ticker.h>   // Mechanizm tickera (do odświeżania)
+#include <algorithm>   // Standardowa biblioteka C++ do manipulacji danymi
 
 #define SD_CS         47  // Pin CS (Chip Select) do komunikacji z kartą SD, wybierany jako interfejs SPI
 #define SPI_MOSI      48  // Pin MOSI (Master Out Slave In) dla interfejsu SPI
