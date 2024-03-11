@@ -468,7 +468,7 @@ void audio_info(const char *info)
   display.setTextSize(1);
   display.setTextColor(SH110X_WHITE);
   
-  for (int y = 45; y <= 54; y++)
+  for (int y = 37; y <= 54; y++)
   {
     for (int x = 0; x < 70; x++)
     {
@@ -478,7 +478,8 @@ void audio_info(const char *info)
 
 
   display.setCursor(0, 37);
-  if (mp3 == true)
+  display.println(sampleRateString.substring(1) + "Hz" + "  " + bitsPerSampleString + "bits");
+  /*if (mp3 == true)
   {
     mp3 = false;
     display.println(sampleRateString.substring(1) + "Hz" + "  " + bitsPerSampleString + "bits   MP3");
@@ -487,7 +488,7 @@ void audio_info(const char *info)
   {
     flac = false;
     display.println(sampleRateString.substring(1) + "Hz" + "  " + bitsPerSampleString + "bits  FLAC");
-  }
+  }*/
 
   display.setCursor(0, 46);
   display.println(bitrateString.substring(1) + "b/s");
@@ -556,9 +557,6 @@ void audio_id3data(const char *info)
   // Ustaw timer, aby wywoływał funkcję updateTimer co sekundę
   timer.attach(1, updateTimer);
 }
-
-
-
 
 
 
@@ -797,6 +795,7 @@ void playFromSelectedFolder(int folderIndex)
     while (isPlaying)
     {
       audio.loop(); // Tutaj obsługujemy odtwarzacz w tle
+      button1.loop();
       button2.loop();
 
       if (button_1) //Przejście do kolejnego pliku w folderze
@@ -920,17 +919,23 @@ void playFromSelectedFolder(int folderIndex)
       {
         printToOLED();
       }
+      if (button1.isPressed())
+      {
+        audio.stopSong();
+        timer.detach();
+        currentOption = INTERNET_RADIO;
+        break;
+      }
     }
-
+    if (currentOption == INTERNET_RADIO)
+    {
+      displayMenu();
+      break;
+    }
   }
 
   dir.close();
 }
-
-
-
-
-
 
 
 
