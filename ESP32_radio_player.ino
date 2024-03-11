@@ -79,7 +79,6 @@ bool button_1 = false;    // Zmienna określająca stan przycisku 1
 bool button_2 = false;    // Zmienna określająca stan przycisku 2
 bool button_3 = false;    // Zmienna określająca stan przycisku 3
 bool button_4 = false;    // Zmienna określająca stan przycisku 4
-bool  button2_isPressed = false;
 bool volume_set = false;    // Zmienna określająca, czy ustawiono poziom głośności.
 bool wifi_config = false;   // Zmienna, która jest ustawiana na true po wykonaniu konfiguracji, aby włączyć moduł Wi-Fi i połączyć się z siecią.
 bool endOfFile = false;  // Flaga końca odtwarzania pliku audio
@@ -432,7 +431,6 @@ void audio_info(const char *info)
   Serial.print("info        ");
   Serial.println(info);
   
-
   // Znajdź pozycję "BitRate:" w tekście
   int bitrateIndex = String(info).indexOf("BitRate:");
   if (bitrateIndex != -1) {
@@ -771,7 +769,7 @@ void playFromSelectedFolder(int folderIndex)
   {
     String fileName = entry.name();
 
-    // Pomijaj pliki, które nie są w formacie MP3
+    // Pomijaj pliki, które nie są w zadeklarowanym formacie audio
     if (!isAudioFile(fileName.c_str()))
     {
       Serial.println("Pominięto plik: " + fileName);
@@ -915,10 +913,12 @@ void playFromSelectedFolder(int folderIndex)
         }
       }
       prev_CLK_state1 = CLK_state1;
+
       if (button2.isPressed())
       {
         printToOLED();
       }
+
       if (button1.isPressed())
       {
         audio.stopSong();
@@ -927,6 +927,7 @@ void playFromSelectedFolder(int folderIndex)
         break;
       }
     }
+    
     if (currentOption == INTERNET_RADIO)
     {
       displayMenu();
