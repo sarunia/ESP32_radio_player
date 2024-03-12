@@ -799,17 +799,17 @@ void playFromSelectedFolder(int folderIndex)
       button1.loop();
       button2.loop();
 
-      if (button_1) //Przejście do kolejnego pliku w folderze
+      if (button_2) //Przejście do kolejnego pliku w folderze
       {
-        button_1 = false;
+        button_2 = false;
         seconds = 0;
         isPlaying = false; // Zakończ aktualne odtwarzanie
         break;            // Wyjdź z pętli
       }
 
-      if (button_2) //Przejście do poprzedniego pliku w folderze
+      if (button_1) //Przejście do poprzedniego pliku w folderze
       {
-        button_2 = false;
+        button_1 = false;
         seconds = 0;
         // Przejdź do poprzedniego pliku, jeśli dostępny
         currentFileIndex = (currentFileIndex > 0) ? (currentFileIndex - 1) : (0);
