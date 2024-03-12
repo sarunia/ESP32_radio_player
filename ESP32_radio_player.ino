@@ -583,12 +583,12 @@ void audio_showstreamtitle(const char *info)
   display.setTextSize(1);
   display.setTextColor(SH110X_WHITE);
   for (int y=9; y<=36; y++)
+  {
+    for (int x=0; x<127; x++)
     {
-      for (int x=0; x<127; x++)
-      {
-      display.drawPixel(x, y, SH110X_BLACK); 
-      }
-    }   
+    display.drawPixel(x, y, SH110X_BLACK); 
+    }
+  }   
   display.setCursor(0, 10);
   display.println(station_data);
   display.display();
@@ -645,6 +645,7 @@ void displayMenu()
 
 void printDirectoriesAndSavePaths(File dir, int numTabs, String currentPath)
 {
+  directoryCount = 0;
   while (true)
   {
     // Otwórz kolejny plik w katalogu
@@ -1077,8 +1078,8 @@ void setup()
   pinMode(DT_PIN1, INPUT);
 
   // Ustaw czas odbicia dla przycisku enkodera na 50 milisekund
-  button1.setDebounceTime(50);
-  button2.setDebounceTime(50);
+  //button1.setDebounceTime(50);
+  //button2.setDebounceTime(50);
 
   // Odczytaj początkowy stan pinu CLK enkodera
   prev_CLK_state1 = digitalRead(CLK_PIN1);
