@@ -79,6 +79,8 @@ bool button_1 = false;    // Zmienna określająca stan przycisku 1
 bool button_2 = false;    // Zmienna określająca stan przycisku 2
 bool button_3 = false;    // Zmienna określająca stan przycisku 3
 bool button_4 = false;    // Zmienna określająca stan przycisku 4
+bool encoderButton1 = false;
+bool encoderButton2 = false;
 bool volume_set = false;    // Zmienna określająca, czy ustawiono poziom głośności.
 bool wifi_config = false;   // Zmienna, która jest ustawiana na true po wykonaniu konfiguracji, aby włączyć moduł Wi-Fi i połączyć się z siecią.
 bool endOfFile = false;  // Flaga końca odtwarzania pliku audio
@@ -92,7 +94,7 @@ unsigned long lastDebounceTime_S2 = 0;    // Czas ostatniego debouncingu dla prz
 unsigned long lastDebounceTime_S3 = 0;    // Czas ostatniego debouncingu dla przycisku S3.
 unsigned long lastDebounceTime_S4 = 0;    // Czas ostatniego debouncingu dla przycisku S4.
 unsigned long debounceDelay = 200;  // Czas trwania debouncingu w milisekundach.
-unsigned long displayTimeout = 8000;  // Czas wyświetlania komunikatu na ekranie w milisekundach.
+unsigned long displayTimeout = 5000;  // Czas wyświetlania komunikatu na ekranie w milisekundach.
 unsigned long displayStartTime = 0;   // Czas rozpoczęcia wyświetlania komunikatu.
 unsigned long seconds = 0;  // Licznik sekund timera
 
@@ -845,8 +847,6 @@ void playFromSelectedFolder(int folderIndex)
       {
         button_3 = false;
         seconds = 0;
-        //scrollUp();
-        //printToOLED();
         // Przełącz do poprzedniego folderu
         dir.close(); // Zamknij bieżący katalog
         folderIndex = (folderIndex > 0) ? (folderIndex - 1) : (directoryCount - 1);
@@ -859,8 +859,6 @@ void playFromSelectedFolder(int folderIndex)
       {
         button_4 = false;
         seconds = 0;
-        //scrollUp();
-        //printToOLED();
         // Przełącz do następnego folderu
         dir.close(); // Zamknij bieżący katalog
         folderIndex = (folderIndex < directoryCount - 1) ? (folderIndex + 1) : 0;
@@ -889,7 +887,13 @@ void playFromSelectedFolder(int folderIndex)
         audio.setVolume(counter); // zakres 0...21
 
         // Wyświetlanie komunikatu przez 5 sekund
-        display.clearDisplay();
+        for (int y = 0; y <= 54; y++)
+        {
+          for (int x = 0; x < 127; x++)
+          {
+            display.drawPixel(x, y, SH110X_BLACK);
+          }
+        }
         display.setTextSize(2);
         display.setTextColor(SH110X_WHITE);
         display.setCursor(4, 0);
@@ -914,6 +918,35 @@ void playFromSelectedFolder(int folderIndex)
       }
       prev_CLK_state1 = CLK_state1;
 
+      
+
+      if (displayActive && (millis() - displayStartTime >= displayTimeout))   // Przywracanie poprzedniej zawartości ekranu po 5 sekundach
+      {
+        for (int y = 0; y <= 54; y++)
+        {
+          for (int x = 0; x < 127; x++)
+          {
+            display.drawPixel(x, y, SH110X_BLACK);
+          }
+        }
+        display.setTextSize(1);
+        display.setTextColor(SH110X_WHITE);
+        display.setCursor(0, 0);
+        display.println("   Odtwarzam plik:   ");
+        display.setCursor(0, 10);
+        artistString = artistString.substring(0, std::min(21, static_cast<int>(artistString.length())));
+        display.println(artistString);
+        display.setCursor(0, 19);
+        titleString = titleString.substring(0, std::min(42, static_cast<int>(titleString.length())));
+        display.println(titleString);
+        display.display();
+        display.setCursor(0, 37);
+        display.println(sampleRateString.substring(1) + "Hz" + "  " + bitsPerSampleString + "bits");
+        display.setCursor(0, 46);
+        display.println(bitrateString.substring(1) + "b/s");
+        displayActive = false;
+      }
+
       if (button2.isPressed())
       {
         printToOLED();
@@ -921,15 +954,17 @@ void playFromSelectedFolder(int folderIndex)
 
       if (button1.isPressed())
       {
+        encoderButton1 = true;
+        display.clearDisplay();
         audio.stopSong();
         timer.detach();
-        currentOption = INTERNET_RADIO;
         break;
       }
     }
     
-    if (currentOption == INTERNET_RADIO)
+    if (encoderButton1 == true)
     {
+      encoderButton1 = false;
       displayMenu();
       break;
     }
@@ -997,7 +1032,6 @@ void printToOLED()
 void updateTimer()
 {
   // Wywoływana co sekundę przez timer
-
   // Zwiększ licznik sekund
   seconds++;
 
@@ -1044,6 +1078,7 @@ void setup()
 
   // Ustaw czas odbicia dla przycisku enkodera na 50 milisekund
   button1.setDebounceTime(50);
+  button2.setDebounceTime(50);
 
   // Odczytaj początkowy stan pinu CLK enkodera
   prev_CLK_state1 = digitalRead(CLK_PIN1);
