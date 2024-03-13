@@ -1274,42 +1274,28 @@ void loop()
       listDirectories("/");
     }
   
-
-
     if (currentOption == INTERNET_RADIO)
     {
       changeStation();
     }
   }
 
-  
-  
-  if (Serial.available()) 
-  { // Jeśli dostępne są dane w strumieniu szeregowym (Serial)
-    audio.stopSong(); // Zatrzymaj odtwarzanie bieżącego utworu
-
-    String r = Serial.readString(); // Odczytaj dane z wejścia szeregowego i zapisz do zmiennej r
-    r.trim(); // Usuń białe znaki z początku i końca ciągu
-
-    if (r.length() > 5) // Jeśli odczytany ciąg ma więcej niż 5 znaków
-      audio.connecttohost(r.c_str()); // Połącz się z nowym adresem strumienia audio
-
-    log_i("Wolna pamięć heap=%i", ESP.getFreeHeap()); // Wyświetl informację o dostępnej pamięci w konsoli
-  }
-  
 
   // Obsługa przycisku S1
   if (button_1)
   {
     if ((millis() - lastDebounceTime_S1) > debounceDelay)
     {
+      button_1 = false;
       licznik_S1 = 0;
       lastDebounceTime_S1 = millis();
-      station_nr++;
-      button_1 = false;
-      Serial.print("Przycisk S1 został wciśnięty, licznik = ");
-      Serial.println(station_nr);
-      changeStation();
+      if (currentOption == INTERNET_RADIO)
+      {
+        station_nr++;
+        Serial.print("Przycisk S1 został wciśnięty, licznik = ");
+        Serial.println(station_nr);
+        changeStation();
+      }
     }
   }
 
@@ -1318,17 +1304,21 @@ void loop()
   {
     if ((millis() - lastDebounceTime_S2) > debounceDelay)
     {
-      if (station_nr <= 0)
-      {
-        station_nr = 51;
-      }
+      button_2 = false;
       licznik_S2 = 0;
       lastDebounceTime_S2 = millis();
-      station_nr--;
-      button_2 = false;
-      Serial.print("Przycisk S2 został wciśnięty, licznik = ");
-      Serial.println(station_nr);
-      changeStation();
+      if (currentOption == INTERNET_RADIO)
+      {
+        if (station_nr <= 0)
+        {
+          station_nr = 51;
+        }
+        lastDebounceTime_S2 = millis();
+        station_nr--;
+        Serial.print("Przycisk S2 został wciśnięty, licznik = ");
+        Serial.println(station_nr);
+        changeStation();
+      }
     }
   }
 
@@ -1361,6 +1351,7 @@ void loop()
         displayActive = true;
         displayStartTime = millis();
         fetchStationsFromServer();
+        delay(250);
         changeStation();
       }
       if (currentOption == PLAY_FILES)
@@ -1403,6 +1394,7 @@ void loop()
         displayActive = true;
         displayStartTime = millis();
         fetchStationsFromServer();
+        delay(250);
         changeStation();
       }
       if (currentOption == PLAY_FILES)
