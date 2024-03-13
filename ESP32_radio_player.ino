@@ -85,7 +85,6 @@ bool volume_set = false;    // Zmienna określająca, czy ustawiono poziom gło�
 bool wifi_config = false;   // Zmienna, która jest ustawiana na true po wykonaniu konfiguracji, aby włączyć moduł Wi-Fi i połączyć się z siecią.
 bool endOfFile = false;  // Flaga końca odtwarzania pliku audio
 bool displayActive = false;   // Flaga określająca, czy wyświetlacz jest aktywny.
-bool readyToPlay = false; //Flaga określająca czy można odtworzyć plik
 bool isPlaying = false;
 bool mp3, flac, aac, wav = false;
 
@@ -1339,13 +1338,13 @@ void loop()
   {
     if ((millis() - lastDebounceTime_S3) > debounceDelay)
     {
+      button_3 = false;
+      licznik_S3 = 0;
+      lastDebounceTime_S3 = millis();
       if (currentOption == INTERNET_RADIO)
       {
-        licznik_S3 = 0;
-        lastDebounceTime_S3 = millis();
         bank_nr++;
-        station_nr = 0;
-        button_3 = false;
+        station_nr = 1;
         Serial.print("Przycisk S3 został wciśnięty, bank = ");
         Serial.println(bank_nr);
         // Wyświetlanie nr banku
@@ -1362,13 +1361,12 @@ void loop()
         displayActive = true;
         displayStartTime = millis();
         fetchStationsFromServer();
+        changeStation();
       }
       if (currentOption == PLAY_FILES)
       {
         scrollUp();
         printToOLED();
-        button_3 = false;
-        readyToPlay = true;
       }
     }
   }
@@ -1378,13 +1376,17 @@ void loop()
   {
     if ((millis() - lastDebounceTime_S4) > debounceDelay)
     {
+      button_4 = false;
+      licznik_S4 = 0;
+      lastDebounceTime_S4 = millis();
       if (currentOption == INTERNET_RADIO)
       {
-        licznik_S4 = 0;
-        lastDebounceTime_S4 = millis();
         bank_nr--;
-        station_nr = 0;
-        button_4 = false;
+        if (bank_nr < 0)
+        {
+          bank_nr = 0;
+        }
+        station_nr = 1;
         Serial.print("Przycisk S4 został wciśnięty, bank = ");
         Serial.println(bank_nr);
         // Wyświetlanie nr banku
@@ -1401,13 +1403,12 @@ void loop()
         displayActive = true;
         displayStartTime = millis();
         fetchStationsFromServer();
+        changeStation();
       }
       if (currentOption == PLAY_FILES)
       {
         scrollDown();
         printToOLED();
-        button_4 = false;
-        readyToPlay = true;
       }
     }
   }
