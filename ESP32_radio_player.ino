@@ -882,7 +882,7 @@ void playFromSelectedFolder(int folderIndex)
       if (endOfFile == true) //Wymuszenie programowego przejścia do odtwarzania następnego pliku
       {
         endOfFile = false;
-        button_1 = true;
+        button_2 = true;
       }
 
 
