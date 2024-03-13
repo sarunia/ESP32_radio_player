@@ -74,6 +74,7 @@ int licznik_S3 = 0;  // Licznik dla przycisku S3
 int licznik_S4 = 0;  // Licznik dla przycisku S4
 int stationsCount = 0;    // Aktualna liczba przechowywanych stacji w tablicy
 int filteredDirectoriesCount = 0; // Deklaracja globalnej zmiennej przechowującej ilość przefiltrowanych folderów
+int currentFileIndex = 0;  // Numer aktualnie wybranego pliku audio ze wskazanego folderu
 const int maxVisibleLines = 5;  // Maksymalna liczba widocznych linii na ekranie OLED
 bool button_1 = false;    // Zmienna określająca stan przycisku 1
 bool button_2 = false;    // Zmienna określająca stan przycisku 2
@@ -491,7 +492,18 @@ void audio_info(const char *info)
 
   display.setCursor(0, 46);
   display.println(bitrateString.substring(1) + "b/s");
-
+  if (currentOption == PLAY_FILES)
+  {
+    for (int y = 55; y <= 63; y++)
+    {
+      for (int x = 51; x < 127; x++)
+      {
+        display.drawPixel(x, y, SH110X_BLACK);
+      }
+    }
+    display.setCursor(63, 55);
+    display.println("Plik " + String(currentFileIndex));
+  }
   // Zaktualizuj ekran OLED
   display.display();
 }
@@ -764,8 +776,6 @@ void playFromSelectedFolder(int folderIndex)
   }
 
   File entry;
-  
-  int currentFileIndex = -1; // -1 oznacza brak aktualnie odtwarzanych plików
 
   while (entry = dir.openNextFile())
   {
@@ -847,6 +857,7 @@ void playFromSelectedFolder(int folderIndex)
       {
         button_3 = false;
         seconds = 0;
+        currentFileIndex = 0;
         // Przełącz do poprzedniego folderu
         dir.close(); // Zamknij bieżący katalog
         folderIndex = (folderIndex > 0) ? (folderIndex - 1) : (directoryCount - 1);
@@ -859,6 +870,7 @@ void playFromSelectedFolder(int folderIndex)
       {
         button_4 = false;
         seconds = 0;
+        currentFileIndex = 0;
         // Przełącz do następnego folderu
         dir.close(); // Zamknij bieżący katalog
         folderIndex = (folderIndex < directoryCount - 1) ? (folderIndex + 1) : 0;
@@ -939,11 +951,20 @@ void playFromSelectedFolder(int folderIndex)
         display.setCursor(0, 19);
         titleString = titleString.substring(0, std::min(42, static_cast<int>(titleString.length())));
         display.println(titleString);
-        display.display();
         display.setCursor(0, 37);
         display.println(sampleRateString.substring(1) + "Hz" + "  " + bitsPerSampleString + "bits");
         display.setCursor(0, 46);
         display.println(bitrateString.substring(1) + "b/s");
+        for (int y = 55; y <= 63; y++)
+        {
+          for (int x = 51; x < 127; x++)
+          {
+            display.drawPixel(x, y, SH110X_BLACK);
+          }
+        }
+        display.setCursor(63, 55);
+        display.println("Plik " + String(currentFileIndex));
+        display.display();
         displayActive = false;
       }
 
@@ -1045,7 +1066,7 @@ void updateTimer()
   display.setTextColor(SH110X_WHITE);
   for (int y = 55; y <= 63; y++)
   {
-    for (int x = 0; x < 127; x++)
+    for (int x = 0; x < 50; x++)
     {
       display.drawPixel(x, y, SH110X_BLACK);
     }
