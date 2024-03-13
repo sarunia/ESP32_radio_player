@@ -470,7 +470,7 @@ void audio_info(const char *info)
   
   for (int y = 37; y <= 54; y++)
   {
-    for (int x = 0; x < 70; x++)
+    for (int x = 0; x < 127; x++)
     {
       display.drawPixel(x, y, SH110X_BLACK);
     }
