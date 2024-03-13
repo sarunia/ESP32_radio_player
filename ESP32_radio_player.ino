@@ -543,13 +543,13 @@ void audio_id3data(const char *info)
   display.setCursor(0, 0);
   display.println("   Odtwarzam plik:   ");
   display.setCursor(0, 10);
-  for (int y = 9; y <= 36; y++)
+  /*for (int y = 9; y <= 36; y++)
   {
     for (int x = 0; x < 127; x++)
     {
       display.drawPixel(x, y, SH110X_BLACK);
     }
-  }
+  }*/
   display.setCursor(0, 10);
   // Przycina artistString do maksymalnie 21 znaków (indeks 0-20) w celu zapewnienia,
   // że zmieści się on na ekranie OLED. Używamy std::min, aby ograniczyć długość
