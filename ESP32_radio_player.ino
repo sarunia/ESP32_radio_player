@@ -55,7 +55,7 @@
 
 int directoryCount = 0; // Licznik katalogów
 int currentFile = 0;  // Numer bieżącego pliku
-int currentSelection = 0;  // Numer aktualnie zaznaczonego katalogu
+int currentSelection = 0;  // Numer domyślnie zaznaczonego pierwszego katalogu na ekranie OLED
 int firstVisibleLine = 0;  // Numer pierwszej widocznej linii na ekranie OLED z wyborem katalogów odczytanych z karty SD
 int button_S1 = 17;  // Przycisk S1 podłączony do pinu 17
 int button_S2 = 18;  // Przycisk S2 podłączony do pinu 18
@@ -74,7 +74,8 @@ int licznik_S3 = 0;  // Licznik dla przycisku S3
 int licznik_S4 = 0;  // Licznik dla przycisku S4
 int stationsCount = 0;    // Aktualna liczba przechowywanych stacji w tablicy
 int filteredDirectoriesCount = 0; // Deklaracja globalnej zmiennej przechowującej ilość przefiltrowanych folderów
-int currentFileIndex = 0;  // Numer aktualnie wybranego pliku audio ze wskazanego folderu
+int fileIndex = 0;  // Numer aktualnie wybranego pliku audio ze wskazanego folderu
+int folderIndex = 1;  // Numer domyślnie wybranego folderu podczas przełączenia do odtwarzania z karty SD
 const int maxVisibleLines = 5;  // Maksymalna liczba widocznych linii na ekranie OLED
 bool button_1 = false;    // Zmienna określająca stan przycisku 1
 bool button_2 = false;    // Zmienna określająca stan przycisku 2
@@ -479,6 +480,7 @@ void audio_info(const char *info)
 
   display.setCursor(0, 37);
   display.println(sampleRateString.substring(1) + "Hz" + "  " + bitsPerSampleString + "bits");
+
   /*if (mp3 == true)
   {
     mp3 = false;
@@ -489,20 +491,24 @@ void audio_info(const char *info)
     flac = false;
     display.println(sampleRateString.substring(1) + "Hz" + "  " + bitsPerSampleString + "bits  FLAC");
   }*/
+  display.setCursor(0, 47);
+  if (currentOption == INTERNET_RADIO)
+  {
+    display.println(bitrateString.substring(1) + "b/s");
+  }
 
-  display.setCursor(0, 46);
-  display.println(bitrateString.substring(1) + "b/s");
   if (currentOption == PLAY_FILES)
   {
-    for (int y = 55; y <= 63; y++)
+    display.println(bitrateString.substring(1) + "b/s  Plik " + String(fileIndex));
+    for (int y = 56; y <= 63; y++)
     {
       for (int x = 51; x < 127; x++)
       {
         display.drawPixel(x, y, SH110X_BLACK);
       }
     }
-    display.setCursor(63, 55);
-    display.println("Plik " + String(currentFileIndex));
+    display.setCursor(66, 56);
+    display.println("Folder " + String(folderIndex));
   }
   // Zaktualizuj ekran OLED
   display.display();
@@ -737,6 +743,7 @@ void scrollUp()
   if (currentSelection > 0)
   {
     currentSelection--;
+    folderIndex--;
 
     if (currentSelection < firstVisibleLine)
     {
@@ -750,6 +757,7 @@ void scrollDown()
   if (currentSelection < directoryCount - 1)
   {
     currentSelection++;
+    folderIndex++;
 
     if (currentSelection >= firstVisibleLine + maxVisibleLines)
     {
@@ -761,7 +769,7 @@ void scrollDown()
 
 
 
-void playFromSelectedFolder(int folderIndex)
+void playFromSelectedFolder()
 {
   String folder = directories[folderIndex];
 
@@ -789,7 +797,7 @@ void playFromSelectedFolder(int folderIndex)
     }
     if (isAudioFile(fileName.c_str()))
     {
-        currentFileIndex++;
+        fileIndex++;
     }
 
     Serial.print("Odtwarzanie pliku: ");
@@ -821,14 +829,14 @@ void playFromSelectedFolder(int folderIndex)
         button_1 = false;
         seconds = 0;
         // Przejdź do poprzedniego pliku, jeśli dostępny
-        currentFileIndex = (currentFileIndex > 0) ? (currentFileIndex - 1) : (0);
+        fileIndex = (fileIndex > 0) ? (fileIndex - 1) : (0);
 
         // Odtwórz znaleziony plik
         dir.rewindDirectory(); // Przewiń katalog na początek
         entry = dir.openNextFile(); // Otwórz pierwszy plik w katalogu
 
         // Przesuń się do wybranego pliku
-        for (int i = 0; i < currentFileIndex; i++)
+        for (int i = 0; i < fileIndex; i++)
         {
           entry = dir.openNextFile();
           if (!entry)
@@ -857,7 +865,7 @@ void playFromSelectedFolder(int folderIndex)
       {
         button_3 = false;
         seconds = 0;
-        currentFileIndex = 0;
+        fileIndex = 0;
         // Przełącz do poprzedniego folderu
         dir.close(); // Zamknij bieżący katalog
         folderIndex = (folderIndex > 0) ? (folderIndex - 1) : (directoryCount - 1);
@@ -870,7 +878,7 @@ void playFromSelectedFolder(int folderIndex)
       {
         button_4 = false;
         seconds = 0;
-        currentFileIndex = 0;
+        fileIndex = 0;
         // Przełącz do następnego folderu
         dir.close(); // Zamknij bieżący katalog
         folderIndex = (folderIndex < directoryCount - 1) ? (folderIndex + 1) : 0;
@@ -953,17 +961,17 @@ void playFromSelectedFolder(int folderIndex)
         display.println(titleString);
         display.setCursor(0, 37);
         display.println(sampleRateString.substring(1) + "Hz" + "  " + bitsPerSampleString + "bits");
-        display.setCursor(0, 46);
-        display.println(bitrateString.substring(1) + "b/s");
-        for (int y = 55; y <= 63; y++)
+        display.setCursor(0, 47);
+        display.println(bitrateString.substring(1) + "b/s  Plik " + String(fileIndex));
+        for (int y = 56; y <= 63; y++)
         {
           for (int x = 51; x < 127; x++)
           {
             display.drawPixel(x, y, SH110X_BLACK);
           }
         }
-        display.setCursor(63, 55);
-        display.println("Plik " + String(currentFileIndex));
+        display.setCursor(66, 56);
+        display.println("Folder " + String(folderIndex));
         display.display();
         displayActive = false;
       }
@@ -1064,7 +1072,7 @@ void updateTimer()
 
   display.setTextSize(1);
   display.setTextColor(SH110X_WHITE);
-  for (int y = 55; y <= 63; y++)
+  for (int y = 56; y <= 63; y++)
   {
     for (int x = 0; x < 50; x++)
     {
@@ -1073,7 +1081,7 @@ void updateTimer()
   }
 
   // Wyświetaj czas 
-  display.setCursor(0, 55);
+  display.setCursor(0, 56);
 
   // Formatuj czas jako "mm:ss"
   char timeString[10];
@@ -1259,7 +1267,7 @@ void loop()
       display.println(sampleRateString.substring(1) + "Hz" + "  " + bitsPerSampleString + "bits  FLAC");
     }*/
     display.println(sampleRateString.substring(1) + "Hz" + "  " + bitsPerSampleString + "bits");
-    display.setCursor(0, 46);
+    display.setCursor(0, 47);
     display.println(bitrateString.substring(1) + "b/s");
 
     // Zaktualizuj ekran OLED
@@ -1272,7 +1280,8 @@ void loop()
   if (button1.isPressed())  //Przycisk enkodera prawego wciśnięty
   {
     Serial.println("Przycisk enkodera prawego");
-    playFromSelectedFolder(currentSelection);
+    fileIndex = 0;
+    playFromSelectedFolder();
   }
 
   if (button2.isPressed())  //Przycisk enkodera lewego wciśnięty
