@@ -480,7 +480,7 @@ void audio_info(const char *info)
   {
     display.setTextSize(1);
     display.setTextColor(SH110X_WHITE);
-    for (int y = 37; y <= 56; y++)
+    for (int y = 37; y <= 54; y++)
     {
       for (int x = 0; x < 127; x++)
       {
@@ -510,6 +510,19 @@ void audio_info(const char *info)
 
   if (currentOption == PLAY_FILES)
   {
+    display.setTextSize(1);
+    display.setTextColor(SH110X_WHITE);
+    for (int y = 37; y <= 54; y++)
+    {
+      for (int x = 0; x < 127; x++)
+      {
+        display.drawPixel(x, y, SH110X_BLACK);
+      }
+    }
+    display.setCursor(0, 37);
+    display.println(sampleRateString.substring(1) + "Hz" + "  " + bitsPerSampleString + "bits");
+    
+    display.setCursor(0, 47);
     display.println(bitrateString.substring(1) + "b/s  Plik " + String(fileIndex));
     for (int y = 56; y <= 63; y++)
     {
