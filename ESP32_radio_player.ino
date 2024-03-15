@@ -62,7 +62,7 @@ int button_S2 = 18;  // Przycisk S2 podłączony do pinu 18
 int button_S3 = 15;  // Przycisk S3 podłączony do pinu 15
 int button_S4 = 16;  // Przycisk S4 podłączony do pinu 16
 int station_nr = 0;  // Numer aktualnie wybranej stacji radiowej z listy
-int bank_nr = 0; // Numer aktualnie wybranego banku stacji z listy
+int bank_nr = 1; // Numer aktualnie wybranego banku stacji z listy, domyślnie pierwszy
 int counter = 12; // Początkowa środkowa wartość ustawienia poziomu głośności
 int CLK_state1;    // Aktualny stan CLK enkodera prawego
 int prev_CLK_state1;   // Poprzedni stan CLK enkodera prawego    
@@ -88,8 +88,8 @@ bool wifi_config = false;   // Zmienna, która jest ustawiana na true po wykonan
 bool endOfFile = false;  // Flaga końca odtwarzania pliku audio
 bool displayActive = false;   // Flaga określająca, czy wyświetlacz jest aktywny.
 bool isPlaying = false;
-bool mp3, flac, aac, wav = false;
-
+bool mp3 = false;
+bool flac = false;
 unsigned long lastDebounceTime_S1 = 0;    // Czas ostatniego debouncingu dla przycisku S1.
 unsigned long lastDebounceTime_S2 = 0;    // Czas ostatniego debouncingu dla przycisku S2.
 unsigned long lastDebounceTime_S3 = 0;    // Czas ostatniego debouncingu dla przycisku S3.
@@ -258,37 +258,37 @@ void fetchStationsFromServer()
   HTTPClient http;
 
   // Inicjalizuj żądanie HTTP do podanego adresu URL
-  if(bank_nr == 0)
-    http.begin(STATIONS_URL);
   if(bank_nr == 1)
-    http.begin(STATIONS_URL1);
+    http.begin(STATIONS_URL);
   if(bank_nr == 2)
-    http.begin(STATIONS_URL2);
+    http.begin(STATIONS_URL1);
   if(bank_nr == 3)
-    http.begin(STATIONS_URL3);
+    http.begin(STATIONS_URL2);
   if(bank_nr == 4)
-    http.begin(STATIONS_URL4);
+    http.begin(STATIONS_URL3);
   if(bank_nr == 5)
-    http.begin(STATIONS_URL5);
+    http.begin(STATIONS_URL4);
   if(bank_nr == 6)
-    http.begin(STATIONS_URL6);
+    http.begin(STATIONS_URL5);
   if(bank_nr == 7)
-    http.begin(STATIONS_URL7);
+    http.begin(STATIONS_URL6);
   if(bank_nr == 8)
-    http.begin(STATIONS_URL8);
+    http.begin(STATIONS_URL7);
   if(bank_nr == 9)
-    http.begin(STATIONS_URL9);
+    http.begin(STATIONS_URL8);
   if(bank_nr == 10)
-    http.begin(STATIONS_URL10);
+    http.begin(STATIONS_URL9);
   if(bank_nr == 11)
-    http.begin(STATIONS_URL11);
+    http.begin(STATIONS_URL10);
   if(bank_nr == 12)
-    http.begin(STATIONS_URL12);
+    http.begin(STATIONS_URL11);
   if(bank_nr == 13)
-    http.begin(STATIONS_URL13);
+    http.begin(STATIONS_URL12);
   if(bank_nr == 14)
-    http.begin(STATIONS_URL14);
+    http.begin(STATIONS_URL13);
   if(bank_nr == 15)
+    http.begin(STATIONS_URL14);
+  if(bank_nr == 16)
     http.begin(STATIONS_URL15);  
 
   // Wykonaj żądanie GET i zapisz kod odpowiedzi HTTP
@@ -455,47 +455,58 @@ void audio_info(const char *info)
     bitsPerSampleString = String(info).substring(bitsPerSampleIndex + 15, String(info).indexOf('\n', bitsPerSampleIndex));
   }
 
+  
   if (String(info).indexOf("MP3Decoder") != -1)
   {
-    mp3 = true;
-    flac = false;
+    display.setTextSize(1);
+    display.setTextColor(SH110X_WHITE);
+    display.setCursor(100, 37);
+    display.println("MP3");
+    display.display();
+    Serial.println("To jest grane MP3");
   }
   if (String(info).indexOf("FLACDecoder") != -1)
   {
-    flac = true;
-    mp3 = false;
+    display.setTextSize(1);
+    display.setTextColor(SH110X_WHITE);
+    display.setCursor(100, 37);
+    display.println("FLAC");
+    display.display();
+    Serial.println("To jest grane FLAC");
   }
+
   
-  display.setTextSize(1);
-  display.setTextColor(SH110X_WHITE);
-  
-  for (int y = 37; y <= 54; y++)
-  {
-    for (int x = 0; x < 127; x++)
-    {
-      display.drawPixel(x, y, SH110X_BLACK);
-    }
-  }
-
-
-  display.setCursor(0, 37);
-  display.println(sampleRateString.substring(1) + "Hz" + "  " + bitsPerSampleString + "bits");
-
-  /*if (mp3 == true)
-  {
-    mp3 = false;
-    display.println(sampleRateString.substring(1) + "Hz" + "  " + bitsPerSampleString + "bits   MP3");
-  }
-  if (flac == true)
-  {
-    flac = false;
-    display.println(sampleRateString.substring(1) + "Hz" + "  " + bitsPerSampleString + "bits  FLAC");
-  }*/
-  display.setCursor(0, 47);
   if (currentOption == INTERNET_RADIO)
   {
-    display.println(bitrateString.substring(1) + "b/s");
+    display.setTextSize(1);
+    display.setTextColor(SH110X_WHITE);
+    for (int y = 37; y <= 56; y++)
+    {
+      for (int x = 0; x < 127; x++)
+      {
+        display.drawPixel(x, y, SH110X_BLACK);
+      }
+    }
+    display.setCursor(0, 37);
+    display.println(sampleRateString.substring(1) + "Hz" + "  " + bitsPerSampleString + "bits");
+    
+    display.setCursor(0, 47);
+    display.println(bitrateString.substring(1) + "b/s  Bank " + String(bank_nr));
+    for (int y = 56; y <= 63; y++)
+    {
+      for (int x = 51; x < 127; x++)
+      {
+        display.drawPixel(x, y, SH110X_BLACK);
+      }
+    }
+    display.setCursor(66, 56);
+    display.println("Stacja " + String(station_nr));
+    display.display();
   }
+
+
+
+
 
   if (currentOption == PLAY_FILES)
   {
@@ -509,9 +520,9 @@ void audio_info(const char *info)
     }
     display.setCursor(66, 56);
     display.println("Folder " + String(folderIndex));
+    display.display();
   }
-  // Zaktualizuj ekran OLED
-  display.display();
+  
 }
 
 
@@ -1252,25 +1263,20 @@ void loop()
       }
     }
 
-    // Wyświetl informacje o SampleRate na ekranie OLED
     display.setCursor(0, 37);
-    /*if (mp3 == true)
-    {
-      mp3 = false;
-      Serial.println("To jest grane MP3");
-      display.println(sampleRateString.substring(1) + "Hz" + "  " + bitsPerSampleString + "bits   MP3");
-    }
-    if (flac == true)
-    {
-      flac = false;
-      Serial.println("To jest grany FLAC");
-      display.println(sampleRateString.substring(1) + "Hz" + "  " + bitsPerSampleString + "bits  FLAC");
-    }*/
     display.println(sampleRateString.substring(1) + "Hz" + "  " + bitsPerSampleString + "bits");
+    
     display.setCursor(0, 47);
-    display.println(bitrateString.substring(1) + "b/s");
-
-    // Zaktualizuj ekran OLED
+    display.println(bitrateString.substring(1) + "b/s  Bank " + String(bank_nr));
+    for (int y = 56; y <= 63; y++)
+    {
+      for (int x = 51; x < 127; x++)
+      {
+        display.drawPixel(x, y, SH110X_BLACK);
+      }
+    }
+    display.setCursor(66, 56);
+    display.println("Stacja " + String(station_nr));
     display.display();
     displayActive = false;
   }
