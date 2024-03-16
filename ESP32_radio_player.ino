@@ -94,7 +94,7 @@ unsigned long lastDebounceTime_S1 = 0;    // Czas ostatniego debouncingu dla prz
 unsigned long lastDebounceTime_S2 = 0;    // Czas ostatniego debouncingu dla przycisku S2.
 unsigned long lastDebounceTime_S3 = 0;    // Czas ostatniego debouncingu dla przycisku S3.
 unsigned long lastDebounceTime_S4 = 0;    // Czas ostatniego debouncingu dla przycisku S4.
-unsigned long debounceDelay = 200;  // Czas trwania debouncingu w milisekundach.
+unsigned long debounceDelay = 50;  // Czas trwania debouncingu w milisekundach.
 unsigned long displayTimeout = 5000;  // Czas wyświetlania komunikatu na ekranie w milisekundach.
 unsigned long displayStartTime = 0;   // Czas rozpoczęcia wyświetlania komunikatu.
 unsigned long seconds = 0;  // Licznik sekund timera
@@ -134,6 +134,49 @@ bool isAudioFile(const char *filename)
   // Dodaj więcej rozszerzeń plików audio, jeśli to konieczne
   return (strstr(filename, ".mp3") || strstr(filename, ".wav") || strstr(filename, ".flac"));
 }
+
+
+void IRAM_ATTR zlicz_S1() // funkcja obsługi przerwania z przycisku S1
+{  
+  if ((millis() - lastDebounceTime_S1) > debounceDelay)
+  {
+    lastDebounceTime_S1 = millis(); // Zapisujemy czas ostatniego debouncingu
+    button_1 = true;
+  }
+}
+
+
+
+void IRAM_ATTR zlicz_S2() // funkcja obsługi przerwania z przycisku S2
+{    
+  if ((millis() - lastDebounceTime_S2) > debounceDelay)
+  {
+    lastDebounceTime_S2 = millis(); // Zapisujemy czas ostatniego debouncingu
+    button_2 = true;
+  }
+}
+
+
+void IRAM_ATTR zlicz_S3() // funkcja obsługi przerwania z przycisku S3
+{  
+  if ((millis() - lastDebounceTime_S3) > debounceDelay)
+  {
+    lastDebounceTime_S3 = millis(); // Zapisujemy czas ostatniego debouncingu
+    button_3 = true;
+  }
+}
+
+
+
+void IRAM_ATTR zlicz_S4() // funkcja obsługi przerwania z przycisku S4
+{    
+  if ((millis() - lastDebounceTime_S4) > debounceDelay)
+  {
+    lastDebounceTime_S4 = millis(); // Zapisujemy czas ostatniego debouncingu
+    button_4 = true;
+  }
+}
+
 
 //Funkcja odpowiedzialna za zapisywanie informacji o stacji do pamięci EEPROM.
 void saveStationToEEPROM(const char* station)
@@ -359,46 +402,7 @@ void sanitizeAndSaveStation(const char* station)
 
 
 
-void IRAM_ATTR zlicz_S1() // funkcja obsługi przerwania z przycisku S1
-{  
-  if ((millis() - lastDebounceTime_S1) > debounceDelay)
-  {
-    lastDebounceTime_S1 = millis(); // Zapisujemy czas ostatniego debouncingu
-    button_1 = true;
-  }
-}
 
-
-
-void IRAM_ATTR zlicz_S2() // funkcja obsługi przerwania z przycisku S2
-{    
-  if ((millis() - lastDebounceTime_S2) > debounceDelay)
-  {
-    lastDebounceTime_S2 = millis(); // Zapisujemy czas ostatniego debouncingu
-    button_2 = true;
-  }
-}
-
-
-void IRAM_ATTR zlicz_S3() // funkcja obsługi przerwania z przycisku S3
-{  
-  if ((millis() - lastDebounceTime_S3) > debounceDelay)
-  {
-    lastDebounceTime_S3 = millis(); // Zapisujemy czas ostatniego debouncingu
-    button_3 = true;
-  }
-}
-
-
-
-void IRAM_ATTR zlicz_S4() // funkcja obsługi przerwania z przycisku S4
-{    
-  if ((millis() - lastDebounceTime_S4) > debounceDelay)
-  {
-    lastDebounceTime_S4 = millis(); // Zapisujemy czas ostatniego debouncingu
-    button_4 = true;
-  }
-}
 
 
 
@@ -458,21 +462,24 @@ void audio_info(const char *info)
   
   if (String(info).indexOf("MP3Decoder") != -1)
   {
-    display.setTextSize(1);
+    mp3 = true;
+    /*display.setTextSize(1);
     display.setTextColor(SH110X_WHITE);
     display.setCursor(100, 37);
     display.println("MP3");
     display.display();
-    Serial.println("To jest grane MP3");
+    Serial.println("To jest grane MP3");*/
   }
+
   if (String(info).indexOf("FLACDecoder") != -1)
   {
-    display.setTextSize(1);
+    flac = true;
+    /*display.setTextSize(1);
     display.setTextColor(SH110X_WHITE);
     display.setCursor(100, 37);
     display.println("FLAC");
     display.display();
-    Serial.println("To jest grane FLAC");
+    Serial.println("To jest grane FLAC");*/
   }
 
   
@@ -535,6 +542,8 @@ void audio_info(const char *info)
     display.println("Folder " + String(folderIndex));
     display.display();
   }
+
+  
   
 }
 
@@ -1187,7 +1196,7 @@ void loop()
   audio.loop();
   button1.loop();
   button2.loop();
-
+  
   CLK_state1 = digitalRead(CLK_PIN1);
   if (CLK_state1 != prev_CLK_state1 && CLK_state1 == HIGH)
   {
