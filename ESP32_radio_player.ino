@@ -75,7 +75,7 @@ int licznik_S4 = 0;  // Licznik dla przycisku S4
 int stationsCount = 0;    // Aktualna liczba przechowywanych stacji w tablicy
 int filteredDirectoriesCount = 0; // Deklaracja globalnej zmiennej przechowującej ilość przefiltrowanych folderów
 int fileIndex = 0;  // Numer aktualnie wybranego pliku audio ze wskazanego folderu
-int folderIndex = 1;  // Numer domyślnie wybranego folderu podczas przełączenia do odtwarzania z karty SD
+int folderIndex = 0;  // Numer domyślnie wybranego folderu podczas przełączenia do odtwarzania z karty SD
 const int maxVisibleLines = 5;  // Maksymalna liczba widocznych linii na ekranie OLED
 bool button_1 = false;    // Zmienna określająca stan przycisku 1
 bool button_2 = false;    // Zmienna określająca stan przycisku 2
@@ -1008,6 +1008,7 @@ void playFromSelectedFolder()
       if (button1.isPressed())
       {
         encoderButton1 = true;
+        seconds = 0;
         display.clearDisplay();
         audio.stopSong();
         timer.detach();
@@ -1144,10 +1145,10 @@ void setup()
   pinMode(button_S4, INPUT_PULLUP);
 
   // Przypnij przerwania do enkodera (wywołanie funkcji zlicz_S1 -- zlicz_S4 przy opadającym zboczu)
-  attachInterrupt(LICZNIK_S1, zlicz_S1, FALLING);
-  attachInterrupt(LICZNIK_S2, zlicz_S2, FALLING);
-  attachInterrupt(LICZNIK_S3, zlicz_S3, FALLING);
-  attachInterrupt(LICZNIK_S4, zlicz_S4, FALLING);
+  attachInterrupt(LICZNIK_S1, zlicz_S1, RISING);
+  attachInterrupt(LICZNIK_S2, zlicz_S2, RISING);
+  attachInterrupt(LICZNIK_S3, zlicz_S3, RISING);
+  attachInterrupt(LICZNIK_S4, zlicz_S4, RISING);
 
   // Inicjalizuj interfejs SPI dla obsługi wyświetlacza OLED
   SPI.begin(SPI_SCK, SPI_MISO, SPI_MOSI);
@@ -1298,7 +1299,9 @@ void loop()
 
   if (button1.isPressed())  //Przycisk enkodera prawego wciśnięty
   {
+    display.clearDisplay();
     Serial.println("Przycisk enkodera prawego");
+    currentOption = PLAY_FILES;
     fileIndex = 0;
     playFromSelectedFolder();
   }
