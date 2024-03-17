@@ -94,7 +94,7 @@ unsigned long lastDebounceTime_S1 = 0;    // Czas ostatniego debouncingu dla prz
 unsigned long lastDebounceTime_S2 = 0;    // Czas ostatniego debouncingu dla przycisku S2.
 unsigned long lastDebounceTime_S3 = 0;    // Czas ostatniego debouncingu dla przycisku S3.
 unsigned long lastDebounceTime_S4 = 0;    // Czas ostatniego debouncingu dla przycisku S4.
-unsigned long debounceDelay = 500;  // Czas trwania debouncingu w milisekundach.
+unsigned long debounceDelay = 200;  // Czas trwania debouncingu w milisekundach.
 unsigned long displayTimeout = 5000;  // Czas wyświetlania komunikatu na ekranie w milisekundach.
 unsigned long displayStartTime = 0;   // Czas rozpoczęcia wyświetlania komunikatu.
 unsigned long seconds = 0;  // Licznik sekund timera
@@ -132,7 +132,7 @@ MenuOption currentOption = INTERNET_RADIO;  // Aktualnie wybrana opcja menu (dom
 bool isAudioFile(const char *filename)
 {
   // Dodaj więcej rozszerzeń plików audio, jeśli to konieczne
-  return (strstr(filename, ".mp3") || strstr(filename, ".wav") || strstr(filename, ".flac"));
+  return (strstr(filename, ".mp3") || strstr(filename, ".MP3") || strstr(filename, ".wav") || strstr(filename, ".WAV") || strstr(filename, ".flac") || strstr(filename, ".FLAC"));
 }
 
 
@@ -558,12 +558,74 @@ void audio_id3data(const char *info)
   if (artistIndex == -1) {
     artistIndex = String(info).indexOf("ARTIST: ");
   }
+
   if (artistIndex != -1)
   {
     // Przytnij tekst od pozycji "Artist:" do końca linii
     artistString = String(info).substring(artistIndex + 8, String(info).indexOf('\n', artistIndex));
     Serial.println("Znalazłem artystę: " + artistString);
+    // Drukowanie bajtów w formacie "0x" w jednej linii
+    for (int i = 0; i < artistString.length(); i++) {
+      Serial.print("0x");
+      if (artistString[i] < 0x10) {
+        Serial.print("0"); // Dodaj zero przed pojedynczymi cyframi w formacie hex
+      }
+      Serial.print(artistString[i], HEX); // Drukowanie znaku jako wartość hex
+      Serial.print(" "); // Dodanie spacji po każdym bajcie
+    }
+    Serial.println(); // Nowa linia po zakończeniu drukowania bajtów
+
+    // Przetwarzanie oryginalnego tekstu, wyłuskanie 2 bajtów polskich znaków i ich przetworzenie do wyświetlania na OLED
+    for (int i = 0; i < artistString.length(); i++)
+    {
+      if ((artistString[i] == (char)0xC3 && artistString[i+1] == (char)0xB1) || (artistString[i] == (char)0xC5 && artistString[i+1] == (char)0x84))
+      {
+        artistString.remove(i, 1); // Usunięcie bajtu
+        artistString.setCharAt(i, 0x0E); // Zamiana na pojedynczy znak "ń"
+      }
+      if (artistString[i] == (char)0xC3 && artistString[i+1] == (char)0xB3) 
+      {
+        artistString.remove(i, 1); // Usunięcie bajtu
+        artistString.setCharAt(i, 0x0F); // Zamiana na pojedynczy znak "ó"
+      }
+      if (artistString[i] == (char)0xC5 && artistString[i+1] == (char)0x82) 
+      {
+        artistString.remove(i, 1); // Usunięcie bajtu
+        artistString.setCharAt(i, 0x10); // Zamiana na pojedynczy znak "ł"
+      }
+      if (artistString[i] == (char)0xC4 && artistString[i+1] == (char)0x85) 
+      {
+        artistString.remove(i, 1); // Usunięcie bajtu
+        artistString.setCharAt(i, 0x11); // Zamiana na pojedynczy znak "ą"
+      }
+      if (artistString[i] == (char)0xC5 && artistString[i+1] == (char)0x9B) 
+      {
+        artistString.remove(i, 1); // Usunięcie bajtu
+        artistString.setCharAt(i, 0x12); // Zamiana na pojedynczy znak "ś"
+      }
+      if (artistString[i] == (char)0xC4 && artistString[i+1] == (char)0x99) 
+      {
+        artistString.remove(i, 1); // Usunięcie bajtu
+        artistString.setCharAt(i, 0x13); // Zamiana na pojedynczy znak "ę"
+      }
+      if (artistString[i] == (char)0xC4 && artistString[i+1] == (char)0x87) 
+      {
+        artistString.remove(i, 1); // Usunięcie bajtu
+        artistString.setCharAt(i, 0x14); // Zamiana na pojedynczy znak "ć"
+      }
+      if (artistString[i] == (char)0xC5 && artistString[i+1] == (char)0xBC) 
+      {
+        artistString.remove(i, 1); // Usunięcie bajtu
+        artistString.setCharAt(i, 0x15); // Zamiana na pojedynczy znak "ż"
+      }
+      if (artistString[i] == (char)0xC5 && artistString[i+1] == (char)0xBA) 
+      {
+        artistString.remove(i, 1); // Usunięcie bajtu
+        artistString.setCharAt(i, 0x16); // Zamiana na pojedynczy znak "ź"
+      }
+    } 
   }
+
 
   // Znajdź pozycję "Title: " lub "TITLE " w tekście
   int titleIndex = String(info).indexOf("Title: ");
@@ -575,7 +637,70 @@ void audio_id3data(const char *info)
     // Przytnij tekst od pozycji "Title: " do końca linii
     titleString = String(info).substring(titleIndex + 7, String(info).indexOf('\n', titleIndex));
     Serial.println("Znalazłem tytuł: " + titleString);
+    // Drukowanie bajtów w formacie "0x" w jednej linii
+    for (int i = 0; i < titleString.length(); i++) {
+      Serial.print("0x");
+      if (titleString[i] < 0x10) {
+        Serial.print("0"); // Dodaj zero przed pojedynczymi cyframi w formacie hex
+      }
+      Serial.print(titleString[i], HEX); // Drukowanie znaku jako wartość hex
+      Serial.print(" "); // Dodanie spacji po każdym bajcie
+    }
+    Serial.println(); // Nowa linia po zakończeniu drukowania bajtów
+
+    // Przetwarzanie oryginalnego tekstu, wyłuskanie 2 bajtów polskich znaków i ich przetworzenie do wyświetlania na OLED
+    for (int i = 0; i < titleString.length(); i++)
+    {
+      if ((titleString[i] == (char)0xC3 && titleString[i+1] == (char)0xB1) || (titleString[i] == (char)0xC5 && titleString[i+1] == (char)0x84))
+      {
+        titleString.remove(i, 1); // Usunięcie bajtu
+        titleString.setCharAt(i, 0x0E); // Zamiana na pojedynczy znak "ń"
+      }
+      if (titleString[i] == (char)0xC3 && titleString[i+1] == (char)0xB3) 
+      {
+        titleString.remove(i, 1); // Usunięcie bajtu
+        titleString.setCharAt(i, 0x0F); // Zamiana na pojedynczy znak "ó"
+      }
+      if (titleString[i] == (char)0xC5 && titleString[i+1] == (char)0x82) 
+      {
+        titleString.remove(i, 1); // Usunięcie bajtu
+        titleString.setCharAt(i, 0x10); // Zamiana na pojedynczy znak "ł"
+      }
+      if (titleString[i] == (char)0xC4 && titleString[i+1] == (char)0x85) 
+      {
+        titleString.remove(i, 1); // Usunięcie bajtu
+        titleString.setCharAt(i, 0x11); // Zamiana na pojedynczy znak "ą"
+      }
+      if (titleString[i] == (char)0xC5 && titleString[i+1] == (char)0x9B) 
+      {
+        titleString.remove(i, 1); // Usunięcie bajtu
+        titleString.setCharAt(i, 0x12); // Zamiana na pojedynczy znak "ś"
+      }
+      if (titleString[i] == (char)0xC4 && titleString[i+1] == (char)0x99) 
+      {
+        titleString.remove(i, 1); // Usunięcie bajtu
+        titleString.setCharAt(i, 0x13); // Zamiana na pojedynczy znak "ę"
+      }
+      if (titleString[i] == (char)0xC4 && titleString[i+1] == (char)0x87) 
+      {
+        titleString.remove(i, 1); // Usunięcie bajtu
+        titleString.setCharAt(i, 0x14); // Zamiana na pojedynczy znak "ć"
+      }
+      if (titleString[i] == (char)0xC5 && titleString[i+1] == (char)0xBC) 
+      {
+        titleString.remove(i, 1); // Usunięcie bajtu
+        titleString.setCharAt(i, 0x15); // Zamiana na pojedynczy znak "ż"
+      }
+      if (titleString[i] == (char)0xC5 && titleString[i+1] == (char)0xBA) 
+      {
+        titleString.remove(i, 1); // Usunięcie bajtu
+        titleString.setCharAt(i, 0x16); // Zamiana na pojedynczy znak "ź"
+      }
+    } 
   }
+
+
+
   display.clearDisplay();
   display.setTextSize(1);
   display.setTextColor(SH110X_WHITE);
@@ -630,6 +755,18 @@ void audio_showstreamtitle(const char *info)
   {
     station_data = station_data.substring(0, 62); // Ogranicz długość tekstu do 63 znaków dla wyświetlacza OLED
   }
+
+  for (int i = 0; i < station_data.length(); i++) {
+      Serial.print("0x");
+      if (station_data[i] < 0x10) {
+        Serial.print("0"); // Dodaj zero przed pojedynczymi cyframi w formacie hex
+      }
+      Serial.print(station_data[i], HEX); // Drukowanie znaku jako wartość hex
+      Serial.print(" "); // Dodanie spacji po każdym bajcie
+    }
+    Serial.println(); // Nowa linia po zakończeniu drukowania bajtów
+
+
   display.setTextSize(1);
   display.setTextColor(SH110X_WHITE);
   for (int y=9; y<=36; y++)
