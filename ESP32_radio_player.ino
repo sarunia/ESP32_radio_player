@@ -83,9 +83,8 @@ bool button_3 = false;    // Zmienna określająca stan przycisku 3
 bool button_4 = false;    // Zmienna określająca stan przycisku 4
 bool encoderButton1 = false;
 bool encoderButton2 = false;
-bool volume_set = false;    // Zmienna określająca, czy ustawiono poziom głośności.
-bool wifi_config = false;   // Zmienna, która jest ustawiana na true po wykonaniu konfiguracji, aby włączyć moduł Wi-Fi i połączyć się z siecią.
-bool endOfFile = false;  // Flaga końca odtwarzania pliku audio
+bool wifiConfig = false;   // Zmienna, która jest ustawiana na true po wykonaniu konfiguracji, aby włączyć moduł Wi-Fi i połączyć się z siecią.
+bool endFile = false;  // Flaga końca odtwarzania pliku audio
 bool displayActive = false;   // Flaga określająca, czy wyświetlacz jest aktywny.
 bool isPlaying = false;
 bool mp3 = false;
@@ -101,7 +100,7 @@ unsigned long seconds = 0;  // Licznik sekund timera
 
 String directories[MAX_FILES]; // Tablica z indeksami i ścieżkami katalogów
 String currentDirectory = "/";  // Ścieżka bieżącego katalogu
-String station_name;    // Nazwa aktualnie wybranej stacji radiowej.
+String stationName;    // Nazwa aktualnie wybranej stacji radiowej.
 String stationString;    // Dodatkowe dane stacji radiowej (jeśli istnieją).
 String bitrateString;         // Zmienna przechowująca informację o bitrate
 String sampleRateString;      // Zmienna przechowująca informację o sample rate
@@ -278,15 +277,15 @@ void changeStation()
   Serial.print("Link do stacji: ");
   Serial.println(station);
 
-  // Skopiuj pierwsze 21 znaków do zmiennej station_name
-  station_name = String(station).substring(0, 21);
+  // Skopiuj pierwsze 21 znaków do zmiennej stationName
+  stationName = String(station).substring(0, 21);
 
   // Wyświetl informacje na ekranie OLED
   display.clearDisplay();
   display.setTextSize(1);
   display.setTextColor(SH110X_WHITE);
   display.setCursor(0, 0);
-  display.println(station_name);
+  display.println(stationName);
   display.display();
 
   // Połącz z daną stacją
@@ -420,7 +419,7 @@ void wifi_setup()
   display.setCursor(10, 35);
   display.println("connected");
   display.display();
-  wifi_config = true; // ustawiono konfig wifi
+  wifiConfig = true; // ustawiono konfig wifi
 }
 
 
@@ -485,7 +484,7 @@ void audio_info(const char *info)
       }
     }
     display.setCursor(0, 37);
-    display.println(sampleRateString.substring(1) + "Hz" + "  " + bitsPerSampleString + "bits");
+    display.println(sampleRateString.substring(1) + "Hz " + bitsPerSampleString + "bits");
     
     display.setCursor(0, 47);
     display.println(bitrateString.substring(1) + "b/s  Bank " + String(bank_nr));
@@ -513,7 +512,7 @@ void audio_info(const char *info)
       }
     }
     display.setCursor(0, 37);
-    display.println(sampleRateString.substring(1) + "Hz" + "  " + bitsPerSampleString + "bits");
+    display.println(sampleRateString.substring(1) + "Hz " + bitsPerSampleString + "bits");
     
     display.setCursor(0, 47);
     display.println(bitrateString.substring(1) + "b/s  Plik " + String(fileIndex));
@@ -677,7 +676,7 @@ void audio_id3data(const char *info)
 
 void audio_eof_mp3(const char *info)
 {
-  endOfFile = true;
+  endFile = true;
   Serial.print("eof_mp3     ");
   Serial.println(info);
 }
@@ -1002,9 +1001,9 @@ void playFromSelectedFolder()
         break;                 // Wyjdź z pętli
       }     
 
-      if (endOfFile == true) //Wymuszenie programowego przejścia do odtwarzania następnego pliku
+      if (endFile == true) //Wymuszenie programowego przejścia do odtwarzania następnego pliku
       {
-        endOfFile = false;
+        endFile = false;
         button_2 = true;
       }
 
@@ -1075,7 +1074,7 @@ void playFromSelectedFolder()
         titleString = titleString.substring(0, std::min(42, static_cast<int>(titleString.length())));
         display.println(titleString);
         display.setCursor(0, 37);
-        display.println(sampleRateString.substring(1) + "Hz" + "  " + bitsPerSampleString + "bits");
+        display.println(sampleRateString.substring(1) + "Hz " + bitsPerSampleString + "bits");
         display.setCursor(0, 47);
         display.println(bitrateString.substring(1) + "b/s  Plik " + String(fileIndex));
         for (int y = 56; y <= 63; y++)
@@ -1357,7 +1356,7 @@ void loop()
     display.setTextSize(1);
     display.setTextColor(SH110X_WHITE);
     display.setCursor(0, 0);
-    display.println(station_name);
+    display.println(stationName);
     display.setCursor(0, 10);
     display.println(stationString);
     for (int y = 37; y <= 54; y++)
@@ -1369,7 +1368,7 @@ void loop()
     }
 
     display.setCursor(0, 37);
-    display.println(sampleRateString.substring(1) + "Hz" + "  " + bitsPerSampleString + "bits");
+    display.println(sampleRateString.substring(1) + "Hz " + bitsPerSampleString + "bits");
     
     display.setCursor(0, 47);
     display.println(bitrateString.substring(1) + "b/s  Bank " + String(bank_nr));
