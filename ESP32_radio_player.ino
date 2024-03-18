@@ -102,7 +102,7 @@ unsigned long seconds = 0;  // Licznik sekund timera
 String directories[MAX_FILES]; // Tablica z indeksami i ścieżkami katalogów
 String currentDirectory = "/";  // Ścieżka bieżącego katalogu
 String station_name;    // Nazwa aktualnie wybranej stacji radiowej.
-String station_data;    // Dodatkowe dane stacji radiowej (jeśli istnieją).
+String stationString;    // Dodatkowe dane stacji radiowej (jeśli istnieją).
 String bitrateString;         // Zmienna przechowująca informację o bitrate
 String sampleRateString;      // Zmienna przechowująca informację o sample rate
 String bitsPerSampleString;   // Zmienna przechowująca informację o liczbie bitów na próbkę
@@ -293,8 +293,6 @@ void changeStation()
   audio.connecttohost(station);
 }
 
-
-
 void fetchStationsFromServer()
 {
   // Utwórz obiekt klienta HTTP
@@ -400,12 +398,6 @@ void sanitizeAndSaveStation(const char* station)
   saveStationToEEPROM(sanitizedStation);
 }
 
-
-
-
-
-
-
 void wifi_setup()
 {
   WiFi.mode(WIFI_STA);  // Ustaw tryb WiFi na klienta (WIFI_STA)
@@ -459,7 +451,6 @@ void audio_info(const char *info)
     bitsPerSampleString = String(info).substring(bitsPerSampleIndex + 15, String(info).indexOf('\n', bitsPerSampleIndex));
   }
 
-  
   if (String(info).indexOf("MP3Decoder") != -1)
   {
     mp3 = true;
@@ -482,7 +473,6 @@ void audio_info(const char *info)
     Serial.println("To jest grane FLAC");*/
   }
 
-  
   if (currentOption == INTERNET_RADIO)
   {
     display.setTextSize(1);
@@ -510,10 +500,6 @@ void audio_info(const char *info)
     display.println("Stacja " + String(station_nr));
     display.display();
   }
-
-
-
-
 
   if (currentOption == PLAY_FILES)
   {
@@ -543,8 +529,61 @@ void audio_info(const char *info)
     display.display();
   }
 
-  
-  
+}
+
+void processText(String &text)
+{
+  for (int i = 0; i < text.length(); i++)
+  {
+    switch (text[i])
+    {
+      case (char)0xC2:
+        switch (text[i+1])
+        {
+          case (char)0xB3: text.setCharAt(i, 0x10); break; // Zamiana na pojedynczy znak "ł"
+        }
+        text.remove(i+1, 1); // Usunięcie kolejnego bajtu
+        break;
+      case (char)0xC3:
+        switch (text[i+1])
+        {
+          case (char)0xB1: text.setCharAt(i, 0x0E); break; // Zamiana na pojedynczy znak "ń"
+          case (char)0xB3: text.setCharAt(i, 0x0F); break; // Zamiana na pojedynczy znak "ó"
+          case (char)0xBA: text.setCharAt(i, 0x16); break; // Zamiana na pojedynczy znak "ź"
+          case (char)0xBB: text.setCharAt(i, 0x1D); break; // Zamiana na pojedynczy znak "Ż"
+          
+        }
+        text.remove(i+1, 1); // Usunięcie kolejnego bajtu
+        break;
+      case (char)0xC4:
+        switch (text[i+1])
+        {
+          case (char)0x85: text.setCharAt(i, 0x11); break; // Zamiana na pojedynczy znak "ą"
+          case (char)0x99: text.setCharAt(i, 0x13); break; // Zamiana na pojedynczy znak "ę"
+          case (char)0x87: text.setCharAt(i, 0x14); break; // Zamiana na pojedynczy znak "ć"
+          case (char)0x84: text.setCharAt(i, 0x19); break; // Zamiana na pojedynczy znak "Ą"
+          case (char)0x98: text.setCharAt(i, 0x1A); break; // Zamiana na pojedynczy znak "Ę"
+          case (char)0x86: text.setCharAt(i, 0x1B); break; // Zamiana na pojedynczy znak "Ć"
+        }
+        text.remove(i+1, 1); // Usunięcie kolejnego bajtu
+        break;
+      case (char)0xC5:
+        switch (text[i+1])
+        {
+          case (char)0x82: text.setCharAt(i, 0x10); break; // Zamiana na pojedynczy znak "ł"
+          case (char)0x84: text.setCharAt(i, 0x0E); break; // Zamiana na pojedynczy znak "ń"
+          case (char)0x9B: text.setCharAt(i, 0x12); break; // Zamiana na pojedynczy znak "ś"
+          case (char)0xBB: text.setCharAt(i, 0x1D); break; // Zamiana na pojedynczy znak "Ż"
+          case (char)0xBC: text.setCharAt(i, 0x15); break; // Zamiana na pojedynczy znak "ż"
+          case (char)0x83: text.setCharAt(i, 0x17); break; // Zamiana na pojedynczy znak "Ń"
+          case (char)0x9A: text.setCharAt(i, 0x18); break; // Zamiana na pojedynczy znak "Ś"
+          case (char)0x81: text.setCharAt(i, 0x1C); break; // Zamiana na pojedynczy znak "Ł"
+          case (char)0xB9: text.setCharAt(i, 0x1E); break; // Zamiana na pojedynczy znak "Ź"
+        }
+        text.remove(i+1, 1); // Usunięcie kolejnego bajtu
+        break;
+    }
+  }
 }
 
 
@@ -564,6 +603,7 @@ void audio_id3data(const char *info)
     // Przytnij tekst od pozycji "Artist:" do końca linii
     artistString = String(info).substring(artistIndex + 8, String(info).indexOf('\n', artistIndex));
     Serial.println("Znalazłem artystę: " + artistString);
+
     // Drukowanie bajtów w formacie "0x" w jednej linii
     for (int i = 0; i < artistString.length(); i++) {
       Serial.print("0x");
@@ -574,98 +614,9 @@ void audio_id3data(const char *info)
       Serial.print(" "); // Dodanie spacji po każdym bajcie
     }
     Serial.println(); // Nowa linia po zakończeniu drukowania bajtów
+    processText(artistString);
 
-    // Przetwarzanie oryginalnego tekstu, wyłuskanie 2 bajtów polskich znaków i ich przetworzenie do wyświetlania na OLED, znak "Ó" jest też jednym bajtem = 0xD3
-    for (int i = 0; i < artistString.length(); i++)
-    {
-      if ((artistString[i] == (char)0xC3 && artistString[i+1] == (char)0xB1) || (artistString[i] == (char)0xC5 && artistString[i+1] == (char)0x84))
-      {
-        artistString.remove(i, 1); // Usunięcie bajtu
-        artistString.setCharAt(i, 0x0E); // Zamiana na pojedynczy znak "ń"
-      }
-      if (artistString[i] == (char)0xC3 && artistString[i+1] == (char)0xB3) 
-      {
-        artistString.remove(i, 1); // Usunięcie bajtu
-        artistString.setCharAt(i, 0x0F); // Zamiana na pojedynczy znak "ó"
-      }
-      if (artistString[i] == (char)0xC5 && artistString[i+1] == (char)0x82) 
-      {
-        artistString.remove(i, 1); // Usunięcie bajtu
-        artistString.setCharAt(i, 0x10); // Zamiana na pojedynczy znak "ł"
-      }
-      if (artistString[i] == (char)0xC4 && artistString[i+1] == (char)0x85) 
-      {
-        artistString.remove(i, 1); // Usunięcie bajtu
-        artistString.setCharAt(i, 0x11); // Zamiana na pojedynczy znak "ą"
-      }
-      if (artistString[i] == (char)0xC5 && artistString[i+1] == (char)0x9B) 
-      {
-        artistString.remove(i, 1); // Usunięcie bajtu
-        artistString.setCharAt(i, 0x12); // Zamiana na pojedynczy znak "ś"
-      }
-      if (artistString[i] == (char)0xC4 && artistString[i+1] == (char)0x99) 
-      {
-        artistString.remove(i, 1); // Usunięcie bajtu
-        artistString.setCharAt(i, 0x13); // Zamiana na pojedynczy znak "ę"
-      }
-      if (artistString[i] == (char)0xC4 && artistString[i+1] == (char)0x87) 
-      {
-        artistString.remove(i, 1); // Usunięcie bajtu
-        artistString.setCharAt(i, 0x14); // Zamiana na pojedynczy znak "ć"
-      }
-      if (artistString[i] == (char)0xC5 && artistString[i+1] == (char)0xBC) 
-      {
-        artistString.remove(i, 1); // Usunięcie bajtu
-        artistString.setCharAt(i, 0x15); // Zamiana na pojedynczy znak "ż"
-      }
-      if (artistString[i] == (char)0xC5 && artistString[i+1] == (char)0xBA) 
-      {
-        artistString.remove(i, 1); // Usunięcie bajtu
-        artistString.setCharAt(i, 0x16); // Zamiana na pojedynczy znak "ź"
-      }
-      if (artistString[i] == (char)0xC5 && artistString[i+1] == (char)0x83) 
-      {
-        artistString.remove(i, 1); // Usunięcie bajtu
-        artistString.setCharAt(i, 0x17); // Zamiana na pojedynczy znak "Ń"
-      }
-      if (artistString[i] == (char)0xC5 && artistString[i+1] == (char)0x9A) 
-      {
-        artistString.remove(i, 1); // Usunięcie bajtu
-        artistString.setCharAt(i, 0x18); // Zamiana na pojedynczy znak "Ś"
-      }
-      if (artistString[i] == (char)0xC4 && artistString[i+1] == (char)0x84) 
-      {
-        artistString.remove(i, 1); // Usunięcie bajtu
-        artistString.setCharAt(i, 0x19); // Zamiana na pojedynczy znak "Ą"
-      }
-      if (artistString[i] == (char)0xC4 && artistString[i+1] == (char)0x98) 
-      {
-        artistString.remove(i, 1); // Usunięcie bajtu
-        artistString.setCharAt(i, 0x1A); // Zamiana na pojedynczy znak "Ę"
-      }
-      if (artistString[i] == (char)0xC4 && artistString[i+1] == (char)0x86) 
-      {
-        artistString.remove(i, 1); // Usunięcie bajtu
-        artistString.setCharAt(i, 0x1B); // Zamiana na pojedynczy znak "Ć"
-      }
-      if (artistString[i] == (char)0xC5 && artistString[i+1] == (char)0x81) 
-      {
-        artistString.remove(i, 1); // Usunięcie bajtu
-        artistString.setCharAt(i, 0x1C); // Zamiana na pojedynczy znak "Ł"
-      }
-      if (artistString[i] == (char)0xC5 && artistString[i+1] == (char)0xBB) 
-      {
-        artistString.remove(i, 1); // Usunięcie bajtu
-        artistString.setCharAt(i, 0x1D); // Zamiana na pojedynczy znak "Ż"
-      }
-      if (artistString[i] == (char)0xC5 && artistString[i+1] == (char)0xB9) 
-      {
-        artistString.remove(i, 1); // Usunięcie bajtu
-        artistString.setCharAt(i, 0x1E); // Zamiana na pojedynczy znak "Ź"
-      }
-    } 
   }
-
 
   // Znajdź pozycję "Title: " lub "TITLE " w tekście
   int titleIndex = String(info).indexOf("Title: ");
@@ -688,98 +639,9 @@ void audio_id3data(const char *info)
     }
     Serial.println(); // Nowa linia po zakończeniu drukowania bajtów
 
-    // Przetwarzanie oryginalnego tekstu, wyłuskanie 2 bajtów polskich znaków i ich przetworzenie do wyświetlania na OLED
-    for (int i = 0; i < titleString.length(); i++)
-    {
-      if ((titleString[i] == (char)0xC3 && titleString[i+1] == (char)0xB1) || (titleString[i] == (char)0xC5 && titleString[i+1] == (char)0x84))
-      {
-        titleString.remove(i, 1); // Usunięcie bajtu
-        titleString.setCharAt(i, 0x0E); // Zamiana na pojedynczy znak "ń"
-      }
-      if (titleString[i] == (char)0xC3 && titleString[i+1] == (char)0xB3) 
-      {
-        titleString.remove(i, 1); // Usunięcie bajtu
-        titleString.setCharAt(i, 0x0F); // Zamiana na pojedynczy znak "ó"
-      }
-      if (titleString[i] == (char)0xC5 && titleString[i+1] == (char)0x82) 
-      {
-        titleString.remove(i, 1); // Usunięcie bajtu
-        titleString.setCharAt(i, 0x10); // Zamiana na pojedynczy znak "ł"
-      }
-      if (titleString[i] == (char)0xC4 && titleString[i+1] == (char)0x85) 
-      {
-        titleString.remove(i, 1); // Usunięcie bajtu
-        titleString.setCharAt(i, 0x11); // Zamiana na pojedynczy znak "ą"
-      }
-      if (titleString[i] == (char)0xC5 && titleString[i+1] == (char)0x9B) 
-      {
-        titleString.remove(i, 1); // Usunięcie bajtu
-        titleString.setCharAt(i, 0x12); // Zamiana na pojedynczy znak "ś"
-      }
-      if (titleString[i] == (char)0xC4 && titleString[i+1] == (char)0x99) 
-      {
-        titleString.remove(i, 1); // Usunięcie bajtu
-        titleString.setCharAt(i, 0x13); // Zamiana na pojedynczy znak "ę"
-      }
-      if (titleString[i] == (char)0xC4 && titleString[i+1] == (char)0x87) 
-      {
-        titleString.remove(i, 1); // Usunięcie bajtu
-        titleString.setCharAt(i, 0x14); // Zamiana na pojedynczy znak "ć"
-      }
-      if (titleString[i] == (char)0xC5 && titleString[i+1] == (char)0xBC) 
-      {
-        titleString.remove(i, 1); // Usunięcie bajtu
-        titleString.setCharAt(i, 0x15); // Zamiana na pojedynczy znak "ż"
-      }
-      if (titleString[i] == (char)0xC5 && titleString[i+1] == (char)0xBA) 
-      {
-        titleString.remove(i, 1); // Usunięcie bajtu
-        titleString.setCharAt(i, 0x16); // Zamiana na pojedynczy znak "ź"
-      }
-      if (titleString[i] == (char)0xC5 && titleString[i+1] == (char)0x83) 
-      {
-        titleString.remove(i, 1); // Usunięcie bajtu
-        titleString.setCharAt(i, 0x17); // Zamiana na pojedynczy znak "Ń"
-      }
-      if (titleString[i] == (char)0xC5 && titleString[i+1] == (char)0x9A) 
-      {
-        titleString.remove(i, 1); // Usunięcie bajtu
-        titleString.setCharAt(i, 0x18); // Zamiana na pojedynczy znak "Ś"
-      }
-      if (titleString[i] == (char)0xC4 && titleString[i+1] == (char)0x84) 
-      {
-        titleString.remove(i, 1); // Usunięcie bajtu
-        titleString.setCharAt(i, 0x19); // Zamiana na pojedynczy znak "Ą"
-      }
-      if (titleString[i] == (char)0xC4 && titleString[i+1] == (char)0x98) 
-      {
-        titleString.remove(i, 1); // Usunięcie bajtu
-        titleString.setCharAt(i, 0x1A); // Zamiana na pojedynczy znak "Ę"
-      }
-      if (titleString[i] == (char)0xC4 && titleString[i+1] == (char)0x86) 
-      {
-        titleString.remove(i, 1); // Usunięcie bajtu
-        titleString.setCharAt(i, 0x1B); // Zamiana na pojedynczy znak "Ć"
-      }
-      if (titleString[i] == (char)0xC5 && titleString[i+1] == (char)0x81) 
-      {
-        titleString.remove(i, 1); // Usunięcie bajtu
-        titleString.setCharAt(i, 0x1C); // Zamiana na pojedynczy znak "Ł"
-      }
-      if (titleString[i] == (char)0xC5 && titleString[i+1] == (char)0xBB) 
-      {
-        titleString.remove(i, 1); // Usunięcie bajtu
-        titleString.setCharAt(i, 0x1D); // Zamiana na pojedynczy znak "Ż"
-      }
-      if (titleString[i] == (char)0xC5 && titleString[i+1] == (char)0xB9) 
-      {
-        titleString.remove(i, 1); // Usunięcie bajtu
-        titleString.setCharAt(i, 0x1E); // Zamiana na pojedynczy znak "Ź"
-      }
-    } 
+    processText(titleString);
+
   }
-
-
 
   display.clearDisplay();
   display.setTextSize(1);
@@ -813,8 +675,6 @@ void audio_id3data(const char *info)
   timer.attach(1, updateTimer);
 }
 
-
-
 void audio_eof_mp3(const char *info)
 {
   endOfFile = true;
@@ -830,22 +690,26 @@ void audio_showstreamtitle(const char *info)
 {
   Serial.print("streamtitle ");
   Serial.println(info);
-  station_data = String(info);
-  if (station_data.length() > 62)
+  stationString = String(info);
+
+  if (stationString.length() > 62)
   {
-    station_data = station_data.substring(0, 62); // Ogranicz długość tekstu do 63 znaków dla wyświetlacza OLED
+    stationString = stationString.substring(0, 62); // Ogranicz długość tekstu do 63 znaków dla wyświetlacza OLED
   }
 
-  for (int i = 0; i < station_data.length(); i++) {
-      Serial.print("0x");
-      if (station_data[i] < 0x10) {
-        Serial.print("0"); // Dodaj zero przed pojedynczymi cyframi w formacie hex
-      }
-      Serial.print(station_data[i], HEX); // Drukowanie znaku jako wartość hex
-      Serial.print(" "); // Dodanie spacji po każdym bajcie
+  for (int i = 0; i < stationString.length(); i++)
+  {
+    Serial.print("0x");
+    if (stationString[i] < 0x10)
+    {
+      Serial.print("0"); // Dodaj zero przed pojedynczymi cyframi w formacie hex
     }
-    Serial.println(); // Nowa linia po zakończeniu drukowania bajtów
+    Serial.print(stationString[i], HEX); // Drukowanie znaku jako wartość hex
+    Serial.print(" "); // Dodanie spacji po każdym bajcie
+  }
+  Serial.println(); // Nowa linia po zakończeniu drukowania bajtów
 
+  processText(stationString);
 
   display.setTextSize(1);
   display.setTextColor(SH110X_WHITE);
@@ -857,9 +721,10 @@ void audio_showstreamtitle(const char *info)
     }
   }   
   display.setCursor(0, 10);
-  display.println(station_data);
+  display.println(stationString);
   display.display();
 }
+
 void audio_bitrate(const char *info)
 {
   Serial.print("bitrate     ");
@@ -1494,7 +1359,7 @@ void loop()
     display.setCursor(0, 0);
     display.println(station_name);
     display.setCursor(0, 10);
-    display.println(station_data);
+    display.println(stationString);
     for (int y = 37; y <= 54; y++)
     {
       for (int x = 0; x < 127; x++)
