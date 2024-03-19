@@ -724,19 +724,19 @@ void audio_showstreamtitle(const char *info)
     stationString = stationString.substring(0, 62); // Ogranicz długość tekstu do 63 znaków dla wyświetlacza OLED
   }
 
-  for (int i = 0; i < stationString.length(); i++)
+  for (int i = 0; i < stationString.length(); i++)  // Pętla iteruje przez każdy znak w `stationString`
   {
-    Serial.print("0x");
+    Serial.print("0x"); // Wyświetla prefiks "0x" przed wartością heksadecymalną
     if (stationString[i] < 0x10)
     {
       Serial.print("0"); // Dodaj zero przed pojedynczymi cyframi w formacie hex
     }
-    Serial.print(stationString[i], HEX); // Drukowanie znaku jako wartość hex
+    Serial.print(stationString[i], HEX); // // Wyświetla wartość znaku w formacie heksadecymalnym.
     Serial.print(" "); // Dodanie spacji po każdym bajcie
   }
   Serial.println(); // Nowa linia po zakończeniu drukowania bajtów
 
-  processText(stationString);
+  processText(stationString);   // Wywołuje funkcję `processText`, która przetwarza tekst zawarty w `stationString`
 
   display.setTextSize(1);
   display.setTextColor(SH110X_WHITE);
@@ -790,11 +790,11 @@ void displayMenu()
   switch (currentOption)
   {
     case PLAY_FILES:
-      display.println(">> Odtwarzacz plikow");
+      display.println(">> Odtwarzacz plik" + String((char)0x0F) + "w");
       display.println("   Radio internetowe");
       break;
     case INTERNET_RADIO:
-      display.println("   Odtwarzacz plikow");
+      display.println("   Odtwarzacz plik" + String((char)0x0F) + "w");
       display.println(">> Radio internetowe");
       break;
   }
@@ -1172,7 +1172,7 @@ void printToOLED()
   display.setTextSize(1);
   display.setTextColor(SH110X_WHITE);
   display.setCursor(0, 0);
-  display.print("   LISTA KATALOGOW   ");
+  display.print("   LISTA KATALOG" + String((char)0x1F) + "W"); // Wyświetla komunikat "LISTA KATALOGÓW" na ekranie, 0x1F reprezentuje literę 'Ó'
   display.println(currentDirectory);
 
   int displayRow = 1;  // Zaczynamy od drugiego wiersza (pierwszy to nagłówek)
@@ -1457,7 +1457,7 @@ void loop()
       display.setTextSize(1);
       display.setTextColor(SH110X_WHITE);
       display.setCursor(0, 0);
-      display.print("   LISTA KATALOGOW   ");
+      display.print("   LISTA KATALOG" + String((char)0x1F) + "W"); // Wyświetla komunikat "LISTA KATALOGÓW" na ekranie, 0x1F reprezentuje literę 'Ó'
       display.display();
       listDirectories("/");
     }
