@@ -793,6 +793,8 @@ void printDirectoriesAndSavePaths(File dir, int numTabs, String currentPath)
     {
       // Utwórz pełną ścieżkę do bieżącego katalogu
       String path = currentPath + "/" + entry.name();
+
+      
       
       // Zapisz pełną ścieżkę do tablicy
       directories[directoryCount] = path;
@@ -818,6 +820,20 @@ void printDirectoriesAndSavePaths(File dir, int numTabs, String currentPath)
           
           // Ogranicz długość do 21 znaków
           fullPath = fullPath.substring(1, 22);
+
+          for (int i = 0; i < fullPath.length(); i++)
+          {
+            Serial.print("0x");
+            if (fullPath[i] < 0x10)
+            {
+              Serial.print("0"); // Dodaj zero przed pojedynczymi cyframi w formacie hex
+            }
+            Serial.print(fullPath[i], HEX); // Drukowanie znaku jako wartość hex
+            Serial.print(" "); // Dodanie spacji po każdym bajcie
+          }
+          Serial.println(); // Nowa linia po zakończeniu drukowania bajtów
+
+          processText(fullPath);
           
           // Ustaw pozycję kursora na ekranie OLED
           display.setCursor(0, i * 10);
@@ -889,9 +905,9 @@ void playFromSelectedFolder()
 
   Serial.println("Odtwarzanie plików z wybranego folderu: " + folder);
 
-  File dir = SD.open(folder);
+  File root = SD.open(folder);
 
-  if (!dir)
+  if (!root)
   {
     Serial.println("Błąd otwarcia katalogu!");
     return;
@@ -899,7 +915,7 @@ void playFromSelectedFolder()
 
   File entry;
 
-  while (entry = dir.openNextFile())
+  while (entry = root.openNextFile())
   {
     String fileName = entry.name();
 
@@ -946,13 +962,13 @@ void playFromSelectedFolder()
         fileIndex = (fileIndex > 0) ? (fileIndex - 1) : (0);
 
         // Odtwórz znaleziony plik
-        dir.rewindDirectory(); // Przewiń katalog na początek
-        entry = dir.openNextFile(); // Otwórz pierwszy plik w katalogu
+        root.rewindDirectory(); // Przewiń katalog na początek
+        entry = root.openNextFile(); // Otwórz pierwszy plik w katalogu
 
         // Przesuń się do wybranego pliku
         for (int i = 0; i < fileIndex; i++)
         {
-          entry = dir.openNextFile();
+          entry = root.openNextFile();
           if (!entry)
           {
               break; // Wyjdź, jeśli nie znaleziono pliku
@@ -980,11 +996,12 @@ void playFromSelectedFolder()
         button_3 = false;
         seconds = 0;
         fileIndex = 0;
+        timer.detach();
         // Przełącz do poprzedniego folderu
-        dir.close(); // Zamknij bieżący katalog
+        root.close(); // Zamknij bieżący katalog
         folderIndex = (folderIndex > 0) ? (folderIndex - 1) : (directoryCount - 1);
         folder = directories[folderIndex];
-        dir = SD.open(folder); // Otwórz nowy katalog
+        root = SD.open(folder); // Otwórz nowy katalog
         break;                 // Wyjdź z pętli
       }
 
@@ -993,11 +1010,12 @@ void playFromSelectedFolder()
         button_4 = false;
         seconds = 0;
         fileIndex = 0;
+        timer.detach();
         // Przełącz do następnego folderu
-        dir.close(); // Zamknij bieżący katalog
+        root.close(); // Zamknij bieżący katalog
         folderIndex = (folderIndex < directoryCount - 1) ? (folderIndex + 1) : 0;
         folder = directories[folderIndex];
-        dir = SD.open(folder); // Otwórz nowy katalog
+        root = SD.open(folder); // Otwórz nowy katalog
         break;                 // Wyjdź z pętli
       }     
 
@@ -1114,7 +1132,7 @@ void playFromSelectedFolder()
     }
   }
 
-  dir.close();
+  root.close();
 }
 
 
