@@ -81,14 +81,14 @@ bool button_1 = false;    // Zmienna określająca stan przycisku 1
 bool button_2 = false;    // Zmienna określająca stan przycisku 2
 bool button_3 = false;    // Zmienna określająca stan przycisku 3
 bool button_4 = false;    // Zmienna określająca stan przycisku 4
-bool encoderButton1 = false;
-bool encoderButton2 = false;
-bool wifiConfig = false;   // Zmienna, która jest ustawiana na true po wykonaniu konfiguracji, aby włączyć moduł Wi-Fi i połączyć się z siecią.
-bool endFile = false;  // Flaga końca odtwarzania pliku audio
-bool displayActive = false;   // Flaga określająca, czy wyświetlacz jest aktywny.
-bool isPlaying = false;
-bool mp3 = false;
-bool flac = false;
+bool encoderButton1 = false;  // Flaga określająca, czy przycisk enkodera 1 został wciśnięty
+bool encoderButton2 = false;  // Flaga określająca, czy przycisk enkodera 2 został wciśnięty
+bool wifiConfig = false;      // Zmienna, która jest ustawiana na true po wykonaniu konfiguracji, aby włączyć moduł Wi-Fi i połączyć się z siecią
+bool endFile = false;         // Flaga sygnalizująca koniec odtwarzania pliku audio
+bool displayActive = false;   // Flaga określająca, czy wyświetlacz jest aktywny
+bool isPlaying = false;       // Flaga określająca, czy obecnie trwa odtwarzanie
+bool mp3 = false;             // Flaga określająca, czy aktualny plik audio jest w formacie MP3
+bool flac = false;            // Flaga określająca, czy aktualny plik audio jest w formacie FLAC
 unsigned long lastDebounceTime_S1 = 0;    // Czas ostatniego debouncingu dla przycisku S1.
 unsigned long lastDebounceTime_S2 = 0;    // Czas ostatniego debouncingu dla przycisku S2.
 unsigned long lastDebounceTime_S3 = 0;    // Czas ostatniego debouncingu dla przycisku S3.
@@ -297,39 +297,67 @@ void fetchStationsFromServer()
   // Utwórz obiekt klienta HTTP
   HTTPClient http;
 
+  // URL stacji dla danego banku
+  String url;
+
+  // Wybierz URL na podstawie bank_nr za pomocą switch
+  switch (bank_nr)
+  {
+    case 1:
+      url = STATIONS_URL;
+      break;
+    case 2:
+      url = STATIONS_URL1;
+      break;
+    case 3:
+      url = STATIONS_URL2;
+      break;
+    case 4:
+      url = STATIONS_URL3;
+      break;
+    case 5:
+      url = STATIONS_URL4;
+      break;
+    case 6:
+      url = STATIONS_URL5;
+      break;
+    case 7:
+      url = STATIONS_URL6;
+      break;
+    case 8:
+      url = STATIONS_URL7;
+      break;
+    case 9:
+      url = STATIONS_URL8;
+      break;
+    case 10:
+      url = STATIONS_URL9;
+      break;
+    case 11:
+      url = STATIONS_URL10;
+      break;
+    case 12:
+      url = STATIONS_URL11;
+      break;
+    case 13:
+      url = STATIONS_URL12;
+      break;
+    case 14:
+      url = STATIONS_URL13;
+      break;
+    case 15:
+      url = STATIONS_URL14;
+      break;
+    case 16:
+      url = STATIONS_URL15;
+      break;
+    default:
+      Serial.println("Nieprawidłowy numer banku.");
+      return;
+  }
+
   // Inicjalizuj żądanie HTTP do podanego adresu URL
-  if(bank_nr == 1)
-    http.begin(STATIONS_URL);
-  if(bank_nr == 2)
-    http.begin(STATIONS_URL1);
-  if(bank_nr == 3)
-    http.begin(STATIONS_URL2);
-  if(bank_nr == 4)
-    http.begin(STATIONS_URL3);
-  if(bank_nr == 5)
-    http.begin(STATIONS_URL4);
-  if(bank_nr == 6)
-    http.begin(STATIONS_URL5);
-  if(bank_nr == 7)
-    http.begin(STATIONS_URL6);
-  if(bank_nr == 8)
-    http.begin(STATIONS_URL7);
-  if(bank_nr == 9)
-    http.begin(STATIONS_URL8);
-  if(bank_nr == 10)
-    http.begin(STATIONS_URL9);
-  if(bank_nr == 11)
-    http.begin(STATIONS_URL10);
-  if(bank_nr == 12)
-    http.begin(STATIONS_URL11);
-  if(bank_nr == 13)
-    http.begin(STATIONS_URL12);
-  if(bank_nr == 14)
-    http.begin(STATIONS_URL13);
-  if(bank_nr == 15)
-    http.begin(STATIONS_URL14);
-  if(bank_nr == 16)
-    http.begin(STATIONS_URL15);  
+  http.begin(url);
 
   // Wykonaj żądanie GET i zapisz kod odpowiedzi HTTP
   int httpCode = http.GET();
