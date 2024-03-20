@@ -1,36 +1,36 @@
 
-#include "Arduino.h"    //Standardowy nagłówek Arduino, który dostarcza podstawowe funkcje i definicje
-#include "WiFiMulti.h"    //Biblioteka do obsługi wielu połączeń WiFi
-#include "Audio.h"    //Biblioteka do obsługi funkcji związanych z dźwiękiem i audio
-#include "SPI.h"    //Biblioteka do obsługi komunikacji SPI
-#include "SD.h"   //Biblioteka do obsługi kart SD
-#include "FS.h"   //Biblioteka do obsługi systemu plików
-#include <Adafruit_SH110X.h>    //Biblioteka do obsługi wyświetlaczy OLED z kontrolerem SH1106
-#include <ezButton.h>  // Biblioteka do obsługi enkodera z przyciskiem
-#include <HTTPClient.h>   //Biblioteka do wykonywania żądań HTTP
-#include <EEPROM.h>   //Biblioteka do obsługi pamięci EEPROM
-#include <Ticker.h>   // Mechanizm tickera (do odświeżania)
-#include <algorithm>   // Standardowa biblioteka C++ do manipulacji danymi
+#include "Arduino.h"              // Standardowy nagłówek Arduino, który dostarcza podstawowe funkcje i definicje
+#include "WiFiMulti.h"            // Biblioteka do obsługi wielu połączeń WiFi
+#include "Audio.h"                // Biblioteka do obsługi funkcji związanych z dźwiękiem i audio
+#include "SPI.h"                  // Biblioteka do obsługi komunikacji SPI
+#include "SD.h"                   // Biblioteka do obsługi kart SD
+#include "FS.h"                   // Biblioteka do obsługi systemu plików
+#include <Adafruit_SH110X.h>      // Biblioteka do obsługi wyświetlaczy OLED z kontrolerem SH1106
+#include <ezButton.h>             // Biblioteka do obsługi enkodera z przyciskiem
+#include <HTTPClient.h>           // Biblioteka do wykonywania żądań HTTP
+#include <EEPROM.h>               // Biblioteka do obsługi pamięci EEPROM
+#include <Ticker.h>               // Mechanizm tickera (do odświeżania)
+#include <algorithm>              // Standardowa biblioteka C++ do manipulacji danymi
 
-#define SD_CS         47  // Pin CS (Chip Select) do komunikacji z kartą SD, wybierany jako interfejs SPI
-#define SPI_MOSI      48  // Pin MOSI (Master Out Slave In) dla interfejsu SPI
-#define SPI_MISO      0  // Pin MISO (Master In Slave Out) dla interfejsu SPI
-#define SPI_SCK       45  // Pin SCK (Serial Clock) dla interfejsu SPI
-#define I2S_DOUT      13 // połączenie do pinu DIN na DAC
-#define I2S_BCLK      12 // połączenie po pinu BCK na DAC
-#define I2S_LRC       14 // połączenie do pinu LCK na DAC
-#define i2c_Address 0x3C // inicjalizacja wyświetlacza
-#define SCREEN_WIDTH 128 // OLED display width, in pixels
-#define SCREEN_HEIGHT 64 // OLED display height, in pixels
-#define OLED_RESET -1  // Pin resetu dla wyświetlacza OLED, -1 oznacza brak fizycznego podłączenia pinu resetu
-#define CLK_PIN1 6  // Podłączenie z pinu 6 do CLK na enkoderze prawym
-#define DT_PIN1  5  // Podłączenie z pinu 5 do DT na enkoderze prawym
-#define SW_PIN1  4  // Podłączenie z pinu 4 do SW na enkoderze prawym (przycisk)
-#define CLK_PIN2 10  // Podłączenie z pinu 10 do CLK na enkoderze
-#define DT_PIN2  11  // Podłączenie z pinu 11 do DT na enkoderze lewym
-#define SW_PIN2  1  // Podłączenie z pinu 1 do SW na enkoderze lewym (przycisk)
-#define MAX_STATIONS 100    // Maksymalna liczba stacji radiowych, które mogą być przechowywane w jednym banku
-#define MAX_LINK_LENGTH 100   // Maksymalna długość linku do stacji radiowej.
+#define SD_CS         47          // Pin CS (Chip Select) do komunikacji z kartą SD, wybierany jako interfejs SPI
+#define SPI_MOSI      48          // Pin MOSI (Master Out Slave In) dla interfejsu SPI
+#define SPI_MISO      0           // Pin MISO (Master In Slave Out) dla interfejsu SPI
+#define SPI_SCK       45          // Pin SCK (Serial Clock) dla interfejsu SPI
+#define I2S_DOUT      13          // połączenie do pinu DIN na DAC
+#define I2S_BCLK      12          // połączenie po pinu BCK na DAC
+#define I2S_LRC       14          // połączenie do pinu LCK na DAC
+#define i2c_Address 0x3C          // inicjalizacja wyświetlacza
+#define SCREEN_WIDTH 128          // OLED display width, in pixels
+#define SCREEN_HEIGHT 64          // OLED display height, in pixels
+#define OLED_RESET -1             // Pin resetu dla wyświetlacza OLED, -1 oznacza brak fizycznego podłączenia pinu resetu
+#define CLK_PIN1 6                // Podłączenie z pinu 6 do CLK na enkoderze prawym
+#define DT_PIN1  5                // Podłączenie z pinu 5 do DT na enkoderze prawym
+#define SW_PIN1  4                // Podłączenie z pinu 4 do SW na enkoderze prawym (przycisk)
+#define CLK_PIN2 10               // Podłączenie z pinu 10 do CLK na enkoderze
+#define DT_PIN2  11               // Podłączenie z pinu 11 do DT na enkoderze lewym
+#define SW_PIN2  1                // Podłączenie z pinu 1 do SW na enkoderze lewym (przycisk)
+#define MAX_STATIONS 100          // Maksymalna liczba stacji radiowych, które mogą być przechowywane w jednym banku
+#define MAX_LINK_LENGTH 100       // Maksymalna długość linku do stacji radiowej.
 #define STATIONS_URL "https://raw.githubusercontent.com/sarunia/ESP32_stream/main/ulubione"    // Adres URL do pliku z listą stacji radiowych.
 #define STATIONS_URL1 "https://raw.githubusercontent.com/sarunia/ESP32_stream/main/lista1"    // Adres URL do pliku z listą stacji radiowych.
 #define STATIONS_URL2 "https://raw.githubusercontent.com/sarunia/ESP32_stream/main/lista2"    // Adres URL do pliku z listą stacji radiowych.
