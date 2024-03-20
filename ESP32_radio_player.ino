@@ -31,27 +31,27 @@
 #define SW_PIN2  1                // Podłączenie z pinu 1 do SW na enkoderze lewym (przycisk)
 #define MAX_STATIONS 100          // Maksymalna liczba stacji radiowych, które mogą być przechowywane w jednym banku
 #define MAX_LINK_LENGTH 100       // Maksymalna długość linku do stacji radiowej.
-#define STATIONS_URL "https://raw.githubusercontent.com/sarunia/ESP32_stream/main/ulubione"    // Adres URL do pliku z listą stacji radiowych.
-#define STATIONS_URL1 "https://raw.githubusercontent.com/sarunia/ESP32_stream/main/lista1"    // Adres URL do pliku z listą stacji radiowych.
-#define STATIONS_URL2 "https://raw.githubusercontent.com/sarunia/ESP32_stream/main/lista2"    // Adres URL do pliku z listą stacji radiowych.
-#define STATIONS_URL3 "https://raw.githubusercontent.com/sarunia/ESP32_stream/main/lista3"    // Adres URL do pliku z listą stacji radiowych.
-#define STATIONS_URL4 "https://raw.githubusercontent.com/sarunia/ESP32_stream/main/lista4"    // Adres URL do pliku z listą stacji radiowych.
-#define STATIONS_URL5 "https://raw.githubusercontent.com/sarunia/ESP32_stream/main/lista5"    // Adres URL do pliku z listą stacji radiowych.
-#define STATIONS_URL6 "https://raw.githubusercontent.com/sarunia/ESP32_stream/main/lista6"    // Adres URL do pliku z listą stacji radiowych.
-#define STATIONS_URL7 "https://raw.githubusercontent.com/sarunia/ESP32_stream/main/lista7"    // Adres URL do pliku z listą stacji radiowych.
-#define STATIONS_URL8 "https://raw.githubusercontent.com/sarunia/ESP32_stream/main/lista8"    // Adres URL do pliku z listą stacji radiowych.
-#define STATIONS_URL9 "https://raw.githubusercontent.com/sarunia/ESP32_stream/main/lista9"    // Adres URL do pliku z listą stacji radiowych.
-#define STATIONS_URL10 "https://raw.githubusercontent.com/sarunia/ESP32_stream/main/lista10"    // Adres URL do pliku z listą stacji radiowych.
-#define STATIONS_URL11 "https://raw.githubusercontent.com/sarunia/ESP32_stream/main/lista11"    // Adres URL do pliku z listą stacji radiowych.
-#define STATIONS_URL12 "https://raw.githubusercontent.com/sarunia/ESP32_stream/main/lista12"    // Adres URL do pliku z listą stacji radiowych.
-#define STATIONS_URL13 "https://raw.githubusercontent.com/sarunia/ESP32_stream/main/lista13"    // Adres URL do pliku z listą stacji radiowych.
-#define STATIONS_URL14 "https://raw.githubusercontent.com/sarunia/ESP32_stream/main/lista14"    // Adres URL do pliku z listą stacji radiowych.
-#define STATIONS_URL15 "https://raw.githubusercontent.com/sarunia/ESP32_stream/main/lista15"    // Adres URL do pliku z listą stacji radiowych.
-#define LICZNIK_S1 17   // Numer pinu dla enkodera/licznika S1
-#define LICZNIK_S2 18   // Numer pinu dla enkodera/licznika S2
-#define LICZNIK_S3 15   // Numer pinu dla enkodera/licznika S3
-#define LICZNIK_S4 16   // Numer pinu dla enkodera/licznika S4
-#define MAX_FILES 100  // Maksymalna liczba plików lub katalogów w tablicy directories
+#define STATIONS_URL    "https://raw.githubusercontent.com/sarunia/ESP32_stream/main/ulubione"    // Adres URL do pliku z listą stacji radiowych.
+#define STATIONS_URL1   "https://raw.githubusercontent.com/sarunia/ESP32_stream/main/lista1"      // Adres URL do pliku z listą stacji radiowych.
+#define STATIONS_URL2   "https://raw.githubusercontent.com/sarunia/ESP32_stream/main/lista2"      // Adres URL do pliku z listą stacji radiowych.
+#define STATIONS_URL3   "https://raw.githubusercontent.com/sarunia/ESP32_stream/main/lista3"      // Adres URL do pliku z listą stacji radiowych.
+#define STATIONS_URL4   "https://raw.githubusercontent.com/sarunia/ESP32_stream/main/lista4"      // Adres URL do pliku z listą stacji radiowych.
+#define STATIONS_URL5   "https://raw.githubusercontent.com/sarunia/ESP32_stream/main/lista5"      // Adres URL do pliku z listą stacji radiowych.
+#define STATIONS_URL6   "https://raw.githubusercontent.com/sarunia/ESP32_stream/main/lista6"      // Adres URL do pliku z listą stacji radiowych.
+#define STATIONS_URL7   "https://raw.githubusercontent.com/sarunia/ESP32_stream/main/lista7"      // Adres URL do pliku z listą stacji radiowych.
+#define STATIONS_URL8   "https://raw.githubusercontent.com/sarunia/ESP32_stream/main/lista8"      // Adres URL do pliku z listą stacji radiowych.
+#define STATIONS_URL9   "https://raw.githubusercontent.com/sarunia/ESP32_stream/main/lista9"      // Adres URL do pliku z listą stacji radiowych.
+#define STATIONS_URL10  "https://raw.githubusercontent.com/sarunia/ESP32_stream/main/lista10"     // Adres URL do pliku z listą stacji radiowych.
+#define STATIONS_URL11  "https://raw.githubusercontent.com/sarunia/ESP32_stream/main/lista11"     // Adres URL do pliku z listą stacji radiowych.
+#define STATIONS_URL12  "https://raw.githubusercontent.com/sarunia/ESP32_stream/main/lista12"     // Adres URL do pliku z listą stacji radiowych.
+#define STATIONS_URL13  "https://raw.githubusercontent.com/sarunia/ESP32_stream/main/lista13"     // Adres URL do pliku z listą stacji radiowych.
+#define STATIONS_URL14  "https://raw.githubusercontent.com/sarunia/ESP32_stream/main/lista14"     // Adres URL do pliku z listą stacji radiowych.
+#define STATIONS_URL15  "https://raw.githubusercontent.com/sarunia/ESP32_stream/main/lista15"     // Adres URL do pliku z listą stacji radiowych.
+#define LICZNIK_S1 17             // Numer pinu dla enkodera/licznika S1
+#define LICZNIK_S2 18             // Numer pinu dla enkodera/licznika S2
+#define LICZNIK_S3 15             // Numer pinu dla enkodera/licznika S3
+#define LICZNIK_S4 16             // Numer pinu dla enkodera/licznika S4
+#define MAX_FILES 100             // Maksymalna liczba plików lub katalogów w tablicy directories
 
 int directoryCount = 0; // Licznik katalogów
 int currentFile = 0;  // Numer bieżącego pliku
