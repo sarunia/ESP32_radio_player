@@ -1195,6 +1195,8 @@ void printToOLED()
         // Ogranicz długość do 21 znaków
         String displayedPath = fullPath.substring(currentDirectory.length(), currentDirectory.length() + 21);
 
+        processText(displayedPath);
+
         // Podświetlenie zaznaczenia
         if (i == currentSelection)
         {
