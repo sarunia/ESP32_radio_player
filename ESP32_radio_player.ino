@@ -631,8 +631,8 @@ void audio_id3data(const char *info)
     artistString = String(info).substring(artistIndex + 8, String(info).indexOf('\n', artistIndex));
     Serial.println("Znalazłem artystę: " + artistString);
 
-    // Drukowanie bajtów w formacie "0x" w jednej linii
-    for (int i = 0; i < artistString.length(); i++) {
+    // Pomocnicza pętla w celu wyłapania bajtów artistString na serial terminalu 
+    /*for (int i = 0; i < artistString.length(); i++) {
       Serial.print("0x");
       if (artistString[i] < 0x10) {
         Serial.print("0"); // Dodaj zero przed pojedynczymi cyframi w formacie hex
@@ -640,7 +640,8 @@ void audio_id3data(const char *info)
       Serial.print(artistString[i], HEX); // Drukowanie znaku jako wartość hex
       Serial.print(" "); // Dodanie spacji po każdym bajcie
     }
-    Serial.println(); // Nowa linia po zakończeniu drukowania bajtów
+    Serial.println(); // Nowa linia po zakończeniu drukowania bajtów*/
+
     processText(artistString);
 
   }
@@ -655,8 +656,9 @@ void audio_id3data(const char *info)
     // Przytnij tekst od pozycji "Title: " do końca linii
     titleString = String(info).substring(titleIndex + 7, String(info).indexOf('\n', titleIndex));
     Serial.println("Znalazłem tytuł: " + titleString);
-    // Drukowanie bajtów w formacie "0x" w jednej linii
-    for (int i = 0; i < titleString.length(); i++) {
+
+    // Pomocnicza pętla w celu wyłapania bajtów titleString na serial terminalu 
+    /*for (int i = 0; i < titleString.length(); i++) {
       Serial.print("0x");
       if (titleString[i] < 0x10) {
         Serial.print("0"); // Dodaj zero przed pojedynczymi cyframi w formacie hex
@@ -664,7 +666,7 @@ void audio_id3data(const char *info)
       Serial.print(titleString[i], HEX); // Drukowanie znaku jako wartość hex
       Serial.print(" "); // Dodanie spacji po każdym bajcie
     }
-    Serial.println(); // Nowa linia po zakończeniu drukowania bajtów
+    Serial.println(); // Nowa linia po zakończeniu drukowania bajtów*/
 
     processText(titleString);
 
@@ -724,7 +726,9 @@ void audio_showstreamtitle(const char *info)
     stationString = stationString.substring(0, 62); // Ogranicz długość tekstu do 63 znaków dla wyświetlacza OLED
   }
 
-  for (int i = 0; i < stationString.length(); i++)  // Pętla iteruje przez każdy znak w `stationString`
+
+  // Pomocnicza pętla w celu wyłapania bajtów stationString na serial terminalu 
+  /*for (int i = 0; i < stationString.length(); i++)  // Pętla iteruje przez każdy znak w `stationString`
   {
     Serial.print("0x"); // Wyświetla prefiks "0x" przed wartością heksadecymalną
     if (stationString[i] < 0x10)
@@ -734,7 +738,7 @@ void audio_showstreamtitle(const char *info)
     Serial.print(stationString[i], HEX); // // Wyświetla wartość znaku w formacie heksadecymalnym.
     Serial.print(" "); // Dodanie spacji po każdym bajcie
   }
-  Serial.println(); // Nowa linia po zakończeniu drukowania bajtów
+  Serial.println(); // Nowa linia po zakończeniu drukowania bajtów*/
 
   processText(stationString);   // Wywołuje funkcję `processText`, która przetwarza tekst zawarty w `stationString`
 
@@ -849,7 +853,8 @@ void printDirectoriesAndSavePaths(File dir, int numTabs, String currentPath)
           // Ogranicz długość do 21 znaków
           fullPath = fullPath.substring(1, 22);
 
-          for (int i = 0; i < fullPath.length(); i++)
+          // Pomocnicza pętla w celu wyłapania bajtów fullPath na serial terminalu 
+          /*for (int i = 0; i < fullPath.length(); i++)
           {
             Serial.print("0x");
             if (fullPath[i] < 0x10)
@@ -859,7 +864,7 @@ void printDirectoriesAndSavePaths(File dir, int numTabs, String currentPath)
             Serial.print(fullPath[i], HEX); // Drukowanie znaku jako wartość hex
             Serial.print(" "); // Dodanie spacji po każdym bajcie
           }
-          Serial.println(); // Nowa linia po zakończeniu drukowania bajtów
+          Serial.println(); // Nowa linia po zakończeniu drukowania bajtów*/
 
           processText(fullPath);
           
