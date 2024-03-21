@@ -1568,9 +1568,9 @@ void loop()
       if (currentOption == INTERNET_RADIO)
       {
         bank_nr--;
-        if (bank_nr < 0)
+        if (bank_nr < 1)
         {
-          bank_nr = 0;
+          bank_nr = 1;
         }
         station_nr = 1;
         Serial.print("Przycisk S4 został wciśnięty, bank = ");
