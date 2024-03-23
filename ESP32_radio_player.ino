@@ -76,6 +76,7 @@ int stationsCount = 0;    // Aktualna liczba przechowywanych stacji w tablicy
 int filteredDirectoriesCount = 0; // Deklaracja globalnej zmiennej przechowującej ilość przefiltrowanych folderów
 int fileIndex = 0;  // Numer aktualnie wybranego pliku audio ze wskazanego folderu
 int folderIndex = 0;  // Numer domyślnie wybranego folderu podczas przełączenia do odtwarzania z karty SD
+int totalFilesInFolder = 0; // Zmienna przechowująca łączną liczbę plików w folderze
 const int maxVisibleLines = 5;  // Maksymalna liczba widocznych linii na ekranie OLED
 bool button_1 = false;    // Flaga określająca stan przycisku 1
 bool button_2 = false;    // Flaga określająca stan przycisku 2
@@ -543,7 +544,7 @@ void audio_info(const char *info)
     display.println(sampleRateString.substring(1) + "Hz " + bitsPerSampleString + "bits");
     
     display.setCursor(0, 47);
-    display.println(bitrateString.substring(1) + "b/s  Plik " + String(fileIndex));
+    display.println(bitrateString.substring(1) + "b/s Plik " + String(fileIndex) + "/" + String(totalFilesInFolder));
     for (int y = 56; y <= 63; y++)
     {
       for (int x = 51; x < 127; x++)
@@ -621,7 +622,8 @@ void audio_id3data(const char *info)
 
   // Znajdź pozycję "Artist: " lub "ARTIST: " w tekście
   int artistIndex = String(info).indexOf("Artist: ");
-  if (artistIndex == -1) {
+  if (artistIndex == -1)
+  {
     artistIndex = String(info).indexOf("ARTIST: ");
   }
 
@@ -645,12 +647,14 @@ void audio_id3data(const char *info)
     processText(artistString);
 
   }
-
+  
   // Znajdź pozycję "Title: " lub "TITLE " w tekście
   int titleIndex = String(info).indexOf("Title: ");
-  if (titleIndex == -1) {
+  if (titleIndex == -1)
+  {
     titleIndex = String(info).indexOf("TITLE: ");
   }
+  
   if (titleIndex != -1)
   {
     // Przytnij tekst od pozycji "Title: " do końca linii
@@ -671,37 +675,27 @@ void audio_id3data(const char *info)
     processText(titleString);
 
   }
-
+  
   display.clearDisplay();
   display.setTextSize(1);
   display.setTextColor(SH110X_WHITE);
   display.setCursor(0, 0);
   display.println("   Odtwarzam plik:   ");
-  display.setCursor(0, 10);
-  /*for (int y = 9; y <= 36; y++)
+
+  if (artistString.length() > 21)
   {
-    for (int x = 0; x < 127; x++)
-    {
-      display.drawPixel(x, y, SH110X_BLACK);
-    }
-  }*/
+    artistString = artistString.substring(0, 21); // Ogranicz długość tekstu do 21 znaków dla wyświetlacza OLED
+  }
   display.setCursor(0, 10);
-  // Przycina artistString do maksymalnie 21 znaków (indeks 0-20) w celu zapewnienia,
-  // że zmieści się on na ekranie OLED. Używamy std::min, aby ograniczyć długość
-  // do wartości mniejszej spośród 21 i aktualnej długości artistString. 
-  // static_cast<int> jest używane do rzutowania wyniku na typ int.
-  artistString = artistString.substring(0, std::min(21, static_cast<int>(artistString.length())));
   display.println(artistString);
+
+  if (titleString.length() > 42)
+  {
+    titleString = titleString.substring(0, 42); // Ogranicz długość tekstu do 42 znaków dla wyświetlacza OLED
+  }
   display.setCursor(0, 19);
-  // Przycina titleString do maksymalnie 42 znaków (indeks 0-41) w celu zapewnienia,
-  // że zmieści się on na ekranie OLED. Używamy std::min, aby ograniczyć długość
-  // do wartości mniejszej spośród 42 i aktualnej długości titleString.
-  // static_cast<int> jest używane do rzutowania wyniku na typ int.
-  titleString = titleString.substring(0, std::min(42, static_cast<int>(titleString.length())));
   display.println(titleString);
   display.display();
-  // Ustaw timer, aby wywoływał funkcję updateTimer co sekundę
-  timer.attach(1, updateTimer);
 }
 
 void audio_eof_mp3(const char *info)
@@ -725,7 +719,6 @@ void audio_showstreamtitle(const char *info)
   {
     stationString = stationString.substring(0, 62); // Ogranicz długość tekstu do 63 znaków dla wyświetlacza OLED
   }
-
 
   // Pomocnicza pętla w celu wyłapania bajtów stationString na serial terminalu 
   /*for (int i = 0; i < stationString.length(); i++)  // Pętla iteruje przez każdy znak w `stationString`
@@ -903,6 +896,7 @@ void listDirectories(const char *dirname)
 // Funkcja do przewijania w górę
 void scrollUp()
 {
+  totalFilesInFolder = 0;
   if (currentSelection > 0)
   {
     currentSelection--;
@@ -917,6 +911,7 @@ void scrollUp()
 
 void scrollDown()
 {
+  totalFilesInFolder = 0;
   if (currentSelection < directoryCount - 1)
   {
     currentSelection++;
@@ -934,17 +929,31 @@ void scrollDown()
 
 void playFromSelectedFolder()
 {
+  timer.attach(1, updateTimer);   // Ustaw timer, aby wywoływał funkcję updateTimer co sekundę
   String folder = directories[folderIndex];
 
   Serial.println("Odtwarzanie plików z wybranego folderu: " + folder);
 
   File root = SD.open(folder);
 
-  if (!root)
-  {
+  if (!root) {
     Serial.println("Błąd otwarcia katalogu!");
     return;
   }
+  
+  totalFilesInFolder = 0;
+  fileIndex = 1; // Domyślnie start odtwarzania od pierwszego pliku audio w folderze
+  while (File entry = root.openNextFile())  // Zliczanie wszystkich plików audio w folderze
+  {
+    String fileName = entry.name();
+    if (isAudioFile(fileName.c_str()))
+    {
+      totalFilesInFolder++;
+      Serial.println(fileName);
+    }
+    entry.close();
+  }
+  root.rewindDirectory(); // Przewiń katalog na początek
 
   File entry;
 
@@ -953,18 +962,18 @@ void playFromSelectedFolder()
     String fileName = entry.name();
 
     // Pomijaj pliki, które nie są w zadeklarowanym formacie audio
-    if (!isAudioFile(fileName.c_str()))
-    {
+    if (!isAudioFile(fileName.c_str())) {
       Serial.println("Pominięto plik: " + fileName);
       continue;
     }
-    if (isAudioFile(fileName.c_str()))
-    {
-        fileIndex++;
-    }
 
     Serial.print("Odtwarzanie pliku: ");
+    Serial.print(fileIndex); // Numeracja pliku
+    Serial.print("/");
+    Serial.print(totalFilesInFolder); // Łączna liczba plików w folderze
+    Serial.print(" - ");
     Serial.println(fileName);
+    
 
     // Pełna ścieżka do pliku
     String fullPath = folder + "/" + fileName;
@@ -972,6 +981,8 @@ void playFromSelectedFolder()
     audio.connecttoFS(SD, fullPath.c_str());
 
     isPlaying = true;
+    
+
     // Oczekuj, aż odtwarzanie się zakończy
     while (isPlaying)
     {
@@ -983,7 +994,14 @@ void playFromSelectedFolder()
       {
         button_2 = false;
         seconds = 0;
-        isPlaying = false; // Zakończ aktualne odtwarzanie
+        isPlaying = false;
+        fileIndex++;
+        if (fileIndex > totalFilesInFolder)
+        {
+          Serial.println("To był ostatni plik w folderze");
+          folderIndex++;
+          playFromSelectedFolder();
+        }
         break;            // Wyjdź z pętli
       }
 
@@ -991,15 +1009,17 @@ void playFromSelectedFolder()
       {
         button_1 = false;
         seconds = 0;
-        // Przejdź do poprzedniego pliku, jeśli dostępny
-        fileIndex = (fileIndex > 0) ? (fileIndex - 1) : (0);
-
+        fileIndex--;
+        if (fileIndex < 1)
+        {
+          fileIndex = 1;
+        }
         // Odtwórz znaleziony plik
         root.rewindDirectory(); // Przewiń katalog na początek
         entry = root.openNextFile(); // Otwórz pierwszy plik w katalogu
 
         // Przesuń się do wybranego pliku
-        for (int i = 0; i < fileIndex; i++)
+        for (int i = 1; i < fileIndex; i++)
         {
           entry = root.openNextFile();
           if (!entry)
@@ -1007,7 +1027,7 @@ void playFromSelectedFolder()
               break; // Wyjdź, jeśli nie znaleziono pliku
           }
         }
-
+        
         // Sprawdź, czy udało się otworzyć plik
         if (entry)
         {
@@ -1019,6 +1039,12 @@ void playFromSelectedFolder()
           {
             audio.connecttoFS(SD, fullPath.c_str());
             isPlaying = true;
+            Serial.print("Odtwarzanie pliku: ");
+            Serial.print(fileIndex); // Numeracja pliku
+            Serial.print("/");
+            Serial.print(totalFilesInFolder); // Łączna liczba plików w folderze
+            Serial.print(" - ");
+            Serial.println(fileName);
           }
         }
       }
@@ -1028,8 +1054,25 @@ void playFromSelectedFolder()
       {
         button_3 = false;
         seconds = 0;
-        fileIndex = 0;
-        timer.detach();
+        fileIndex = 1;
+        totalFilesInFolder = 0;
+        for (int y = 9; y <= 36; y++)
+        {
+          for (int x = 0; x < 127; x++)
+          {
+            display.drawPixel(x, y, SH110X_BLACK);
+          }
+        }
+        // Zliczanie wszystkich plików audio w folderze
+        while (File entry = root.openNextFile()) {
+          String fileName = entry.name();
+          if (isAudioFile(fileName.c_str())) {
+            totalFilesInFolder++;
+          }
+          entry.close();
+        }
+        root.rewindDirectory(); // Przewiń katalog na początek
+        //timer.detach();
         // Przełącz do poprzedniego folderu
         root.close(); // Zamknij bieżący katalog
         folderIndex = (folderIndex > 0) ? (folderIndex - 1) : (directoryCount - 1);
@@ -1042,8 +1085,25 @@ void playFromSelectedFolder()
       {
         button_4 = false;
         seconds = 0;
-        fileIndex = 0;
-        timer.detach();
+        fileIndex = 1;
+        totalFilesInFolder = 0;
+        for (int y = 9; y <= 36; y++)
+        {
+          for (int x = 0; x < 127; x++)
+          {
+            display.drawPixel(x, y, SH110X_BLACK);
+          }
+        }
+        // Zliczanie wszystkich plików audio w folderze
+        while (File entry = root.openNextFile()) {
+          String fileName = entry.name();
+          if (isAudioFile(fileName.c_str())) {
+            totalFilesInFolder++;
+          }
+          entry.close();
+        }
+        root.rewindDirectory(); // Przewiń katalog na początek
+        //timer.detach();
         // Przełącz do następnego folderu
         root.close(); // Zamknij bieżący katalog
         folderIndex = (folderIndex < directoryCount - 1) ? (folderIndex + 1) : 0;
@@ -1119,15 +1179,13 @@ void playFromSelectedFolder()
         display.setCursor(0, 0);
         display.println("   Odtwarzam plik:   ");
         display.setCursor(0, 10);
-        artistString = artistString.substring(0, std::min(21, static_cast<int>(artistString.length())));
         display.println(artistString);
         display.setCursor(0, 19);
-        titleString = titleString.substring(0, std::min(42, static_cast<int>(titleString.length())));
         display.println(titleString);
         display.setCursor(0, 37);
         display.println(sampleRateString.substring(1) + "Hz " + bitsPerSampleString + "bits");
         display.setCursor(0, 47);
-        display.println(bitrateString.substring(1) + "b/s  Plik " + String(fileIndex));
+        display.println(bitrateString.substring(1) + "b/s Plik " + String(fileIndex) + "/" + String(totalFilesInFolder));
         for (int y = 56; y <= 63; y++)
         {
           for (int x = 51; x < 127; x++)
