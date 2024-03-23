@@ -1508,7 +1508,6 @@ void loop()
         {
           station_nr = 51;
         }
-        lastDebounceTime_S2 = millis();
         station_nr--;
         Serial.print("Przycisk S2 został wciśnięty, licznik = ");
         Serial.println(station_nr);
