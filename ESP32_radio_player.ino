@@ -1050,12 +1050,10 @@ void playFromSelectedFolder()
       }
 
 
-      if (button_3)
+      if (button_3) // Przewijanie folderów do tyłu
       {
         button_3 = false;
-        seconds = 0;
-        fileIndex = 1;
-        totalFilesInFolder = 0;
+        folderIndex--;
         for (int y = 9; y <= 36; y++)
         {
           for (int x = 0; x < 127; x++)
@@ -1063,30 +1061,15 @@ void playFromSelectedFolder()
             display.drawPixel(x, y, SH110X_BLACK);
           }
         }
-        // Zliczanie wszystkich plików audio w folderze
-        while (File entry = root.openNextFile()) {
-          String fileName = entry.name();
-          if (isAudioFile(fileName.c_str())) {
-            totalFilesInFolder++;
-          }
-          entry.close();
-        }
-        root.rewindDirectory(); // Przewiń katalog na początek
-        //timer.detach();
-        // Przełącz do poprzedniego folderu
-        root.close(); // Zamknij bieżący katalog
-        folderIndex = (folderIndex > 0) ? (folderIndex - 1) : (directoryCount - 1);
-        folder = directories[folderIndex];
-        root = SD.open(folder); // Otwórz nowy katalog
-        break;                 // Wyjdź z pętli
+        audio.stopSong();
+        timer.detach();
+        playFromSelectedFolder();
       }
 
-      if (button_4)
+      if (button_4) // Przewijanie folderów do przodu
       {
         button_4 = false;
-        seconds = 0;
-        fileIndex = 1;
-        totalFilesInFolder = 0;
+        folderIndex++;
         for (int y = 9; y <= 36; y++)
         {
           for (int x = 0; x < 127; x++)
@@ -1094,22 +1077,9 @@ void playFromSelectedFolder()
             display.drawPixel(x, y, SH110X_BLACK);
           }
         }
-        // Zliczanie wszystkich plików audio w folderze
-        while (File entry = root.openNextFile()) {
-          String fileName = entry.name();
-          if (isAudioFile(fileName.c_str())) {
-            totalFilesInFolder++;
-          }
-          entry.close();
-        }
-        root.rewindDirectory(); // Przewiń katalog na początek
-        //timer.detach();
-        // Przełącz do następnego folderu
-        root.close(); // Zamknij bieżący katalog
-        folderIndex = (folderIndex < directoryCount - 1) ? (folderIndex + 1) : 0;
-        folder = directories[folderIndex];
-        root = SD.open(folder); // Otwórz nowy katalog
-        break;                 // Wyjdź z pętli
+        audio.stopSong();
+        timer.detach();
+        playFromSelectedFolder();
       }     
 
       if (endFile == true) //Wymuszenie programowego przejścia do odtwarzania następnego pliku
