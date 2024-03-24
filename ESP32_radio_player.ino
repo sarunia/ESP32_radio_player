@@ -469,11 +469,13 @@ void audio_info(const char *info)
   if (String(info).indexOf("MP3Decoder") != -1)
   {
     mp3 = true;
+    flac = false;
   }
 
   if (String(info).indexOf("FLACDecoder") != -1)
   {
     flac = true;
+    mp3 = false;
   }
 
   if (currentOption == INTERNET_RADIO)
