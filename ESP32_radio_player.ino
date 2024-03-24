@@ -526,7 +526,6 @@ void audio_info(const char *info)
     display.setTextColor(SH110X_WHITE);
     if (noID3data == true)
     {
-      noID3data = false;
       for (int y = 9; y <= 36; y++)
       {
         for (int x = 0; x < 127; x++)
@@ -534,7 +533,7 @@ void audio_info(const char *info)
           display.drawPixel(x, y, SH110X_BLACK);
         }
       }
-      display.setCursor(0, 9);
+      display.setCursor(0, 10);
       display.println(fileNameString);
     }
     for (int y = 37; y <= 54; y++)
@@ -977,6 +976,7 @@ void playFromSelectedFolder()
     audio.connecttoFS(SD, fullPath.c_str());
 
     isPlaying = true;
+    noID3data = false;
 
     // Oczekuj, aż odtwarzanie się zakończy
     while (isPlaying)
@@ -1145,10 +1145,20 @@ void playFromSelectedFolder()
         display.setTextColor(SH110X_WHITE);
         display.setCursor(0, 0);
         display.println("   Odtwarzam plik:   ");
-        display.setCursor(0, 10);
-        display.println(artistString);
-        display.setCursor(0, 19);
-        display.println(titleString);
+        
+        if (noID3data == true)
+        {
+          display.setCursor(0, 10);
+          display.println(fileNameString);
+        }
+        else
+        {
+          display.setCursor(0, 10);
+          display.println(artistString);
+          display.setCursor(0, 19);
+          display.println(titleString);
+        }
+        
         display.setCursor(0, 37);
         display.println(sampleRateString.substring(1) + "Hz " + bitsPerSampleString + "bit");
         display.setCursor(0, 47);
