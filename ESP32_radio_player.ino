@@ -482,23 +482,11 @@ void audio_info(const char *info)
   if (String(info).indexOf("MP3Decoder") != -1)
   {
     mp3 = true;
-    /*display.setTextSize(1);
-    display.setTextColor(SH110X_WHITE);
-    display.setCursor(100, 37);
-    display.println("MP3");
-    display.display();
-    Serial.println("To jest grane MP3");*/
   }
 
   if (String(info).indexOf("FLACDecoder") != -1)
   {
     flac = true;
-    /*display.setTextSize(1);
-    display.setTextColor(SH110X_WHITE);
-    display.setCursor(100, 37);
-    display.println("FLAC");
-    display.display();
-    Serial.println("To jest grane FLAC");*/
   }
 
   if (currentOption == INTERNET_RADIO)
@@ -513,7 +501,7 @@ void audio_info(const char *info)
       }
     }
     display.setCursor(0, 37);
-    display.println(sampleRateString.substring(1) + "Hz " + bitsPerSampleString + "bits");
+    display.println(sampleRateString.substring(1) + "Hz " + bitsPerSampleString + "bit");
     
     display.setCursor(0, 47);
     display.println(bitrateString.substring(1) + "b/s  Bank " + String(bank_nr));
@@ -541,7 +529,7 @@ void audio_info(const char *info)
       }
     }
     display.setCursor(0, 37);
-    display.println(sampleRateString.substring(1) + "Hz " + bitsPerSampleString + "bits");
+    display.println(sampleRateString.substring(1) + "Hz " + bitsPerSampleString + "bit");
     
     display.setCursor(0, 47);
     display.println(bitrateString.substring(1) + "b/s Plik " + String(fileIndex) + "/" + String(totalFilesInFolder));
@@ -1160,7 +1148,7 @@ void playFromSelectedFolder()
         display.setCursor(0, 19);
         display.println(titleString);
         display.setCursor(0, 37);
-        display.println(sampleRateString.substring(1) + "Hz " + bitsPerSampleString + "bits");
+        display.println(sampleRateString.substring(1) + "Hz " + bitsPerSampleString + "bit");
         display.setCursor(0, 47);
         display.println(bitrateString.substring(1) + "b/s Plik " + String(fileIndex) + "/" + String(totalFilesInFolder));
         for (int y = 56; y <= 63; y++)
@@ -1282,20 +1270,31 @@ void updateTimer()
     }
   }
 
-  // Wyświetaj czas 
-  display.setCursor(0, 56);
-
   // Formatuj czas jako "mm:ss"
   char timeString[10];
   snprintf(timeString, sizeof(timeString), "%02um:%02us", minutes, remainingSeconds);
 
-  // Wydrukuj czas na ekranie OLED
+  if (seconds == 2)
+  {
+    if (mp3 == true)
+    {
+      mp3 = false;
+      display.setCursor(100, 37);
+      display.println("MP3");
+    }
+    if (flac == true)
+    {
+      flac = false;
+      display.setCursor(100, 37);
+      display.println("FLAC");
+    }
+  }
+  // Wyświetaj czas 
+  display.setCursor(0, 56);
   display.print(timeString);
   display.display();
 
 }
-
-
 
 void setup()
 {
@@ -1455,7 +1454,7 @@ void loop()
     }
 
     display.setCursor(0, 37);
-    display.println(sampleRateString.substring(1) + "Hz " + bitsPerSampleString + "bits");
+    display.println(sampleRateString.substring(1) + "Hz " + bitsPerSampleString + "bit");
     
     display.setCursor(0, 47);
     display.println(bitrateString.substring(1) + "b/s  Bank " + String(bank_nr));
