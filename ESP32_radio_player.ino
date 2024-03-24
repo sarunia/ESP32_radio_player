@@ -555,6 +555,8 @@ void audio_info(const char *info)
     display.setCursor(66, 56);
     display.println("Folder " + String(folderIndex));
     display.display();
+    timer.attach(1, updateTimer);   // Ustaw timer, aby wywoływał funkcję updateTimer co sekundę
+    seconds = 0;
   }
 
 }
@@ -929,7 +931,7 @@ void scrollDown()
 
 void playFromSelectedFolder()
 {
-  timer.attach(1, updateTimer);   // Ustaw timer, aby wywoływał funkcję updateTimer co sekundę
+  
   String folder = directories[folderIndex];
 
   Serial.println("Odtwarzanie plików z wybranego folderu: " + folder);
@@ -981,7 +983,6 @@ void playFromSelectedFolder()
     audio.connecttoFS(SD, fullPath.c_str());
 
     isPlaying = true;
-    
 
     // Oczekuj, aż odtwarzanie się zakończy
     while (isPlaying)
@@ -993,7 +994,6 @@ void playFromSelectedFolder()
       if (button_2) //Przejście do kolejnego pliku w folderze
       {
         button_2 = false;
-        seconds = 0;
         isPlaying = false;
         fileIndex++;
         if (fileIndex > totalFilesInFolder)
@@ -1008,7 +1008,6 @@ void playFromSelectedFolder()
       if (button_1) //Przejście do poprzedniego pliku w folderze
       {
         button_1 = false;
-        seconds = 0;
         fileIndex--;
         if (fileIndex < 1)
         {
@@ -1054,6 +1053,10 @@ void playFromSelectedFolder()
       {
         button_3 = false;
         folderIndex--;
+        if (folderIndex < 1)
+        {
+          folderIndex = 1;
+        }
         for (int y = 9; y <= 36; y++)
         {
           for (int x = 0; x < 127; x++)
@@ -1070,6 +1073,10 @@ void playFromSelectedFolder()
       {
         button_4 = false;
         folderIndex++;
+        if (folderIndex > filteredDirectoriesCount)
+        {
+          folderIndex = 1;
+        }
         for (int y = 9; y <= 36; y++)
         {
           for (int x = 0; x < 127; x++)
@@ -1177,7 +1184,6 @@ void playFromSelectedFolder()
       if (button1.isPressed())
       {
         encoderButton1 = true;
-        seconds = 0;
         display.clearDisplay();
         audio.stopSong();
         timer.detach();
