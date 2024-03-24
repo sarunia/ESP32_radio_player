@@ -108,7 +108,6 @@ String sampleRateString;      // Zmienna przechowująca informację o sample rat
 String bitsPerSampleString;   // Zmienna przechowująca informację o liczbie bitów na próbkę
 String artistString;         // Zmienna przechowująca informację o wykonawcy
 String titleString;      // Zmienna przechowująca informację o tytule utworu
-String path;  // Zmienna przechowująca ścieżkę dostępu do pliku
 
 Adafruit_SH1106G display = Adafruit_SH1106G(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);    //Inicjalizacja obiektu wyświetlacza OLED
 ezButton button1(SW_PIN1);  // Utworzenie obiektu przycisku z enkodera 1 ezButton, podłączonego do pinu 4
@@ -119,7 +118,6 @@ Ticker timer;  // Obiekt do obsługi timera
 String ssid =     "brakdostepu";
 String password = "malinowykrul1977comeback";
 char stations[MAX_STATIONS][MAX_LINK_LENGTH + 1];   // Tablica przechowująca linki do stacji radiowych (jedna na stację) +1 dla terminatora null.
-
 
 enum MenuOption
 {
@@ -134,7 +132,6 @@ bool isAudioFile(const char *filename)
   return (strstr(filename, ".mp3") || strstr(filename, ".MP3") || strstr(filename, ".wav") || strstr(filename, ".WAV") || strstr(filename, ".flac") || strstr(filename, ".FLAC"));
 }
 
-
 void IRAM_ATTR zlicz_S1() // funkcja obsługi przerwania z przycisku S1
 {  
   if ((millis() - lastDebounceTime_S1) > debounceDelay)
@@ -143,8 +140,6 @@ void IRAM_ATTR zlicz_S1() // funkcja obsługi przerwania z przycisku S1
     button_1 = true;
   }
 }
-
-
 
 void IRAM_ATTR zlicz_S2() // funkcja obsługi przerwania z przycisku S2
 {    
@@ -155,7 +150,6 @@ void IRAM_ATTR zlicz_S2() // funkcja obsługi przerwania z przycisku S2
   }
 }
 
-
 void IRAM_ATTR zlicz_S3() // funkcja obsługi przerwania z przycisku S3
 {  
   if ((millis() - lastDebounceTime_S3) > debounceDelay)
@@ -165,8 +159,6 @@ void IRAM_ATTR zlicz_S3() // funkcja obsługi przerwania z przycisku S3
   }
 }
 
-
-
 void IRAM_ATTR zlicz_S4() // funkcja obsługi przerwania z przycisku S4
 {    
   if ((millis() - lastDebounceTime_S4) > debounceDelay)
@@ -175,7 +167,6 @@ void IRAM_ATTR zlicz_S4() // funkcja obsługi przerwania z przycisku S4
     button_4 = true;
   }
 }
-
 
 //Funkcja odpowiedzialna za zapisywanie informacji o stacji do pamięci EEPROM.
 void saveStationToEEPROM(const char* station)
@@ -218,7 +209,6 @@ void saveStationToEEPROM(const char* station)
   }
 }
 
-
 //Funkcja odpowiedzialna za odczyt i wyświetlenie informacji o zapisanych stacjach z pamięci EEPROM
 void readStationsFromEEPROM()
 {   
@@ -244,7 +234,6 @@ void readStationsFromEEPROM()
     Serial.printf("[%d] %s\n", i + 1, station);
   }
 }
-
 
 // Funkcja odpowiedzialna za zmianę aktualnie wybranej stacji radiowej.
 void changeStation()
@@ -450,7 +439,6 @@ void wifi_setup()
   wifiConfig = true; // ustawiono konfig wifi
 }
 
-
 void audio_info(const char *info)
 {
   // Wyświetl informacje w konsoli szeregowej
@@ -602,7 +590,6 @@ void processText(String &text)
     }
   }
 }
-
 
 void audio_id3data(const char *info)
 {
@@ -787,7 +774,6 @@ void displayMenu()
   display.display();
 }
 
-
 void printDirectoriesAndSavePaths(File dir, int numTabs, String currentPath)
 {
   directoryCount = 0;
@@ -856,14 +842,10 @@ void printDirectoriesAndSavePaths(File dir, int numTabs, String currentPath)
           // Wydrukuj skróconą ścieżkę na ekranie OLED
           display.print(fullPath);
         }
-        
-
       }
-      
       // Wyświetl aktualny stan ekranu OLED
       display.display();
     }
-    
     // Zamknij plik
     entry.close();
   }
@@ -913,9 +895,6 @@ void scrollDown()
   }
 }
 
-
-
-
 void playFromSelectedFolder()
 {
   
@@ -963,7 +942,6 @@ void playFromSelectedFolder()
     Serial.print(" - ");
     Serial.println(fileName);
     
-
     // Pełna ścieżka do pliku
     String fullPath = folder + "/" + fileName;
     // Odtwarzaj plik
@@ -1035,7 +1013,6 @@ void playFromSelectedFolder()
         }
       }
 
-
       if (button_3) // Przewijanie folderów do tyłu
       {
         button_3 = false;
@@ -1082,7 +1059,6 @@ void playFromSelectedFolder()
         button_2 = true;
       }
 
-
       CLK_state1 = digitalRead(CLK_PIN1);
       if (CLK_state1 != prev_CLK_state1 && CLK_state1 == HIGH)
       {
@@ -1126,8 +1102,6 @@ void playFromSelectedFolder()
         }
       }
       prev_CLK_state1 = CLK_state1;
-
-      
 
       if (displayActive && (millis() - displayStartTime >= displayTimeout))   // Przywracanie poprzedniej zawartości ekranu po 5 sekundach
       {
@@ -1185,11 +1159,8 @@ void playFromSelectedFolder()
       break;
     }
   }
-
   root.close();
 }
-
-
 
 // Funkcja do drukowania na ekranie OLED z uwzględnieniem zaznaczenia
 void printToOLED()
@@ -1240,12 +1211,10 @@ void printToOLED()
       }
     }
   }
-
   // Przywróć domyślne kolory tekstu
   display.setTextColor(SH110X_WHITE);
   display.display();
 }
-
 
 void updateTimer()
 {
@@ -1292,7 +1261,6 @@ void updateTimer()
   display.setCursor(0, 56);
   display.print(timeString);
   display.display();
-
 }
 
 void setup()
@@ -1434,7 +1402,6 @@ void loop()
   }
   prev_CLK_state2 = CLK_state2;
 
-
   if (displayActive && (millis() - displayStartTime >= displayTimeout))   // Przywracanie poprzedniej zawartości ekranu po 5 sekundach
   {
     display.clearDisplay();
@@ -1470,8 +1437,6 @@ void loop()
     displayActive = false;
   }
   
-  
-
   if (button1.isPressed())  //Przycisk enkodera prawego wciśnięty
   {
     display.clearDisplay();
@@ -1506,7 +1471,6 @@ void loop()
       changeStation();
     }
   }
-
 
   // Obsługa przycisku S1
   if (button_1)
@@ -1548,8 +1512,7 @@ void loop()
     }
   }
 
-
-    // Obsługa przycisku S3
+  // Obsługa przycisku S3
   if (button_3)
   {
     if ((millis() - lastDebounceTime_S3) > debounceDelay)
@@ -1630,6 +1593,4 @@ void loop()
       }
     }
   }
-  
-  
 }
