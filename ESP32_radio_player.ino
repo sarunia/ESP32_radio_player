@@ -73,7 +73,7 @@ int licznik_S2 = 0;  // Licznik dla przycisku S2
 int licznik_S3 = 0;  // Licznik dla przycisku S3
 int licznik_S4 = 0;  // Licznik dla przycisku S4
 int stationsCount = 0;    // Aktualna liczba przechowywanych stacji w tablicy
-int filteredDirectoriesCount = 0; // Deklaracja globalnej zmiennej przechowującej ilość przefiltrowanych folderów
+int foldersCount = 0; // Liczba znalezionych folderow na karcie SD
 int fileIndex = 0;  // Numer aktualnie wybranego pliku audio ze wskazanego folderu
 int folderIndex = 0;  // Numer domyślnie wybranego folderu podczas przełączenia do odtwarzania z karty SD
 int totalFilesInFolder = 0; // Zmienna przechowująca łączną liczbę plików w folderze
@@ -109,7 +109,6 @@ String bitsPerSampleString;   // Zmienna przechowująca informację o liczbie bi
 String artistString;         // Zmienna przechowująca informację o wykonawcy
 String titleString;      // Zmienna przechowująca informację o tytule utworu
 String path;  // Zmienna przechowująca ścieżkę dostępu do pliku
-File root, myFile;  // Obiekty do obsługi plików na karcie SD
 
 Adafruit_SH1106G display = Adafruit_SH1106G(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);    //Inicjalizacja obiektu wyświetlacza OLED
 ezButton button1(SW_PIN1);  // Utworzenie obiektu przycisku z enkodera 1 ezButton, podłączonego do pinu 4
@@ -1061,7 +1060,7 @@ void playFromSelectedFolder()
       {
         button_4 = false;
         folderIndex++;
-        if (folderIndex > filteredDirectoriesCount)
+        if (folderIndex > foldersCount)
         {
           folderIndex = 1;
         }
@@ -1236,8 +1235,8 @@ void printToOLED()
         // Przesuń się do kolejnego wiersza
         displayRow++;
 
-        // Zaktualizuj liczbę przefiltrowanych folderów
-        filteredDirectoriesCount++;
+        // Zaktualizuj liczbę folderów
+        foldersCount++;
       }
     }
   }
@@ -1279,13 +1278,13 @@ void updateTimer()
     if (mp3 == true)
     {
       mp3 = false;
-      display.setCursor(100, 37);
+      display.setCursor(102, 37);
       display.println("MP3");
     }
     if (flac == true)
     {
       flac = false;
-      display.setCursor(100, 37);
+      display.setCursor(102, 37);
       display.println("FLAC");
     }
   }
