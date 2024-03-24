@@ -90,6 +90,7 @@ bool displayActive = false;   // Flaga określająca, czy wyświetlacz jest akty
 bool isPlaying = false;       // Flaga określająca, czy obecnie trwa odtwarzanie
 bool mp3 = false;             // Flaga określająca, czy aktualny plik audio jest w formacie MP3
 bool flac = false;            // Flaga określająca, czy aktualny plik audio jest w formacie FLAC
+bool noID3data = false;       // Flaga określająca, czy plik audio posiada dane ID3
 unsigned long lastDebounceTime_S1 = 0;    // Czas ostatniego debouncingu dla przycisku S1.
 unsigned long lastDebounceTime_S2 = 0;    // Czas ostatniego debouncingu dla przycisku S2.
 unsigned long lastDebounceTime_S3 = 0;    // Czas ostatniego debouncingu dla przycisku S3.
@@ -108,6 +109,7 @@ String sampleRateString;      // Zmienna przechowująca informację o sample rat
 String bitsPerSampleString;   // Zmienna przechowująca informację o liczbie bitów na próbkę
 String artistString;         // Zmienna przechowująca informację o wykonawcy
 String titleString;      // Zmienna przechowująca informację o tytule utworu
+String fileNameString;  // Zmienna przechowująca informację o nazwie pliku
 
 Adafruit_SH1106G display = Adafruit_SH1106G(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);    //Inicjalizacja obiektu wyświetlacza OLED
 ezButton button1(SW_PIN1);  // Utworzenie obiektu przycisku z enkodera 1 ezButton, podłączonego do pinu 4
@@ -466,6 +468,18 @@ void audio_info(const char *info)
     bitsPerSampleString = String(info).substring(bitsPerSampleIndex + 15, String(info).indexOf('\n', bitsPerSampleIndex));
   }
 
+  // Znajdź pozycję "skip metadata" w tekście
+  int metadata = String(info).indexOf("skip metadata");
+  if (metadata != -1)
+  {
+    noID3data = true;
+    Serial.println("Brak ID3 - nazwa pliku: " + fileNameString);
+    if (fileNameString.length() > 63)
+    {
+      fileNameString = String(fileNameString).substring(0, 63);
+    }
+  }
+
   if (String(info).indexOf("MP3Decoder") != -1)
   {
     mp3 = true;
@@ -510,6 +524,19 @@ void audio_info(const char *info)
   {
     display.setTextSize(1);
     display.setTextColor(SH110X_WHITE);
+    if (noID3data == true)
+    {
+      noID3data = false;
+      for (int y = 9; y <= 36; y++)
+      {
+        for (int x = 0; x < 127; x++)
+        {
+          display.drawPixel(x, y, SH110X_BLACK);
+        }
+      }
+      display.setCursor(0, 9);
+      display.println(fileNameString);
+    }
     for (int y = 37; y <= 54; y++)
     {
       for (int x = 0; x < 127; x++)
@@ -936,7 +963,7 @@ void playFromSelectedFolder()
       Serial.println("Pominięto plik: " + fileName);
       continue;
     }
-
+    fileNameString = fileName;
     Serial.print("Odtwarzanie pliku: ");
     Serial.print(fileIndex); // Numeracja pliku
     Serial.print("/");
