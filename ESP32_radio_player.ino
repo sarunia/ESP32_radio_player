@@ -193,7 +193,7 @@ void saveStationToEEPROM(const char* station)
       EEPROM.commit();
 
       // Wydrukuj informację o zapisanej stacji na Serialu.
-      Serial.printf("[%d] %s\n", stationsCount + 1, station);
+      Serial.println(String(stationsCount + 1) + "   " + String(station)); // Drukowanie na serialu od nr 1 jak w banku na serwerze
 
       // Zwiększ licznik zapisanych stacji.
       stationsCount++;
@@ -210,31 +210,7 @@ void saveStationToEEPROM(const char* station)
   }
 }
 
-//Funkcja odpowiedzialna za odczyt i wyświetlenie informacji o zapisanych stacjach z pamięci EEPROM
-void readStationsFromEEPROM()
-{   
-  Serial.println("Zapisane stacje:");
 
-  // Przeiteruj przez zapisane stacje w pamięci EEPROM.
-  for (int i = 0; i < stationsCount; i++)
-  {
-    // Odczytaj długość linku dla aktualnej stacji.
-    int length = EEPROM.read(i * (MAX_LINK_LENGTH + 1));
-
-    // Inicjalizuj tablicę do przechowywania linku stacji.
-    char station[MAX_LINK_LENGTH + 1];
-    memset(station, 0, sizeof(station));
-
-    // Odczytaj link stacji jako bajty.
-    for (int j = 0; j < length; j++)
-    {
-      station[j] = EEPROM.read(i * (MAX_LINK_LENGTH + 1) + 1 + j);
-    }
-
-    // Wydrukuj informacje o zapisanej stacji na Serialu wraz z jej numerem.
-    Serial.printf("[%d] %s\n", i + 1, station);
-  }
-}
 
 // Funkcja odpowiedzialna za zmianę aktualnie wybranej stacji radiowej.
 void changeStation()
