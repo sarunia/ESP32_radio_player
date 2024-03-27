@@ -84,7 +84,6 @@ bool button_3 = false;    // Flaga określająca stan przycisku 3
 bool button_4 = false;    // Flaga określająca stan przycisku 4
 bool encoderButton1 = false;  // Flaga określająca, czy przycisk enkodera 1 został wciśnięty
 bool encoderButton2 = false;  // Flaga określająca, czy przycisk enkodera 2 został wciśnięty
-bool wifiConfig = false;      // Flaga, która jest ustawiana na true po wykonaniu konfiguracji, aby włączyć moduł Wi-Fi i połączyć się z siecią
 bool endFile = false;         // Flaga sygnalizująca koniec odtwarzania pliku audio
 bool displayActive = false;   // Flaga określająca, czy wyświetlacz jest aktywny
 bool isPlaying = false;       // Flaga określająca, czy obecnie trwa odtwarzanie
@@ -438,7 +437,6 @@ void wifi_setup()
   display.setCursor(10, 35);
   display.println("connected");
   display.display();
-  wifiConfig = true; // ustawiono konfig wifi
 }
 
 void audio_info(const char *info)
