@@ -61,8 +61,8 @@ int button_S1 = 17;  // Przycisk S1 podłączony do pinu 17
 int button_S2 = 18;  // Przycisk S2 podłączony do pinu 18
 int button_S3 = 15;  // Przycisk S3 podłączony do pinu 15
 int button_S4 = 16;  // Przycisk S4 podłączony do pinu 16
-int station_nr = 0;  // Numer aktualnie wybranej stacji radiowej z listy
-int bank_nr = 1; // Numer aktualnie wybranego banku stacji z listy, domyślnie pierwszy
+int station_nr = 6;  // Numer aktualnie wybranej stacji radiowej z listy, domyślnie stacja nr 6
+int bank_nr = 1; // Numer aktualnie wybranego banku stacji z listy, domyślnie bank nr 1
 int counter = 12; // Początkowa środkowa wartość ustawienia poziomu głośności
 int CLK_state1;    // Aktualny stan CLK enkodera prawego
 int prev_CLK_state1;   // Poprzedni stan CLK enkodera prawego    
@@ -239,7 +239,7 @@ void readStationsFromEEPROM()
 
 // Funkcja odpowiedzialna za zmianę aktualnie wybranej stacji radiowej.
 void changeStation()
-{    
+{  
   // Odczytaj link stacji o aktualnym numerze station_nr
   char station[MAX_LINK_LENGTH + 1];
   memset(station, 0, sizeof(station));
@@ -945,7 +945,7 @@ void playFromSelectedFolder()
     if (isAudioFile(fileName.c_str()))
     {
       totalFilesInFolder++;
-      Serial.println(fileName);
+      //Serial.println(fileName);
     }
     entry.close();
   }
@@ -1158,7 +1158,7 @@ void playFromSelectedFolder()
           display.setCursor(0, 19);
           display.println(titleString);
         }
-        
+
         display.setCursor(0, 37);
         display.println(sampleRateString.substring(1) + "Hz " + bitsPerSampleString + "bit");
         display.setCursor(0, 47);
@@ -1358,7 +1358,6 @@ void setup()
   display.display();
   wifi_setup();
   fetchStationsFromServer();
-  station_nr = 6;
   changeStation();
 }
 
