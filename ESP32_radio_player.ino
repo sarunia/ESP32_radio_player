@@ -1519,6 +1519,10 @@ void loop()
       if (currentOption == INTERNET_RADIO)
       {
         station_nr++;
+        if (station_nr > stationsCount)
+        {
+          station_nr = 1;
+        }
         Serial.print("Przycisk S1 został wciśnięty, licznik = ");
         Serial.println(station_nr);
         changeStation();
@@ -1536,11 +1540,11 @@ void loop()
       lastDebounceTime_S2 = millis();
       if (currentOption == INTERNET_RADIO)
       {
-        if (station_nr <= 0)
-        {
-          station_nr = 51;
-        }
         station_nr--;
+        if (station_nr < 1)
+        {
+          station_nr = stationsCount;
+        }
         Serial.print("Przycisk S2 został wciśnięty, licznik = ");
         Serial.println(station_nr);
         changeStation();
