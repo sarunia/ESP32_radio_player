@@ -865,6 +865,8 @@ void listDirectories(const char *dirname)
   printDirectoriesAndSavePaths(root, 0, ""); // Początkowo pełna ścieżka jest pusta
   Serial.println("Wylistowano katalogi z karty SD");
   root.close();
+  scrollDown();
+  printToOLED();
 }
 
 // Funkcja do przewijania w górę
@@ -1066,6 +1068,9 @@ void playFromSelectedFolder()
       CLK_state1 = digitalRead(CLK_PIN1);
       if (CLK_state1 != prev_CLK_state1 && CLK_state1 == HIGH)
       {
+        // Ustawienie flagi aktywnego wyświetlania
+        displayActive = true;
+        displayStartTime = millis();
         if (digitalRead(DT_PIN1) == HIGH)
         {
           counter--;
@@ -1092,15 +1097,11 @@ void playFromSelectedFolder()
         display.println(counter);
         display.display();
 
-        // Ustawienie flagi aktywnego wyświetlania
-        displayActive = true;
-        displayStartTime = millis();
-        
-        if (counter >= 15)
+        if (counter > 15)
         {
           counter = 15;
         }
-        if (counter <= 5)
+        if (counter < 5)
         {
           counter = 5;
         }
@@ -1169,7 +1170,6 @@ void playFromSelectedFolder()
       if (button1.isPressed())
       {
         encoderButton1 = true;
-        display.clearDisplay();
         audio.stopSong();
         timer.detach();
         break;
