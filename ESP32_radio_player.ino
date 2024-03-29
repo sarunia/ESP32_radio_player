@@ -805,7 +805,7 @@ void printDirectoriesAndSavePaths(File dir, int numTabs, String currentPath)
       // Wydrukuj numer indeksu i pełną ścieżkę
       Serial.print(directoryCount);
       Serial.print(": ");
-      Serial.println(path);
+      Serial.println(path.substring(1));
       
       // Zwiększ licznik katalogów
       directoryCount++;
@@ -1161,14 +1161,12 @@ void playFromSelectedFolder()
 
       if (button2.isPressed())
       {
-        noTimeDisplay = true;
-        displayActive = true;
-        displayStartTime = millis();
-        printToOLED();
+        playFromSelectedFolder();
       }
 
       if (button1.isPressed())
       {
+        display.clearDisplay();
         encoderButton1 = true;
         audio.stopSong();
         timer.detach();
