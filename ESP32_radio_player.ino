@@ -90,6 +90,7 @@ bool isPlaying = false;       // Flaga określająca, czy obecnie trwa odtwarzan
 bool mp3 = false;             // Flaga określająca, czy aktualny plik audio jest w formacie MP3
 bool flac = false;            // Flaga określająca, czy aktualny plik audio jest w formacie FLAC
 bool noID3data = false;       // Flaga określająca, czy plik audio posiada dane ID3
+bool noTimeDisplay = false;
 unsigned long lastDebounceTime_S1 = 0;    // Czas ostatniego debouncingu dla przycisku S1.
 unsigned long lastDebounceTime_S2 = 0;    // Czas ostatniego debouncingu dla przycisku S2.
 unsigned long lastDebounceTime_S3 = 0;    // Czas ostatniego debouncingu dla przycisku S3.
@@ -1106,15 +1107,28 @@ void playFromSelectedFolder()
       }
       prev_CLK_state1 = CLK_state1;
 
+      CLK_state2 = digitalRead(CLK_PIN2);
+      if (CLK_state2 != prev_CLK_state2 && CLK_state2 == HIGH)
+      {
+        noTimeDisplay = true;
+        displayActive = true;
+        displayStartTime = millis();
+        if (digitalRead(DT_PIN2) == HIGH)
+        {
+          scrollUp();
+          printToOLED();
+        }
+        else
+        {
+          scrollDown();
+          printToOLED();
+        }
+      }
+      prev_CLK_state2 = CLK_state2;
+
       if (displayActive && (millis() - displayStartTime >= displayTimeout))   // Przywracanie poprzedniej zawartości ekranu po 5 sekundach
       {
-        for (int y = 0; y <= 54; y++)
-        {
-          for (int x = 0; x < 127; x++)
-          {
-            display.drawPixel(x, y, SH110X_BLACK);
-          }
-        }
+        display.clearDisplay();
         display.setTextSize(1);
         display.setTextColor(SH110X_WHITE);
         display.setCursor(0, 0);
@@ -1137,21 +1151,18 @@ void playFromSelectedFolder()
         display.println(sampleRateString.substring(1) + "Hz " + bitsPerSampleString + "bit");
         display.setCursor(0, 47);
         display.println(bitrateString.substring(1) + "b/s Plik " + String(fileIndex) + "/" + String(totalFilesInFolder));
-        for (int y = 56; y <= 63; y++)
-        {
-          for (int x = 51; x < 127; x++)
-          {
-            display.drawPixel(x, y, SH110X_BLACK);
-          }
-        }
         display.setCursor(66, 56);
         display.println("Folder " + String(folderIndex));
         display.display();
         displayActive = false;
+        noTimeDisplay = false;
       }
 
       if (button2.isPressed())
       {
+        noTimeDisplay = true;
+        displayActive = true;
+        displayStartTime = millis();
         printToOLED();
       }
 
@@ -1249,13 +1260,7 @@ void updateTimer()
 
   display.setTextSize(1);
   display.setTextColor(SH110X_WHITE);
-  for (int y = 56; y <= 63; y++)
-  {
-    for (int x = 0; x < 50; x++)
-    {
-      display.drawPixel(x, y, SH110X_BLACK);
-    }
-  }
+  
 
   // Formatuj czas jako "mm:ss"
   char timeString[10];
@@ -1278,7 +1283,17 @@ void updateTimer()
   }
   // Wyświetaj czas 
   display.setCursor(0, 56);
-  display.print(timeString);
+  if (noTimeDisplay == false)
+  {
+    for (int y = 56; y <= 63; y++)
+    {
+      for (int x = 0; x < 50; x++)
+      {
+        display.drawPixel(x, y, SH110X_BLACK);
+      }
+    }
+    display.print(timeString);
+  }
   display.display();
 }
 
