@@ -1182,7 +1182,7 @@ void printToOLED()
   display.setTextSize(1);
   display.setTextColor(SH110X_WHITE);
   display.setCursor(0, 0);
-  display.print("   LISTA KATALOG" + String((char)0x1F) + "W"); // Wyświetla komunikat "LISTA KATALOGÓW" na ekranie, 0x1F reprezentuje literę 'Ó'
+  display.println("   LISTA KATALOG" + String((char)0x1F) + "W"); // Wyświetla komunikat "LISTA KATALOGÓW" na ekranie, 0x1F reprezentuje literę 'Ó'
   display.println(currentDirectory);
 
   int displayRow = 1;  // Zaczynamy od drugiego wiersza (pierwszy to nagłówek)
@@ -1479,7 +1479,7 @@ void loop()
       display.setTextSize(1);
       display.setTextColor(SH110X_WHITE);
       display.setCursor(0, 0);
-      display.print("   LISTA KATALOG" + String((char)0x1F) + "W"); // Wyświetla komunikat "LISTA KATALOGÓW" na ekranie, 0x1F reprezentuje literę 'Ó'
+      display.println("   LISTA KATALOG" + String((char)0x1F) + "W"); // Wyświetla komunikat "LISTA KATALOGÓW" na ekranie, 0x1F reprezentuje literę 'Ó'
       display.display();
       listDirectories("/");
     }
