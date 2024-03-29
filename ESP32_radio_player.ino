@@ -815,7 +815,7 @@ void printDirectoriesAndSavePaths(File dir, int numTabs, String currentPath)
       // Jeżeli to nie katalog System Volume Information, wydrukuj na ekranie OLED
       if (path != "/System Volume Information")
       {
-        for (int i = 1; i < 6; i++)
+        for (int i = 1; i < 7; i++)
         {
           // Przygotuj pełną ścieżkę dla wyświetlenia
           String fullPath = directories[i];
@@ -839,7 +839,7 @@ void printDirectoriesAndSavePaths(File dir, int numTabs, String currentPath)
           processText(fullPath);
           
           // Ustaw pozycję kursora na ekranie OLED
-          display.setCursor(0, i * 10);
+          display.setCursor(0, i * 9);
           
           // Wydrukuj skróconą ścieżkę na ekranie OLED
           display.print(fullPath);
@@ -1187,7 +1187,7 @@ void printToOLED()
 
   int displayRow = 1;  // Zaczynamy od drugiego wiersza (pierwszy to nagłówek)
 
-  for (int i = firstVisibleLine; i < min(firstVisibleLine + 6, directoryCount); i++)
+  for (int i = firstVisibleLine; i < min(firstVisibleLine + 7, directoryCount); i++)
   {
     String fullPath = directories[i];
 
@@ -1213,9 +1213,15 @@ void printToOLED()
         }
 
         // Wyświetl wiersz
-        display.setCursor(0, displayRow * 10);
+        display.setCursor(0, displayRow * 9);
         display.print(displayedPath);
-
+        for (int y = 61; y <= 63; y++) // Wygaszenie 2 ostatnich linii wyświetlacza
+        {
+          for (int x = 0; x < 127; x++)
+          {
+            display.drawPixel(x, y, SH110X_BLACK);
+          }
+        }
         // Przesuń się do kolejnego wiersza
         displayRow++;
 
