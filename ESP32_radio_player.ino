@@ -53,8 +53,6 @@
 #define LICZNIK_S4 16             // Numer pinu dla enkodera/licznika S4
 #define MAX_FILES 100             // Maksymalna liczba plików lub katalogów w tablicy directories
 
-int directoryCount = 0; // Licznik katalogów
-int currentFile = 0;  // Numer bieżącego pliku
 int currentSelection = 0;  // Numer domyślnie zaznaczonego pierwszego katalogu na ekranie OLED
 int firstVisibleLine = 0;  // Numer pierwszej widocznej linii na ekranie OLED z wyborem katalogów odczytanych z karty SD
 int button_S1 = 17;  // Przycisk S1 podłączony do pinu 17
@@ -73,9 +71,9 @@ int licznik_S2 = 0;  // Licznik dla przycisku S2
 int licznik_S3 = 0;  // Licznik dla przycisku S3
 int licznik_S4 = 0;  // Licznik dla przycisku S4
 int stationsCount = 0;    // Aktualna liczba przechowywanych stacji w tablicy
-int foldersCount = 0; // Liczba znalezionych folderow na karcie SD
+int directoryCount = 0; // Licznik katalogów
 int fileIndex = 0;  // Numer aktualnie wybranego pliku audio ze wskazanego folderu
-int folderIndex = 0;  // Numer domyślnie wybranego folderu podczas przełączenia do odtwarzania z karty SD
+int folderIndex = 1;  // Numer domyślnie wybranego folderu podczas przełączenia do odtwarzania z karty SD
 int totalFilesInFolder = 0; // Zmienna przechowująca łączną liczbę plików w folderze
 const int maxVisibleLines = 5;  // Maksymalna liczba widocznych linii na ekranie OLED
 bool button_1 = false;    // Flaga określająca stan przycisku 1
@@ -872,12 +870,9 @@ void listDirectories(const char *dirname)
 // Funkcja do przewijania w górę
 void scrollUp()
 {
-  totalFilesInFolder = 0;
   if (currentSelection > 0)
   {
     currentSelection--;
-    folderIndex--;
-
     if (currentSelection < firstVisibleLine)
     {
       firstVisibleLine = currentSelection;
@@ -887,12 +882,9 @@ void scrollUp()
 
 void scrollDown()
 {
-  totalFilesInFolder = 0;
   if (currentSelection < directoryCount - 1)
   {
     currentSelection++;
-    folderIndex++;
-
     if (currentSelection >= firstVisibleLine + maxVisibleLines)
     {
       firstVisibleLine++;
@@ -1017,47 +1009,7 @@ void playFromSelectedFolder()
             Serial.println(fileName);
           }
         }
-      }
-
-      if (button_3) // Przewijanie folderów do tyłu
-      {
-        button_3 = false;
-        folderIndex--;
-        if (folderIndex < 1)
-        {
-          folderIndex = 1;
-        }
-        for (int y = 9; y <= 36; y++)
-        {
-          for (int x = 0; x < 127; x++)
-          {
-            display.drawPixel(x, y, SH110X_BLACK);
-          }
-        }
-        audio.stopSong();
-        timer.detach();
-        playFromSelectedFolder();
-      }
-
-      if (button_4) // Przewijanie folderów do przodu
-      {
-        button_4 = false;
-        folderIndex++;
-        if (folderIndex > foldersCount)
-        {
-          folderIndex = 1;
-        }
-        for (int y = 9; y <= 36; y++)
-        {
-          for (int x = 0; x < 127; x++)
-          {
-            display.drawPixel(x, y, SH110X_BLACK);
-          }
-        }
-        audio.stopSong();
-        timer.detach();
-        playFromSelectedFolder();
-      }     
+      } 
 
       if (endFile == true) //Wymuszenie programowego przejścia do odtwarzania następnego pliku
       {
@@ -1116,11 +1068,25 @@ void playFromSelectedFolder()
         displayStartTime = millis();
         if (digitalRead(DT_PIN2) == HIGH)
         {
+          folderIndex--;
+          if (folderIndex < 1)
+          {
+            folderIndex = 1;
+          }
+          Serial.print("Wartość folder index: ");
+          Serial.println(folderIndex);
           scrollUp();
           printToOLED();
         }
         else
         {
+          folderIndex++;
+          if (folderIndex > (directoryCount - 1))
+          {
+            folderIndex = directoryCount - 1;
+          }
+          Serial.print("Wartość folder index: ");
+          Serial.println(folderIndex);
           scrollDown();
           printToOLED();
         }
@@ -1235,7 +1201,7 @@ void printToOLED()
         displayRow++;
 
         // Zaktualizuj liczbę folderów
-        foldersCount++;
+        //foldersCount++;
       }
     }
   }
@@ -1575,13 +1541,7 @@ void loop()
         displayActive = true;
         displayStartTime = millis();
         fetchStationsFromServer();
-        delay(250);
         changeStation();
-      }
-      if (currentOption == PLAY_FILES)
-      {
-        scrollUp();
-        printToOLED();
       }
     }
   }
@@ -1618,13 +1578,7 @@ void loop()
         displayActive = true;
         displayStartTime = millis();
         fetchStationsFromServer();
-        delay(250);
         changeStation();
-      }
-      if (currentOption == PLAY_FILES)
-      {
-        scrollDown();
-        printToOLED();
       }
     }
   }
