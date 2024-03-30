@@ -190,6 +190,7 @@ void printLocalTime()
   char timeString[9]; // Bufor przechowujący czas w formie tekstowej
   snprintf(timeString, sizeof(timeString), "%02d:%02d:%02d", timeinfo.tm_hour, timeinfo.tm_min, timeinfo.tm_sec);
   display.print(timeString);
+  display.display();
 }
 
 //Funkcja odpowiedzialna za zapisywanie informacji o stacji do pamięci EEPROM.
@@ -1235,9 +1236,8 @@ void printToOLED()
   display.display();
 }
 
-void updateTimer()
+void updateTimer()  // Wywoływana co sekundę przez timer
 {
-  // Wywoływana co sekundę przez timer
   // Zwiększ licznik sekund
   seconds++;
 
@@ -1245,24 +1245,25 @@ void updateTimer()
   // Konwertuj sekundy na minutę i sekundy
   unsigned int minutes = seconds / 60;
   unsigned int remainingSeconds = seconds % 60;
-  // Wyświetl aktualny czas w formacie "mm:ss" na ekranie OLED
 
   display.setTextSize(1);
   display.setTextColor(SH110X_WHITE);
 
-  if (seconds == 2)
+  if (seconds == 3)
   {
     if (mp3 == true)
     {
       mp3 = false;
       display.setCursor(102, 37);
-      display.println("MP3");
+      display.print("MP3");
+      display.display();
     }
     if (flac == true)
     {
       flac = false;
       display.setCursor(102, 37);
-      display.println("FLAC");
+      display.print("FLAC");
+      display.display();
     }
   }
   
@@ -1282,13 +1283,13 @@ void updateTimer()
       char timeString[10];
       snprintf(timeString, sizeof(timeString), "%02um:%02us", minutes, remainingSeconds);
       display.print(timeString);
+      display.display();
     }
     if (currentOption == INTERNET_RADIO)
     {
       printLocalTime();
     }
   }
-  display.display();
 }
 
 void setup()
