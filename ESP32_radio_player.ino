@@ -60,7 +60,8 @@ int button_S3 = 15;  // Przycisk S3 podłączony do pinu 15
 int button_S4 = 16;  // Przycisk S4 podłączony do pinu 16
 int station_nr = 6;  // Numer aktualnie wybranej stacji radiowej z listy, domyślnie stacja nr 6
 int bank_nr = 1; // Numer aktualnie wybranego banku stacji z listy, domyślnie bank nr 1
-int counter = 12; // Początkowa środkowa wartość ustawienia poziomu głośności
+int encoderCounter1 = 12; // Początkowa środkowa wartość ustawienia poziomu głośności - prawy encoder
+int encoderCounter2 = 1; // Licznik lewy encoder, zaczynam od 1
 int CLK_state1;    // Aktualny stan CLK enkodera prawego
 int prev_CLK_state1;   // Poprzedni stan CLK enkodera prawego    
 int CLK_state2;    // Aktualny stan CLK enkodera lewego
@@ -425,7 +426,7 @@ void wifi_setup()
   }
   Serial.println("Połączono z siecią WiFi");
   audio.setPinout(I2S_BCLK, I2S_LRC, I2S_DOUT); // Konfiguruj pinout dla interfejsu I2S audio
-  audio.setVolume(counter); // Ustaw głośność na podstawie wartości zmiennej counter w zakresie 0...21
+  audio.setVolume(encoderCounter1); // Ustaw głośność na podstawie wartości zmiennej encoderCounter1 w zakresie 0...21
   display.clearDisplay();
   display.setTextSize(2);
   display.setTextColor(SH110X_WHITE);
@@ -442,7 +443,6 @@ void audio_info(const char *info)
   // Wyświetl informacje w konsoli szeregowej
   Serial.print("info        ");
   Serial.println(info);
-  
   // Znajdź pozycję "BitRate:" w tekście
   int bitrateIndex = String(info).indexOf("BitRate:");
   if (bitrateIndex != -1) {
@@ -618,7 +618,7 @@ void audio_id3data(const char *info)
 {
   Serial.print("id3data     ");
   Serial.println(info);
-
+  
   // Znajdź pozycję "Artist: " lub "ARTIST: " w tekście
   int artistIndex = String(info).indexOf("Artist: ");
   if (artistIndex == -1)
@@ -980,6 +980,7 @@ void playFromSelectedFolder()
       {
         button_2 = false;
         isPlaying = false;
+        audio.stopSong();
         fileIndex++;
         if (fileIndex > totalFilesInFolder)
         {
@@ -993,6 +994,7 @@ void playFromSelectedFolder()
       if (button_1) //Przejście do poprzedniego pliku w folderze
       {
         button_1 = false;
+        audio.stopSong();
         fileIndex--;
         if (fileIndex < 1)
         {
@@ -1047,12 +1049,12 @@ void playFromSelectedFolder()
         displayStartTime = millis();
         if (digitalRead(DT_PIN1) == HIGH)
         {
-          counter--;
+          encoderCounter1--;
         } else
         {
-          counter++;
+          encoderCounter1++;
         }
-        audio.setVolume(counter); // zakres 0...21
+        audio.setVolume(encoderCounter1); // zakres 0...21
 
         // Wyświetlanie komunikatu przez 5 sekund
         for (int y = 0; y <= 54; y++)
@@ -1068,16 +1070,16 @@ void playFromSelectedFolder()
         display.println("Volume set");
         display.setTextSize(3);
         display.setCursor(48, 30);
-        display.println(counter);
+        display.println(encoderCounter1);
         display.display();
 
-        if (counter > 15)
+        if (encoderCounter1 > 15)
         {
-          counter = 15;
+          encoderCounter1 = 15;
         }
-        if (counter < 5)
+        if (encoderCounter1 < 5)
         {
-          counter = 5;
+          encoderCounter1 = 5;
         }
       }
       prev_CLK_state1 = CLK_state1;
@@ -1088,25 +1090,25 @@ void playFromSelectedFolder()
         timeDisplay = false;
         if (digitalRead(DT_PIN2) == HIGH)
         {
-          folderIndex--;
-          if (folderIndex < 1)
+          encoderCounter2--;
+          if (encoderCounter2 < 1)
           {
-            folderIndex = 1;
+            encoderCounter2 = 1;
           }
-          Serial.print("Wartość folder index: ");
-          Serial.println(folderIndex);
+          Serial.print("Wartość licznika lewego enkodera: ");
+          Serial.println(encoderCounter2);
           scrollUp();
           printToOLED();
         }
         else
         {
-          folderIndex++;
-          if (folderIndex > (directoryCount - 1))
+          encoderCounter2++;
+          if (encoderCounter2 > (directoryCount - 1))
           {
-            folderIndex = directoryCount - 1;
+            encoderCounter2 = directoryCount - 1;
           }
-          Serial.print("Wartość folder index: ");
-          Serial.println(folderIndex);
+          Serial.print("Wartość licznika lewego enkodera: ");
+          Serial.println(encoderCounter2);
           scrollDown();
           printToOLED();
         }
@@ -1149,14 +1151,16 @@ void playFromSelectedFolder()
 
       if (button2.isPressed())
       {
+        audio.stopSong();
+        folderIndex = encoderCounter2;
         playFromSelectedFolder();
       }
 
       if (button1.isPressed())
       {
+        audio.stopSong();
         display.clearDisplay();
         encoderButton1 = true;
-        audio.stopSong();
         break;
       }
     }
@@ -1361,15 +1365,15 @@ void loop()
   {
     if (digitalRead(DT_PIN1) == HIGH)
     {
-      counter--;
+      encoderCounter1--;
     } else
     {
-      counter++;
+      encoderCounter1++;
     }
 
     Serial.print("Encoder prawy: ");
-    Serial.println(counter);
-    audio.setVolume(counter); // zakres 0...21
+    Serial.println(encoderCounter1);
+    audio.setVolume(encoderCounter1); // zakres 0...21
 
     // Wyświetlanie komunikatu przez 5 sekund
     display.clearDisplay();
@@ -1379,20 +1383,20 @@ void loop()
     display.println("Volume set");
     display.setTextSize(3);
     display.setCursor(48, 30);
-    display.println(counter);
+    display.println(encoderCounter1);
     display.display();
 
     // Ustawienie flagi aktywnego wyświetlania
     displayActive = true;
     displayStartTime = millis();
     
-    if (counter >= 15)
+    if (encoderCounter1 >= 15)
     {
-      counter = 15;
+      encoderCounter1 = 15;
     }
-    if (counter <= 5)
+    if (encoderCounter1 <= 5)
     {
-      counter = 5;
+      encoderCounter1 = 5;
     }
   }
   prev_CLK_state1 = CLK_state1;
