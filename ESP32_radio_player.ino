@@ -10,7 +10,6 @@
 #include <HTTPClient.h>           // Biblioteka do wykonywania żądań HTTP
 #include <EEPROM.h>               // Biblioteka do obsługi pamięci EEPROM
 #include <Ticker.h>               // Mechanizm tickera (do odświeżania)
-#include <algorithm>              // Standardowa biblioteka C++ do manipulacji danymi
 
 #define SD_CS         47          // Pin CS (Chip Select) do komunikacji z kartą SD, wybierany jako interfejs SPI
 #define SPI_MOSI      48          // Pin MOSI (Master Out Slave In) dla interfejsu SPI
@@ -88,7 +87,7 @@ bool isPlaying = false;       // Flaga określająca, czy obecnie trwa odtwarzan
 bool mp3 = false;             // Flaga określająca, czy aktualny plik audio jest w formacie MP3
 bool flac = false;            // Flaga określająca, czy aktualny plik audio jest w formacie FLAC
 bool noID3data = false;       // Flaga określająca, czy plik audio posiada dane ID3
-bool noTimeDisplay = false;
+bool timeDisplay = true;      // Flaga określająca kiedy pokazać czas na wyświetlaczu, domyślnie od razu po starcie
 unsigned long lastDebounceTime_S1 = 0;    // Czas ostatniego debouncingu dla przycisku S1.
 unsigned long lastDebounceTime_S2 = 0;    // Czas ostatniego debouncingu dla przycisku S2.
 unsigned long lastDebounceTime_S3 = 0;    // Czas ostatniego debouncingu dla przycisku S3.
@@ -117,7 +116,12 @@ WiFiMulti wifiMulti;       // Obiekt do obsługi wielu połączeń WiFi
 Ticker timer;  // Obiekt do obsługi timera
 String ssid =     "brakdostepu";
 String password = "malinowykrul1977comeback";
-char stations[MAX_STATIONS][MAX_LINK_LENGTH + 1];   // Tablica przechowująca linki do stacji radiowych (jedna na stację) +1 dla terminatora null.
+char stations[MAX_STATIONS][MAX_LINK_LENGTH + 1];   // Tablica przechowująca linki do stacji radiowych (jedna na stację) +1 dla terminatora null
+
+const char* ntpServer = "pool.ntp.org";      // Adres serwera NTP używany do synchronizacji czasu
+const long  gmtOffset_sec = 0;               // Przesunięcie czasu UTC w sekundach
+const int   daylightOffset_sec = 3600;       // Przesunięcie czasu letniego w sekundach, dla Polski to 1 godzina
+
 
 enum MenuOption
 {
@@ -166,6 +170,25 @@ void IRAM_ATTR zlicz_S4() // funkcja obsługi przerwania z przycisku S4
     lastDebounceTime_S4 = millis(); // Zapisujemy czas ostatniego debouncingu
     button_4 = true;
   }
+}
+
+void printLocalTime()
+{
+  // Struktura przechowująca informacje o czasie
+  struct tm timeinfo;
+
+  // Sprawdź, czy udało się pobrać czas z lokalnego zegara czasu rzeczywistego
+  if (!getLocalTime(&timeinfo))
+  {
+    // Wyświetl komunikat o niepowodzeniu w pobieraniu czasu
+    Serial.println("Nie udało się uzyskać czasu");
+    return; // Zakończ funkcję, gdy nie udało się uzyskać czasu
+  }
+
+  // Konwertuj godzinę, minutę i sekundę na stringi w formacie "HH:MM:SS"
+  char timeString[9]; // Bufor przechowujący czas w formie tekstowej
+  snprintf(timeString, sizeof(timeString), "%02d:%02d:%02d", timeinfo.tm_hour, timeinfo.tm_min, timeinfo.tm_sec);
+  display.print(timeString);
 }
 
 //Funkcja odpowiedzialna za zapisywanie informacji o stacji do pamięci EEPROM.
@@ -531,7 +554,6 @@ void audio_info(const char *info)
     display.setCursor(66, 56);
     display.println("Folder " + String(folderIndex));
     display.display();
-    timer.attach(1, updateTimer);   // Ustaw timer, aby wywoływał funkcję updateTimer co sekundę
     seconds = 0;
   }
 
@@ -1063,9 +1085,7 @@ void playFromSelectedFolder()
       CLK_state2 = digitalRead(CLK_PIN2);
       if (CLK_state2 != prev_CLK_state2 && CLK_state2 == HIGH)
       {
-        noTimeDisplay = true;
-        displayActive = true;
-        displayStartTime = millis();
+        timeDisplay = false;
         if (digitalRead(DT_PIN2) == HIGH)
         {
           folderIndex--;
@@ -1090,6 +1110,8 @@ void playFromSelectedFolder()
           scrollDown();
           printToOLED();
         }
+        displayActive = true;
+        displayStartTime = millis();
       }
       prev_CLK_state2 = CLK_state2;
 
@@ -1122,7 +1144,7 @@ void playFromSelectedFolder()
         display.println("Folder " + String(folderIndex));
         display.display();
         displayActive = false;
-        noTimeDisplay = false;
+        timeDisplay = true;
       }
 
       if (button2.isPressed())
@@ -1135,7 +1157,6 @@ void playFromSelectedFolder()
         display.clearDisplay();
         encoderButton1 = true;
         audio.stopSong();
-        timer.detach();
         break;
       }
     }
@@ -1224,11 +1245,6 @@ void updateTimer()
 
   display.setTextSize(1);
   display.setTextColor(SH110X_WHITE);
-  
-
-  // Formatuj czas jako "mm:ss"
-  char timeString[10];
-  snprintf(timeString, sizeof(timeString), "%02um:%02us", minutes, remainingSeconds);
 
   if (seconds == 2)
   {
@@ -1245,10 +1261,10 @@ void updateTimer()
       display.println("FLAC");
     }
   }
-  // Wyświetaj czas 
-  display.setCursor(0, 56);
-  if (noTimeDisplay == false)
+  
+  if (timeDisplay == true)
   {
+    display.setCursor(0, 56);
     for (int y = 56; y <= 63; y++)
     {
       for (int x = 0; x < 50; x++)
@@ -1256,7 +1272,17 @@ void updateTimer()
         display.drawPixel(x, y, SH110X_BLACK);
       }
     }
-    display.print(timeString);
+    if (currentOption == PLAY_FILES)
+    {
+      // Formatuj czas jako "mm:ss"
+      char timeString[10];
+      snprintf(timeString, sizeof(timeString), "%02um:%02us", minutes, remainingSeconds);
+      display.print(timeString);
+    }
+    if (currentOption == INTERNET_RADIO)
+    {
+      printLocalTime();
+    }
   }
   display.display();
 }
@@ -1316,6 +1342,8 @@ void setup()
   display.println("Radio");
   display.display();
   wifi_setup();
+  configTime(gmtOffset_sec, daylightOffset_sec, ntpServer);
+  timer.attach(1, updateTimer);   // Ustaw timer, aby wywoływał funkcję updateTimer co sekundę
   fetchStationsFromServer();
   changeStation();
 }
@@ -1372,15 +1400,16 @@ void loop()
   CLK_state2 = digitalRead(CLK_PIN2);
   if (CLK_state2 != prev_CLK_state2 && CLK_state2 == HIGH)
   {
+    timeDisplay = false;
     directoryCount = 0;
+    // Ustawienie flagi aktywnego wyświetlania
+    displayActive = true;
+    displayStartTime = millis();
     if (digitalRead(DT_PIN2) == HIGH)
     {
       Serial.println("Encoder lewy: obracam w lewo");
       // Przełącz między opcjami menu
       currentOption = (currentOption == PLAY_FILES) ? INTERNET_RADIO : PLAY_FILES;
-      // Ustawienie flagi aktywnego wyświetlania
-      //displayActive = true;
-      //displayStartTime = millis();
       // Wyświetl aktualne menu
       displayMenu();
     }
@@ -1389,58 +1418,60 @@ void loop()
       Serial.println("Encoder lewy: obracam w prawo");
       // Przełącz między opcjami menu
       currentOption = (currentOption == PLAY_FILES) ? INTERNET_RADIO : PLAY_FILES;
-      // Ustawienie flagi aktywnego wyświetlania
-      //displayActive = true;
-      //displayStartTime = millis();
+
       // Wyświetl aktualne menu
       displayMenu();
-      
     }
   }
   prev_CLK_state2 = CLK_state2;
 
   if (displayActive && (millis() - displayStartTime >= displayTimeout))   // Przywracanie poprzedniej zawartości ekranu po 5 sekundach
   {
-    display.clearDisplay();
-    display.setTextSize(1);
-    display.setTextColor(SH110X_WHITE);
-    display.setCursor(0, 0);
-    display.println(stationName);
-    display.setCursor(0, 10);
-    display.println(stationString);
-    for (int y = 37; y <= 54; y++)
+    if (currentOption == INTERNET_RADIO)
     {
-      for (int x = 0; x < 127; x++)
+      display.clearDisplay();
+      display.setTextSize(1);
+      display.setTextColor(SH110X_WHITE);
+      display.setCursor(0, 0);
+      display.println(stationName);
+      display.setCursor(0, 10);
+      display.println(stationString);
+      for (int y = 37; y <= 54; y++)
       {
-        display.drawPixel(x, y, SH110X_BLACK);
+        for (int x = 0; x < 127; x++)
+        {
+          display.drawPixel(x, y, SH110X_BLACK);
+        }
       }
-    }
 
-    display.setCursor(0, 37);
-    display.println(sampleRateString.substring(1) + "Hz " + bitsPerSampleString + "bit");
-    
-    display.setCursor(0, 47);
-    display.println(bitrateString.substring(1) + "b/s  Bank " + String(bank_nr));
-    for (int y = 56; y <= 63; y++)
-    {
-      for (int x = 51; x < 127; x++)
+      display.setCursor(0, 37);
+      display.println(sampleRateString.substring(1) + "Hz " + bitsPerSampleString + "bit");
+      
+      display.setCursor(0, 47);
+      display.println(bitrateString.substring(1) + "b/s  Bank " + String(bank_nr));
+      for (int y = 56; y <= 63; y++)
       {
-        display.drawPixel(x, y, SH110X_BLACK);
+        for (int x = 51; x < 127; x++)
+        {
+          display.drawPixel(x, y, SH110X_BLACK);
+        }
       }
+      display.setCursor(66, 56);
+      display.println("Stacja " + String(station_nr));
+      display.display();
+      displayActive = false;
+      timeDisplay = true;
     }
-    display.setCursor(66, 56);
-    display.println("Stacja " + String(station_nr));
-    display.display();
-    displayActive = false;
   }
   
   if (button1.isPressed())  //Przycisk enkodera prawego wciśnięty
   {
-    display.clearDisplay();
     Serial.println("Przycisk enkodera prawego");
-    currentOption = PLAY_FILES;
-    fileIndex = 0;
-    playFromSelectedFolder();
+    if (currentOption == PLAY_FILES)
+    {
+      fileIndex = 0;
+      playFromSelectedFolder();
+    }
   }
 
   if (button2.isPressed())  //Przycisk enkodera lewego wciśnięty
@@ -1448,6 +1479,7 @@ void loop()
     Serial.println("Przycisk enkodera lewego");
     if (currentOption == PLAY_FILES)
     {
+      timeDisplay = false;
       audio.stopSong();
       if (!SD.begin(SD_CS))
       {
@@ -1465,6 +1497,7 @@ void loop()
   
     if (currentOption == INTERNET_RADIO)
     {
+      timeDisplay = true;
       display.clearDisplay();
       changeStation();
     }
@@ -1538,9 +1571,6 @@ void loop()
         display.setCursor(55, 30);
         display.println(bank_nr);
         display.display();
-        // Ustawienie flagi aktywnego wyświetlania
-        displayActive = true;
-        displayStartTime = millis();
         fetchStationsFromServer();
         changeStation();
       }
@@ -1575,9 +1605,6 @@ void loop()
         display.setCursor(55, 30);
         display.println(bank_nr);
         display.display();
-        // Ustawienie flagi aktywnego wyświetlania
-        displayActive = true;
-        displayStartTime = millis();
         fetchStationsFromServer();
         changeStation();
       }
