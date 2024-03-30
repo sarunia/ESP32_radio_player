@@ -1465,6 +1465,7 @@ void loop()
   
     if (currentOption == INTERNET_RADIO)
     {
+      display.clearDisplay();
       changeStation();
     }
   }
