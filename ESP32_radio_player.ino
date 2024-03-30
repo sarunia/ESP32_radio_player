@@ -554,6 +554,7 @@ void audio_info(const char *info)
     display.setCursor(66, 56);
     display.println("Folder " + String(folderIndex));
     display.display();
+    seconds = 0;
   }
 
 }
@@ -967,7 +968,6 @@ void playFromSelectedFolder()
 
     isPlaying = true;
     noID3data = false;
-    seconds = 0;
 
     // Oczekuj, aż odtwarzanie się zakończy
     while (isPlaying)
@@ -1029,7 +1029,6 @@ void playFromSelectedFolder()
             Serial.print(totalFilesInFolder); // Łączna liczba plików w folderze
             Serial.print(" - ");
             Serial.println(fileName);
-            seconds = 0;
           }
         }
       } 
