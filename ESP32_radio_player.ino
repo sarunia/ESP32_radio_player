@@ -554,7 +554,6 @@ void audio_info(const char *info)
     display.setCursor(66, 56);
     display.println("Folder " + String(folderIndex));
     display.display();
-    seconds = 0;
   }
 
 }
@@ -968,6 +967,7 @@ void playFromSelectedFolder()
 
     isPlaying = true;
     noID3data = false;
+    seconds = 0;
 
     // Oczekuj, aż odtwarzanie się zakończy
     while (isPlaying)
@@ -1029,6 +1029,7 @@ void playFromSelectedFolder()
             Serial.print(totalFilesInFolder); // Łączna liczba plików w folderze
             Serial.print(" - ");
             Serial.println(fileName);
+            seconds = 0;
           }
         }
       } 
@@ -1492,6 +1493,7 @@ void loop()
       display.setCursor(0, 0);
       display.println("   LISTA KATALOG" + String((char)0x1F) + "W"); // Wyświetla komunikat "LISTA KATALOGÓW" na ekranie, 0x1F reprezentuje literę 'Ó'
       display.display();
+      currentSelection = 0;
       listDirectories("/");
     }
   
