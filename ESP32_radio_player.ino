@@ -1262,7 +1262,6 @@ void updateTimer()  // Wywoływana co sekundę przez timer
     if (mp3 == true)
     {
       Serial.println("To jest grane MP3");
-      mp3 = false;
       display.setCursor(102, 37);
       display.print("MP3");
       display.display();
@@ -1270,7 +1269,6 @@ void updateTimer()  // Wywoływana co sekundę przez timer
     if (flac == true)
     {
       Serial.println("To jest grany FLAC");
-      flac = false;
       display.setCursor(102, 37);
       display.print("FLAC");
       display.display();
@@ -1278,7 +1276,6 @@ void updateTimer()  // Wywoływana co sekundę przez timer
     if (aac == true)
     {
       Serial.println("To jest grane AAC");
-      aac = false;
       display.setCursor(102, 37);
       display.print("AAC");
       display.display();
@@ -1469,6 +1466,20 @@ void loop()
 
       display.setCursor(0, 37);
       display.println(sampleRateString.substring(1) + "Hz " + bitsPerSampleString + "bit");
+
+      display.setCursor(102, 37);
+      if (mp3 == true)
+      {
+        display.print("MP3");
+      }
+      if (flac == true)
+      {
+        display.print("FLAC");
+      }
+      if (aac == true)
+      {
+        display.print("AAC");
+      }
       
       display.setCursor(0, 47);
       display.println(bitrateString.substring(1) + "b/s  Bank " + String(bank_nr));
@@ -1532,7 +1543,7 @@ void loop()
   {
     if ((millis() - lastDebounceTime_S1) > debounceDelay)
     {
-      button_1 = false;
+      button_1 = mp3 = aac = flac = false;
       licznik_S1 = 0;
       lastDebounceTime_S1 = millis();
       if (currentOption == INTERNET_RADIO)
@@ -1554,7 +1565,7 @@ void loop()
   {
     if ((millis() - lastDebounceTime_S2) > debounceDelay)
     {
-      button_2 = false;
+      button_2 = mp3 = aac = flac = false;
       licznik_S2 = 0;
       lastDebounceTime_S2 = millis();
       if (currentOption == INTERNET_RADIO)
@@ -1576,7 +1587,7 @@ void loop()
   {
     if ((millis() - lastDebounceTime_S3) > debounceDelay)
     {
-      button_3 = false;
+      button_3 = mp3 = aac = flac = false;
       licznik_S3 = 0;
       lastDebounceTime_S3 = millis();
       if (currentOption == INTERNET_RADIO)
@@ -1606,7 +1617,7 @@ void loop()
   {
     if ((millis() - lastDebounceTime_S4) > debounceDelay)
     {
-      button_4 = false;
+      button_4 = mp3 = aac = flac = false;
       licznik_S4 = 0;
       lastDebounceTime_S4 = millis();
       if (currentOption == INTERNET_RADIO)
