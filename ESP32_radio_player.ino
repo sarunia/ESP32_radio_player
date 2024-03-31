@@ -240,6 +240,8 @@ void saveStationToEEPROM(const char* station)
 // Funkcja odpowiedzialna za zmianę aktualnie wybranej stacji radiowej.
 void changeStation()
 {  
+  stationString.remove(0);  // Usunięcie wszystkich znaków z obiektu stationString
+
   // Odczytaj link stacji o aktualnym numerze station_nr
   char station[MAX_LINK_LENGTH + 1];
   memset(station, 0, sizeof(station));
@@ -1456,14 +1458,6 @@ void loop()
       display.println(stationName);
       display.setCursor(0, 10);
       display.println(stationString);
-      for (int y = 37; y <= 54; y++)
-      {
-        for (int x = 0; x < 127; x++)
-        {
-          display.drawPixel(x, y, SH110X_BLACK);
-        }
-      }
-
       display.setCursor(0, 37);
       display.println(sampleRateString.substring(1) + "Hz " + bitsPerSampleString + "bit");
 
@@ -1483,13 +1477,6 @@ void loop()
       
       display.setCursor(0, 47);
       display.println(bitrateString.substring(1) + "b/s  Bank " + String(bank_nr));
-      for (int y = 56; y <= 63; y++)
-      {
-        for (int x = 51; x < 127; x++)
-        {
-          display.drawPixel(x, y, SH110X_BLACK);
-        }
-      }
       display.setCursor(66, 56);
       display.println("Stacja " + String(station_nr));
       display.display();
@@ -1546,17 +1533,14 @@ void loop()
       button_1 = mp3 = aac = flac = false;
       licznik_S1 = 0;
       lastDebounceTime_S1 = millis();
-      if (currentOption == INTERNET_RADIO)
+      station_nr++;
+      if (station_nr > stationsCount)
       {
-        station_nr++;
-        if (station_nr > stationsCount)
-        {
-          station_nr = 1;
-        }
-        Serial.print("Przycisk S1 został wciśnięty, licznik = ");
-        Serial.println(station_nr);
-        changeStation();
+        station_nr = 1;
       }
+      Serial.print("Przycisk S1 został wciśnięty, licznik = ");
+      Serial.println(station_nr);
+      changeStation();
     }
   }
 
@@ -1568,17 +1552,14 @@ void loop()
       button_2 = mp3 = aac = flac = false;
       licznik_S2 = 0;
       lastDebounceTime_S2 = millis();
-      if (currentOption == INTERNET_RADIO)
+      station_nr--;
+      if (station_nr < 1)
       {
-        station_nr--;
-        if (station_nr < 1)
-        {
-          station_nr = stationsCount;
-        }
-        Serial.print("Przycisk S2 został wciśnięty, licznik = ");
-        Serial.println(station_nr);
-        changeStation();
+        station_nr = stationsCount;
       }
+      Serial.print("Przycisk S2 został wciśnięty, licznik = ");
+      Serial.println(station_nr);
+      changeStation();
     }
   }
 
@@ -1590,25 +1571,22 @@ void loop()
       button_3 = mp3 = aac = flac = false;
       licznik_S3 = 0;
       lastDebounceTime_S3 = millis();
-      if (currentOption == INTERNET_RADIO)
-      {
-        bank_nr++;
-        station_nr = 1;
-        Serial.print("Przycisk S3 został wciśnięty, bank = ");
-        Serial.println(bank_nr);
-        // Wyświetlanie nr banku
-        display.clearDisplay();
-        display.setTextSize(2);
-        display.setTextColor(SH110X_WHITE);
-        display.setCursor(25, 0);
-        display.println("Bank nr");
-        display.setTextSize(3);
-        display.setCursor(55, 30);
-        display.println(bank_nr);
-        display.display();
-        fetchStationsFromServer();
-        changeStation();
-      }
+      bank_nr++;
+      station_nr = 1;
+      Serial.print("Przycisk S3 został wciśnięty, bank = ");
+      Serial.println(bank_nr);
+      // Wyświetlanie nr banku
+      display.clearDisplay();
+      display.setTextSize(2);
+      display.setTextColor(SH110X_WHITE);
+      display.setCursor(25, 0);
+      display.println("Bank nr");
+      display.setTextSize(3);
+      display.setCursor(55, 30);
+      display.println(bank_nr);
+      display.display();
+      fetchStationsFromServer();
+      changeStation();
     }
   }
 
@@ -1620,29 +1598,26 @@ void loop()
       button_4 = mp3 = aac = flac = false;
       licznik_S4 = 0;
       lastDebounceTime_S4 = millis();
-      if (currentOption == INTERNET_RADIO)
+      bank_nr--;
+      if (bank_nr < 1)
       {
-        bank_nr--;
-        if (bank_nr < 1)
-        {
-          bank_nr = 1;
-        }
-        station_nr = 1;
-        Serial.print("Przycisk S4 został wciśnięty, bank = ");
-        Serial.println(bank_nr);
-        // Wyświetlanie nr banku
-        display.clearDisplay();
-        display.setTextSize(2);
-        display.setTextColor(SH110X_WHITE);
-        display.setCursor(25, 0);
-        display.println("Bank nr");
-        display.setTextSize(3);
-        display.setCursor(55, 30);
-        display.println(bank_nr);
-        display.display();
-        fetchStationsFromServer();
-        changeStation();
+        bank_nr = 1;
       }
+      station_nr = 1;
+      Serial.print("Przycisk S4 został wciśnięty, bank = ");
+      Serial.println(bank_nr);
+      // Wyświetlanie nr banku
+      display.clearDisplay();
+      display.setTextSize(2);
+      display.setTextColor(SH110X_WHITE);
+      display.setCursor(25, 0);
+      display.println("Bank nr");
+      display.setTextSize(3);
+      display.setCursor(55, 30);
+      display.println(bank_nr);
+      display.display();
+      fetchStationsFromServer();
+      changeStation();
     }
   }
 }
