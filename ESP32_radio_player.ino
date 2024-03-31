@@ -87,6 +87,7 @@ bool displayActive = false;       // Flaga określająca, czy wyświetlacz jest 
 bool isPlaying = false;           // Flaga określająca, czy obecnie trwa odtwarzanie
 bool mp3 = false;                 // Flaga określająca, czy aktualny plik audio jest w formacie MP3
 bool flac = false;                // Flaga określająca, czy aktualny plik audio jest w formacie FLAC
+bool aac = false;                 // Flaga określająca, czy aktualny plik audio jest w formacie AAC
 bool noID3data = false;           // Flaga określająca, czy plik audio posiada dane ID3
 bool timeDisplay = true;          // Flaga określająca kiedy pokazać czas na wyświetlaczu, domyślnie od razu po starcie
 unsigned long lastDebounceTime_S1 = 0;    // Czas ostatniego debouncingu dla przycisku S1.
@@ -482,11 +483,20 @@ void audio_info(const char *info)
   {
     mp3 = true;
     flac = false;
+    aac = false;
   }
 
   if (String(info).indexOf("FLACDecoder") != -1)
   {
     flac = true;
+    mp3 = false;
+    aac = false;
+  }
+
+  if (String(info).indexOf("AACDecoder") != -1)
+  {
+    aac = true;
+    flac = false;
     mp3 = false;
   }
 
@@ -1263,6 +1273,14 @@ void updateTimer()  // Wywoływana co sekundę przez timer
       flac = false;
       display.setCursor(102, 37);
       display.print("FLAC");
+      display.display();
+    }
+    if (aac == true)
+    {
+      Serial.println("To jest grane AAC");
+      aac = false;
+      display.setCursor(102, 37);
+      display.print("AAC");
       display.display();
     }
   }
