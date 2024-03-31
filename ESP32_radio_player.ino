@@ -90,6 +90,7 @@ bool flac = false;                // Flaga określająca, czy aktualny plik audi
 bool aac = false;                 // Flaga określająca, czy aktualny plik audio jest w formacie AAC
 bool noID3data = false;           // Flaga określająca, czy plik audio posiada dane ID3
 bool timeDisplay = true;          // Flaga określająca kiedy pokazać czas na wyświetlaczu, domyślnie od razu po starcie
+bool listedStations = false;      // Flaga określająca czy na ekranie jest pokazana lista stacji do wyboru
 unsigned long lastDebounceTime_S1 = 0;    // Czas ostatniego debouncingu dla przycisku S1.
 unsigned long lastDebounceTime_S2 = 0;    // Czas ostatniego debouncingu dla przycisku S2.
 unsigned long lastDebounceTime_S3 = 0;    // Czas ostatniego debouncingu dla przycisku S3.
@@ -900,7 +901,7 @@ void listDirectories(const char *dirname)
   Serial.println("Wylistowano katalogi z karty SD");
   root.close();
   scrollDown();
-  printToOLED();
+  printFoldersToOLED();
 }
 
 // Funkcja do przewijania w górę
@@ -914,18 +915,38 @@ void scrollUp()
       firstVisibleLine = currentSelection;
     }
   }
+  // Dodaj dodatkowy wydruk do diagnostyki
+  //Serial.print("Scroll Up: CurrentSelection = ");
+  //Serial.println(currentSelection);
 }
 
 void scrollDown()
 {
-  if (currentSelection < directoryCount - 1)
+  if (currentOption = INTERNET_RADIO)
   {
-    currentSelection++;
-    if (currentSelection >= firstVisibleLine + maxVisibleLines)
+    if (currentSelection < stationsCount - 1)
     {
-      firstVisibleLine++;
+      currentSelection++;
+      if (currentSelection >= firstVisibleLine + maxVisibleLines)
+      {
+        firstVisibleLine++;
+      }
     }
   }
+  else
+  {
+    if (currentSelection < directoryCount - 1)
+    {
+      currentSelection++;
+      if (currentSelection >= firstVisibleLine + maxVisibleLines)
+      {
+        firstVisibleLine++;
+      }
+    }
+  }
+  // Dodaj dodatkowy wydruk do diagnostyki
+  //Serial.print("Scroll Down: CurrentSelection = ");
+  //Serial.println(currentSelection);
 }
 
 void playFromSelectedFolder()
@@ -1058,7 +1079,7 @@ void playFromSelectedFolder()
       CLK_state1 = digitalRead(CLK_PIN1);
       if (CLK_state1 != prev_CLK_state1 && CLK_state1 == HIGH)
       {
-        // Ustawienie flagi aktywnego wyświetlania
+        // Ustawienie flagi aktywnego wyświetlania na 5 sekund
         displayActive = true;
         displayStartTime = millis();
         if (digitalRead(DT_PIN1) == HIGH)
@@ -1112,7 +1133,7 @@ void playFromSelectedFolder()
           Serial.print("Wartość licznika lewego enkodera: ");
           Serial.println(encoderCounter2);
           scrollUp();
-          printToOLED();
+          printFoldersToOLED();
         }
         else
         {
@@ -1124,7 +1145,7 @@ void playFromSelectedFolder()
           Serial.print("Wartość licznika lewego enkodera: ");
           Serial.println(encoderCounter2);
           scrollDown();
-          printToOLED();
+          printFoldersToOLED();
         }
         displayActive = true;
         displayStartTime = millis();
@@ -1189,8 +1210,8 @@ void playFromSelectedFolder()
   root.close();
 }
 
-// Funkcja do drukowania na ekranie OLED z uwzględnieniem zaznaczenia
-void printToOLED()
+// Funkcja do drukowania folderów na ekranie OLED z uwzględnieniem zaznaczenia
+void printFoldersToOLED()
 {
   display.clearDisplay();
   display.setTextSize(1);
@@ -1245,6 +1266,58 @@ void printToOLED()
   display.setTextColor(SH110X_WHITE);
   display.display();
 }
+
+// Funkcja do drukowania listy stacji radiowych na ekranie OLED z uwzględnieniem zaznaczenia
+void printStationsToOLED()
+{
+  display.clearDisplay();
+  display.setTextSize(1);
+  display.setTextColor(SH110X_WHITE);
+  display.setCursor(0, 0);
+  display.println("   STACJE RADIOWE    ");
+
+  int displayRow = 1;  // Zaczynamy od drugiego wiersza (pierwszy to nagłówek)
+
+  for (int i = firstVisibleLine; i < min(firstVisibleLine + 7, stationsCount); i++)
+  {
+    char station[MAX_LINK_LENGTH + 1];
+    memset(station, 0, sizeof(station));
+
+    // Odczytaj długość linku
+    int length = EEPROM.read(i * (MAX_LINK_LENGTH + 1));
+
+    // Odczytaj link jako bajty
+    for (int j = 0; j < min(length, 21); j++)
+    {
+      station[j] = EEPROM.read(i * (MAX_LINK_LENGTH + 1) + 1 + j);
+    }
+
+    // Podświetlenie zaznaczenia
+    if (i == currentSelection)
+    {
+      display.setTextColor(SH110X_BLACK, SH110X_WHITE);
+    }
+    else
+    {
+      display.setTextColor(SH110X_WHITE);
+    }
+
+    // Wyświetl nazwę stacji (pierwsze 21 znaków)
+    display.setCursor(0, displayRow * 9);
+    display.print(station);
+    // Dodaj dodatkowy wydruk do diagnostyki
+    //Serial.print("Wyświetlona stacja: ");
+    //Serial.println(station);
+
+    // Przesuń się do kolejnego wiersza
+    displayRow++;
+  }
+
+  // Przywróć domyślne kolory tekstu
+  display.setTextColor(SH110X_WHITE);
+  display.display();
+}
+
 
 void updateTimer()  // Wywoływana co sekundę przez timer
 {
@@ -1381,40 +1454,67 @@ void loop()
   CLK_state1 = digitalRead(CLK_PIN1);
   if (CLK_state1 != prev_CLK_state1 && CLK_state1 == HIGH)
   {
-    if (digitalRead(DT_PIN1) == HIGH)
-    {
-      encoderCounter1--;
-    } else
-    {
-      encoderCounter1++;
-    }
-
-    Serial.print("Encoder prawy: ");
-    Serial.println(encoderCounter1);
-    audio.setVolume(encoderCounter1); // zakres 0...21
-
-    // Wyświetlanie komunikatu przez 5 sekund
-    display.clearDisplay();
-    display.setTextSize(2);
-    display.setTextColor(SH110X_WHITE);
-    display.setCursor(4, 0);
-    display.println("Volume set");
-    display.setTextSize(3);
-    display.setCursor(48, 30);
-    display.println(encoderCounter1);
-    display.display();
-
-    // Ustawienie flagi aktywnego wyświetlania
+    // Ustawienie flagi aktywnego wyświetlania na 5 sekund
     displayActive = true;
     displayStartTime = millis();
-    
-    if (encoderCounter1 >= 15)
+
+    if (listedStations == true)
     {
-      encoderCounter1 = 15;
+      station_nr = currentSelection + 1;
+      if (digitalRead(DT_PIN1) == HIGH)
+      {
+        station_nr--;
+        if (station_nr < 1)
+        {
+          station_nr = stationsCount;
+        }
+        scrollUp();
+        printStationsToOLED();
+      }
+      else
+      {
+        station_nr++;
+        if (station_nr > stationsCount)
+        {
+          station_nr = 1;
+        }
+        scrollDown();
+        printStationsToOLED();
+      }
+      Serial.print("Numer wybranej stacji: ");
+      Serial.println(station_nr);
     }
-    if (encoderCounter1 <= 5)
+
+    else
     {
-      encoderCounter1 = 5;
+      if (digitalRead(DT_PIN1) == HIGH)
+      {
+        encoderCounter1--;
+        if (encoderCounter1 < 5)
+        {
+          encoderCounter1 = 5;
+        }
+      } 
+      else
+      {
+        encoderCounter1++;
+        if (encoderCounter1 > 15)
+        {
+          encoderCounter1 = 15;
+        }
+      }
+      Serial.print("Wartość głośności: ");
+      Serial.println(encoderCounter1);
+      audio.setVolume(encoderCounter1); // zakres 0...21
+      display.clearDisplay();
+      display.setTextSize(2);
+      display.setTextColor(SH110X_WHITE);
+      display.setCursor(4, 0);
+      display.println("Volume set");
+      display.setTextSize(3);
+      display.setCursor(48, 30);
+      display.println(encoderCounter1);
+      display.display();
     }
   }
   prev_CLK_state1 = CLK_state1;
@@ -1424,7 +1524,7 @@ void loop()
   {
     timeDisplay = false;
     directoryCount = 0;
-    // Ustawienie flagi aktywnego wyświetlania
+    // Ustawienie flagi aktywnego wyświetlania na 5 sekund
     displayActive = true;
     displayStartTime = millis();
     if (digitalRead(DT_PIN2) == HIGH)
@@ -1482,6 +1582,7 @@ void loop()
       display.display();
       displayActive = false;
       timeDisplay = true;
+      listedStations = false;
     }
   }
   
@@ -1492,6 +1593,14 @@ void loop()
     {
       fileIndex = 0;
       playFromSelectedFolder();
+    }
+    if (currentOption == INTERNET_RADIO)
+    {
+      timeDisplay = false;
+      printStationsToOLED();
+      listedStations = true;
+      displayActive = true;
+      displayStartTime = millis();
     }
   }
 
