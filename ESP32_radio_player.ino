@@ -120,7 +120,7 @@ String password = "malinowykrul1977comeback";
 char stations[MAX_STATIONS][MAX_LINK_LENGTH + 1];   // Tablica przechowująca linki do stacji radiowych (jedna na stację) +1 dla terminatora null
 
 const char* ntpServer = "pool.ntp.org";      // Adres serwera NTP używany do synchronizacji czasu
-const long  gmtOffset_sec = 0;               // Przesunięcie czasu UTC w sekundach
+const long  gmtOffset_sec = 3600;            // Przesunięcie czasu UTC w sekundach
 const int   daylightOffset_sec = 3600;       // Przesunięcie czasu letniego w sekundach, dla Polski to 1 godzina
 
 
@@ -280,6 +280,7 @@ void changeStation()
 
   // Połącz z daną stacją
   audio.connecttohost(station);
+  seconds = 0;
 }
 
 void fetchStationsFromServer()
@@ -1253,6 +1254,7 @@ void updateTimer()  // Wywoływana co sekundę przez timer
   {
     if (mp3 == true)
     {
+      Serial.println("To jest grane MP3");
       mp3 = false;
       display.setCursor(102, 37);
       display.print("MP3");
@@ -1260,6 +1262,7 @@ void updateTimer()  // Wywoływana co sekundę przez timer
     }
     if (flac == true)
     {
+      Serial.println("To jest grany FLAC");
       flac = false;
       display.setCursor(102, 37);
       display.print("FLAC");
