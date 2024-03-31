@@ -52,69 +52,69 @@
 #define LICZNIK_S4 16             // Numer pinu dla enkodera/licznika S4
 #define MAX_FILES 100             // Maksymalna liczba plików lub katalogów w tablicy directories
 
-int currentSelection = 0;  // Numer domyślnie zaznaczonego pierwszego katalogu na ekranie OLED
-int firstVisibleLine = 0;  // Numer pierwszej widocznej linii na ekranie OLED z wyborem katalogów odczytanych z karty SD
-int button_S1 = 17;  // Przycisk S1 podłączony do pinu 17
-int button_S2 = 18;  // Przycisk S2 podłączony do pinu 18
-int button_S3 = 15;  // Przycisk S3 podłączony do pinu 15
-int button_S4 = 16;  // Przycisk S4 podłączony do pinu 16
-int station_nr = 6;  // Numer aktualnie wybranej stacji radiowej z listy, domyślnie stacja nr 6
-int bank_nr = 1; // Numer aktualnie wybranego banku stacji z listy, domyślnie bank nr 1
-int encoderCounter1 = 12; // Początkowa środkowa wartość ustawienia poziomu głośności - prawy encoder
-int encoderCounter2 = 1; // Licznik lewy encoder, zaczynam od 1
-int CLK_state1;    // Aktualny stan CLK enkodera prawego
-int prev_CLK_state1;   // Poprzedni stan CLK enkodera prawego    
-int CLK_state2;    // Aktualny stan CLK enkodera lewego
-int prev_CLK_state2;   // Poprzedni stan CLK enkodera lewego          
-int licznik_S1 = 0;  // Licznik dla przycisku S1
-int licznik_S2 = 0;  // Licznik dla przycisku S2
-int licznik_S3 = 0;  // Licznik dla przycisku S3
-int licznik_S4 = 0;  // Licznik dla przycisku S4
-int stationsCount = 0;    // Aktualna liczba przechowywanych stacji w tablicy
-int directoryCount = 0; // Licznik katalogów
-int fileIndex = 0;  // Numer aktualnie wybranego pliku audio ze wskazanego folderu
-int folderIndex = 1;  // Numer domyślnie wybranego folderu podczas przełączenia do odtwarzania z karty SD
-int totalFilesInFolder = 0; // Zmienna przechowująca łączną liczbę plików w folderze
-const int maxVisibleLines = 5;  // Maksymalna liczba widocznych linii na ekranie OLED
-bool button_1 = false;    // Flaga określająca stan przycisku 1
-bool button_2 = false;    // Flaga określająca stan przycisku 2
-bool button_3 = false;    // Flaga określająca stan przycisku 3
-bool button_4 = false;    // Flaga określająca stan przycisku 4
-bool encoderButton1 = false;  // Flaga określająca, czy przycisk enkodera 1 został wciśnięty
-bool encoderButton2 = false;  // Flaga określająca, czy przycisk enkodera 2 został wciśnięty
-bool endFile = false;         // Flaga sygnalizująca koniec odtwarzania pliku audio
-bool displayActive = false;   // Flaga określająca, czy wyświetlacz jest aktywny
-bool isPlaying = false;       // Flaga określająca, czy obecnie trwa odtwarzanie
-bool mp3 = false;             // Flaga określająca, czy aktualny plik audio jest w formacie MP3
-bool flac = false;            // Flaga określająca, czy aktualny plik audio jest w formacie FLAC
-bool noID3data = false;       // Flaga określająca, czy plik audio posiada dane ID3
-bool timeDisplay = true;      // Flaga określająca kiedy pokazać czas na wyświetlaczu, domyślnie od razu po starcie
+int currentSelection = 0;         // Numer domyślnie zaznaczonego pierwszego katalogu na ekranie OLED
+int firstVisibleLine = 0;         // Numer pierwszej widocznej linii na ekranie OLED z wyborem katalogów odczytanych z karty SD
+int button_S1 = 17;               // Przycisk S1 podłączony do pinu 17
+int button_S2 = 18;               // Przycisk S2 podłączony do pinu 18
+int button_S3 = 15;               // Przycisk S3 podłączony do pinu 15
+int button_S4 = 16;               // Przycisk S4 podłączony do pinu 16
+int station_nr = 6;               // Numer aktualnie wybranej stacji radiowej z listy, domyślnie stacja nr 6
+int bank_nr = 1;                  // Numer aktualnie wybranego banku stacji z listy, domyślnie bank nr 1
+int encoderCounter1 = 12;         // Początkowa środkowa wartość ustawienia poziomu głośności - prawy encoder
+int encoderCounter2 = 1;          // Licznik lewy encoder, zaczynam od 1
+int CLK_state1;                   // Aktualny stan CLK enkodera prawego
+int prev_CLK_state1;              // Poprzedni stan CLK enkodera prawego    
+int CLK_state2;                   // Aktualny stan CLK enkodera lewego
+int prev_CLK_state2;              // Poprzedni stan CLK enkodera lewego          
+int licznik_S1 = 0;               // Licznik dla przycisku S1
+int licznik_S2 = 0;               // Licznik dla przycisku S2
+int licznik_S3 = 0;               // Licznik dla przycisku S3
+int licznik_S4 = 0;               // Licznik dla przycisku S4
+int stationsCount = 0;            // Aktualna liczba przechowywanych stacji w tablicy
+int directoryCount = 0;           // Licznik katalogów
+int fileIndex = 0;                // Numer aktualnie wybranego pliku audio ze wskazanego folderu
+int folderIndex = 1;              // Numer domyślnie wybranego folderu podczas przełączenia do odtwarzania z karty SD
+int totalFilesInFolder = 0;       // Zmienna przechowująca łączną liczbę plików w folderze
+const int maxVisibleLines = 5;    // Maksymalna liczba widocznych linii na ekranie OLED
+bool button_1 = false;            // Flaga określająca stan przycisku 1
+bool button_2 = false;            // Flaga określająca stan przycisku 2
+bool button_3 = false;            // Flaga określająca stan przycisku 3
+bool button_4 = false;            // Flaga określająca stan przycisku 4
+bool encoderButton1 = false;      // Flaga określająca, czy przycisk enkodera 1 został wciśnięty
+bool encoderButton2 = false;      // Flaga określająca, czy przycisk enkodera 2 został wciśnięty
+bool endFile = false;             // Flaga sygnalizująca koniec odtwarzania pliku audio
+bool displayActive = false;       // Flaga określająca, czy wyświetlacz jest aktywny
+bool isPlaying = false;           // Flaga określająca, czy obecnie trwa odtwarzanie
+bool mp3 = false;                 // Flaga określająca, czy aktualny plik audio jest w formacie MP3
+bool flac = false;                // Flaga określająca, czy aktualny plik audio jest w formacie FLAC
+bool noID3data = false;           // Flaga określająca, czy plik audio posiada dane ID3
+bool timeDisplay = true;          // Flaga określająca kiedy pokazać czas na wyświetlaczu, domyślnie od razu po starcie
 unsigned long lastDebounceTime_S1 = 0;    // Czas ostatniego debouncingu dla przycisku S1.
 unsigned long lastDebounceTime_S2 = 0;    // Czas ostatniego debouncingu dla przycisku S2.
 unsigned long lastDebounceTime_S3 = 0;    // Czas ostatniego debouncingu dla przycisku S3.
 unsigned long lastDebounceTime_S4 = 0;    // Czas ostatniego debouncingu dla przycisku S4.
-unsigned long debounceDelay = 200;  // Czas trwania debouncingu w milisekundach.
-unsigned long displayTimeout = 5000;  // Czas wyświetlania komunikatu na ekranie w milisekundach.
-unsigned long displayStartTime = 0;   // Czas rozpoczęcia wyświetlania komunikatu.
-unsigned long seconds = 0;  // Licznik sekund timera
+unsigned long debounceDelay = 200;        // Czas trwania debouncingu w milisekundach.
+unsigned long displayTimeout = 5000;      // Czas wyświetlania komunikatu na ekranie w milisekundach.
+unsigned long displayStartTime = 0;       // Czas rozpoczęcia wyświetlania komunikatu.
+unsigned long seconds = 0;                // Licznik sekund timera
 
-String directories[MAX_FILES]; // Tablica z indeksami i ścieżkami katalogów
-String currentDirectory = "/";  // Ścieżka bieżącego katalogu
-String stationName;    // Nazwa aktualnie wybranej stacji radiowej.
-String stationString;    // Dodatkowe dane stacji radiowej (jeśli istnieją).
-String bitrateString;         // Zmienna przechowująca informację o bitrate
-String sampleRateString;      // Zmienna przechowująca informację o sample rate
-String bitsPerSampleString;   // Zmienna przechowująca informację o liczbie bitów na próbkę
-String artistString;         // Zmienna przechowująca informację o wykonawcy
-String titleString;      // Zmienna przechowująca informację o tytule utworu
-String fileNameString;  // Zmienna przechowująca informację o nazwie pliku
+String directories[MAX_FILES];            // Tablica z indeksami i ścieżkami katalogów
+String currentDirectory = "/";            // Ścieżka bieżącego katalogu
+String stationName;                       // Nazwa aktualnie wybranej stacji radiowej.
+String stationString;                     // Dodatkowe dane stacji radiowej (jeśli istnieją).
+String bitrateString;                     // Zmienna przechowująca informację o bitrate
+String sampleRateString;                  // Zmienna przechowująca informację o sample rate
+String bitsPerSampleString;               // Zmienna przechowująca informację o liczbie bitów na próbkę
+String artistString;                      // Zmienna przechowująca informację o wykonawcy
+String titleString;                       // Zmienna przechowująca informację o tytule utworu
+String fileNameString;                    // Zmienna przechowująca informację o nazwie pliku
 
 Adafruit_SH1106G display = Adafruit_SH1106G(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);    //Inicjalizacja obiektu wyświetlacza OLED
-ezButton button1(SW_PIN1);  // Utworzenie obiektu przycisku z enkodera 1 ezButton, podłączonego do pinu 4
-ezButton button2(SW_PIN2);  // Utworzenie obiektu przycisku z enkodera 1 ezButton, podłączonego do pinu 1
-Audio audio;               // Obiekt do obsługi funkcji związanych z dźwiękiem i audio
-WiFiMulti wifiMulti;       // Obiekt do obsługi wielu połączeń WiFi
-Ticker timer;  // Obiekt do obsługi timera
+ezButton button1(SW_PIN1);                // Utworzenie obiektu przycisku z enkodera 1 ezButton, podłączonego do pinu 4
+ezButton button2(SW_PIN2);                // Utworzenie obiektu przycisku z enkodera 1 ezButton, podłączonego do pinu 1
+Audio audio;                              // Obiekt do obsługi funkcji związanych z dźwiękiem i audio
+WiFiMulti wifiMulti;                      // Obiekt do obsługi wielu połączeń WiFi
+Ticker timer;                             // Obiekt do obsługi timera
 String ssid =     "brakdostepu";
 String password = "malinowykrul1977comeback";
 char stations[MAX_STATIONS][MAX_LINK_LENGTH + 1];   // Tablica przechowująca linki do stacji radiowych (jedna na stację) +1 dla terminatora null
@@ -1184,7 +1184,7 @@ void printToOLED()
   display.setTextSize(1);
   display.setTextColor(SH110X_WHITE);
   display.setCursor(0, 0);
-  display.println("   LISTA KATALOG" + String((char)0x1F) + "W"); // Wyświetla komunikat "LISTA KATALOGÓW" na ekranie, 0x1F reprezentuje literę 'Ó'
+  display.println("   LISTA KATALOG" + String((char)0x1F) + "W"); // Wyświetla napis "LISTA KATALOGÓW" na ekranie, 0x1F reprezentuje literę 'Ó'
   display.println(currentDirectory);
 
   int displayRow = 1;  // Zaczynamy od drugiego wiersza (pierwszy to nagłówek)
@@ -1226,9 +1226,6 @@ void printToOLED()
         }
         // Przesuń się do kolejnego wiersza
         displayRow++;
-
-        // Zaktualizuj liczbę folderów
-        //foldersCount++;
       }
     }
   }
