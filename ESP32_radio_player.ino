@@ -1332,33 +1332,30 @@ void updateTimer()  // Wywoływana co sekundę przez timer
   display.setTextSize(1);
   display.setTextColor(SH110X_WHITE);
 
-  if (seconds == 3)
-  {
-    if (mp3 == true)
-    {
-      Serial.println("To jest grane MP3");
-      display.setCursor(102, 37);
-      display.print("MP3");
-      display.display();
-    }
-    if (flac == true)
-    {
-      Serial.println("To jest grany FLAC");
-      display.setCursor(102, 37);
-      display.print("FLAC");
-      display.display();
-    }
-    if (aac == true)
-    {
-      Serial.println("To jest grane AAC");
-      display.setCursor(102, 37);
-      display.print("AAC");
-      display.display();
-    }
-  }
-  
   if (timeDisplay == true)
   {
+    if (audio.isRunning() == true)
+    {
+      if (mp3 == true)
+      {
+        display.setCursor(102, 37);
+        display.print("MP3");
+        display.display();
+      }
+      if (flac == true)
+      {
+        display.setCursor(102, 37);
+        display.print("FLAC");
+        display.display();
+      }
+      if (aac == true)
+      {
+        display.setCursor(102, 37);
+        display.print("AAC");
+        display.display();
+      }
+    }
+
     display.setCursor(0, 56);
     for (int y = 56; y <= 63; y++)
     {
