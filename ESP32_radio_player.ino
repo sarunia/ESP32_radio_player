@@ -96,7 +96,7 @@ unsigned long lastDebounceTime_S2 = 0;    // Czas ostatniego debouncingu dla prz
 unsigned long lastDebounceTime_S3 = 0;    // Czas ostatniego debouncingu dla przycisku S3.
 unsigned long lastDebounceTime_S4 = 0;    // Czas ostatniego debouncingu dla przycisku S4.
 unsigned long debounceDelay = 200;        // Czas trwania debouncingu w milisekundach.
-unsigned long displayTimeout = 5000;      // Czas wyświetlania komunikatu na ekranie w milisekundach.
+unsigned long displayTimeout = 6000;      // Czas wyświetlania komunikatu na ekranie w milisekundach.
 unsigned long displayStartTime = 0;       // Czas rozpoczęcia wyświetlania komunikatu.
 unsigned long seconds = 0;                // Licznik sekund timera
 
