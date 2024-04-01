@@ -1463,7 +1463,7 @@ void loop()
         station_nr--;
         if (station_nr < 1)
         {
-          station_nr = stationsCount;
+          station_nr = 1;
         }
         scrollUp();
         printStationsToOLED();
@@ -1473,7 +1473,7 @@ void loop()
         station_nr++;
         if (station_nr > stationsCount)
         {
-          station_nr = 1;
+          station_nr = stationsCount;
         }
         scrollDown();
         printStationsToOLED();
@@ -1684,6 +1684,7 @@ void loop()
       button_3 = mp3 = aac = flac = false;
       licznik_S3 = 0;
       currentSelection = 0;
+      firstVisibleLine = 0;
       lastDebounceTime_S3 = millis();
       bank_nr++;
       station_nr = 1;
@@ -1712,6 +1713,7 @@ void loop()
       button_4 = mp3 = aac = flac = false;
       licznik_S4 = 0;
       currentSelection = 0;
+      firstVisibleLine = 0;
       lastDebounceTime_S4 = millis();
       bank_nr--;
       if (bank_nr < 1)
