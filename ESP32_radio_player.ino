@@ -1487,6 +1487,7 @@ void loop()
 
     else
     {
+      timeDisplay = false;
       if (digitalRead(DT_PIN1) == HIGH)
       {
         encoderCounter1--;
