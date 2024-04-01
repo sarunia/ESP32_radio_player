@@ -922,7 +922,7 @@ void scrollUp()
 
 void scrollDown()
 {
-  if (currentOption = INTERNET_RADIO)
+  if (currentOption == INTERNET_RADIO)
   {
     if (currentSelection < stationsCount - 1)
     {
@@ -933,7 +933,7 @@ void scrollDown()
       }
     }
   }
-  else
+  if (currentOption == PLAY_FILES)
   {
     if (currentSelection < directoryCount - 1)
     {
@@ -1553,6 +1553,7 @@ void loop()
 
   if (displayActive && (millis() - displayStartTime >= displayTimeout))   // Przywracanie poprzedniej zawartości ekranu po 5 sekundach
   {
+    
     if (currentOption == INTERNET_RADIO)
     {
       display.clearDisplay();
@@ -1619,10 +1620,10 @@ void loop()
   {
     Serial.println("Przycisk enkodera lewego");
     display.clearDisplay();
+    audio.stopSong();
     if (currentOption == PLAY_FILES)
     {
       timeDisplay = false;
-      audio.stopSong();
       if (!SD.begin(SD_CS))
       {
         Serial.println("Błąd inicjalizacji karty SD!");
@@ -1634,6 +1635,7 @@ void loop()
       display.println("   LISTA KATALOG" + String((char)0x1F) + "W"); // Wyświetla komunikat "LISTA KATALOGÓW" na ekranie, 0x1F reprezentuje literę 'Ó'
       display.display();
       currentSelection = 0;
+      firstVisibleLine = 0;
       listDirectories("/");
     }
   
@@ -1649,17 +1651,18 @@ void loop()
   {
     if ((millis() - lastDebounceTime_S1) > debounceDelay)
     {
+      licznik_S1 = 0;
+      lastDebounceTime_S1 = millis();
+      button_1 = mp3 = aac = flac = false;
+      Serial.println("Przycisk S1 został wciśnięty");
       if (currentOption == INTERNET_RADIO)
       {
-        button_1 = mp3 = aac = flac = false;
-        licznik_S1 = 0;
-        lastDebounceTime_S1 = millis();
         station_nr++;
         if (station_nr > stationsCount)
         {
           station_nr = 1;
         }
-        Serial.print("Przycisk S1 został wciśnięty, licznik = ");
+        ;
         Serial.println(station_nr);
         changeStation();
       }
@@ -1671,17 +1674,17 @@ void loop()
   {
     if ((millis() - lastDebounceTime_S2) > debounceDelay)
     {
+      licznik_S2 = 0;
+      lastDebounceTime_S2 = millis();
+      button_2 = mp3 = aac = flac = false;
+      Serial.println("Przycisk S2 został wciśnięty");
       if (currentOption == INTERNET_RADIO)
       {
-        button_2 = mp3 = aac = flac = false;
-        licznik_S2 = 0;
-        lastDebounceTime_S2 = millis();
         station_nr--;
         if (station_nr < 1)
         {
           station_nr = stationsCount;
         }
-        Serial.print("Przycisk S2 został wciśnięty, licznik = ");
         Serial.println(station_nr);
         changeStation();
       }
@@ -1693,18 +1696,17 @@ void loop()
   {
     if ((millis() - lastDebounceTime_S3) > debounceDelay)
     {
+      licznik_S3 = 0;
+      lastDebounceTime_S3 = millis();
+      button_3 = mp3 = aac = flac = false;
+      Serial.println("Przycisk S3 został wciśnięty");
       if (currentOption == INTERNET_RADIO)
       {
-        button_3 = mp3 = aac = flac = false;
-        licznik_S3 = 0;
         currentSelection = 0;
         firstVisibleLine = 0;
-        lastDebounceTime_S3 = millis();
         bank_nr++;
         station_nr = 1;
-        Serial.print("Przycisk S3 został wciśnięty, bank = ");
         Serial.println(bank_nr);
-        // Wyświetlanie nr banku
         display.clearDisplay();
         display.setTextSize(2);
         display.setTextColor(SH110X_WHITE);
@@ -1725,22 +1727,21 @@ void loop()
   {
     if ((millis() - lastDebounceTime_S4) > debounceDelay)
     {
+      licznik_S4 = 0;
+      lastDebounceTime_S4 = millis();
+      button_4 = mp3 = aac = flac = false;
+      Serial.println("Przycisk S4 został wciśnięty");
       if (currentOption == INTERNET_RADIO)
       {
-        button_4 = mp3 = aac = flac = false;
-        licznik_S4 = 0;
         currentSelection = 0;
         firstVisibleLine = 0;
-        lastDebounceTime_S4 = millis();
         bank_nr--;
         if (bank_nr < 1)
         {
           bank_nr = 1;
         }
         station_nr = 1;
-        Serial.print("Przycisk S4 został wciśnięty, bank = ");
         Serial.println(bank_nr);
-        // Wyświetlanie nr banku
         display.clearDisplay();
         display.setTextSize(2);
         display.setTextColor(SH110X_WHITE);
