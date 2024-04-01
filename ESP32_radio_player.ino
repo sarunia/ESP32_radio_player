@@ -1594,7 +1594,13 @@ void loop()
       fileIndex = 0;
       playFromSelectedFolder();
     }
-    if (currentOption == INTERNET_RADIO)
+
+    if ((currentOption == INTERNET_RADIO) && (listedStations == true))
+    {
+      listedStations = false;
+      changeStation();
+    }
+    else
     {
       timeDisplay = false;
       printStationsToOLED();
