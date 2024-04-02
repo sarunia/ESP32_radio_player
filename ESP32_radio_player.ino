@@ -1598,7 +1598,8 @@ void loop()
     if (currentOption == PLAY_FILES)
     {
       fileIndex = 0;
-      playFromSelectedFolder();
+      audio.stopSong();
+      displayMenu();
     }
 
     if ((currentOption == INTERNET_RADIO) && (listedStations == true))
