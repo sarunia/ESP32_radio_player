@@ -1637,6 +1637,7 @@ void loop()
       currentSelection = 0;
       firstVisibleLine = 0;
       listDirectories("/");
+      playFromSelectedFolder();
     }
   
     if (currentOption == INTERNET_RADIO)
