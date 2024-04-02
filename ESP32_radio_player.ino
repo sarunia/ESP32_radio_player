@@ -1636,6 +1636,7 @@ void loop()
       display.setCursor(0, 0);
       display.println("   LISTA KATALOG" + String((char)0x1F) + "W"); // Wyświetla komunikat "LISTA KATALOGÓW" na ekranie, 0x1F reprezentuje literę 'Ó'
       display.display();
+      folderIndex = 1;
       currentSelection = 0;
       firstVisibleLine = 0;
       listDirectories("/");
