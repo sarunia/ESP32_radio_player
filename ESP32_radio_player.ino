@@ -1598,6 +1598,7 @@ void loop()
     if (currentOption == PLAY_FILES)
     {
       fileIndex = 0;
+      timeDisplay = false;
       audio.stopSong();
       displayMenu();
     }
