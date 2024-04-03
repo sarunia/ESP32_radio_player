@@ -1515,13 +1515,12 @@ void loop()
   prev_CLK_state1 = CLK_state1;
 
   CLK_state2 = digitalRead(CLK_PIN2);
-  if (CLK_state2 != prev_CLK_state2 && CLK_state2 == HIGH)
+  if (CLK_state2 != prev_CLK_state2 && CLK_state2 == HIGH) 
   {
     timeDisplay = false;
-    menuEnable = false;
     displayActive = true;
     displayStartTime = millis();
-    if (currentOption == INTERNET_RADIO)
+    if ((currentOption == INTERNET_RADIO) && (menuEnable == false))
     {
       if (digitalRead(DT_PIN2) == HIGH)
       {
@@ -1554,18 +1553,18 @@ void loop()
         case PLAY_FILES:
           if (DT_state2 == HIGH)
           {
-            currentOption = FOLDERS_LIST;
+            currentOption = BANK_LIST;
           }
           else
           {
-            currentOption = INTERNET_RADIO;
+            currentOption = FOLDERS_LIST;
           }
           break;
           
         case INTERNET_RADIO:
           if (DT_state2 == HIGH)
           {
-            currentOption = PLAY_FILES;
+            currentOption = FOLDERS_LIST;
           }
           else
           {
@@ -1580,18 +1579,18 @@ void loop()
           }
           else
           {
-            currentOption = FOLDERS_LIST;
+            currentOption = PLAY_FILES;
           }
           break;
           
         case FOLDERS_LIST:
           if (DT_state2 == HIGH)
           {
-            currentOption = BANK_LIST;
+            currentOption = PLAY_FILES;
           }
           else
           {
-            currentOption = PLAY_FILES;
+            currentOption = INTERNET_RADIO;
           }
           break;
       }
@@ -1647,15 +1646,11 @@ void loop()
   {
     display.clearDisplay();
     Serial.println("Przycisk enkodera prawego");
-    if (currentOption == PLAY_FILES)
-    {
-      fileIndex = 0;
-      timeDisplay = false;
-      audio.stopSong();
-      displayMenu();
-    }
-
-    
+    timeDisplay = false;
+    displayMenu();
+    menuEnable = true;
+    displayActive = true;
+    displayStartTime = millis();
   }
 
   if (button2.isPressed())  //Przycisk enkodera lewego wciśnięty
@@ -1664,10 +1659,7 @@ void loop()
     display.clearDisplay();
     timeDisplay = false;
     //audio.stopSong();
-    if (menuEnable == true)
-    {
-      displayMenu();
-    }
+    
     if (currentOption == PLAY_FILES)
     {
       if (!SD.begin(SD_CS))
