@@ -91,7 +91,7 @@ bool aac = false;                 // Flaga określająca, czy aktualny plik audi
 bool noID3data = false;           // Flaga określająca, czy plik audio posiada dane ID3
 bool timeDisplay = true;          // Flaga określająca kiedy pokazać czas na wyświetlaczu, domyślnie od razu po starcie
 bool listedStations = false;      // Flaga określająca czy na ekranie jest pokazana lista stacji do wyboru
-bool menuEnable = true;           // Flaga określająca czy na ekranie można wyświetlić menu, domyślnie włączone
+bool menuEnable = false;           // Flaga określająca czy na ekranie można wyświetlić menu
 unsigned long lastDebounceTime_S1 = 0;    // Czas ostatniego debouncingu dla przycisku S1.
 unsigned long lastDebounceTime_S2 = 0;    // Czas ostatniego debouncingu dla przycisku S2.
 unsigned long lastDebounceTime_S3 = 0;    // Czas ostatniego debouncingu dla przycisku S3.
@@ -1481,6 +1481,58 @@ void loop()
     timeDisplay = false;
     displayActive = true;
     displayStartTime = millis();
+    if (menuEnable == true)  // Przewijanie menu enkoderem prawym
+    {
+      int DT_state1 = digitalRead(DT_PIN1);
+      switch(currentOption)
+      {
+        case PLAY_FILES:
+          if (DT_state1 == HIGH)
+          {
+            currentOption = BANK_LIST;
+          }
+          else
+          {
+            currentOption = FOLDERS_LIST;
+          }
+          break;
+          
+        case INTERNET_RADIO:
+          if (DT_state1 == HIGH)
+          {
+            currentOption = FOLDERS_LIST;
+          }
+          else
+          {
+            currentOption = BANK_LIST;
+          }
+          break;
+          
+        case BANK_LIST:
+          if (DT_state1 == HIGH)
+          {
+            currentOption = INTERNET_RADIO;
+          }
+          else
+          {
+            currentOption = PLAY_FILES;
+          }
+          break;
+          
+        case FOLDERS_LIST:
+          if (DT_state1 == HIGH)
+          {
+            currentOption = PLAY_FILES;
+          }
+          else
+          {
+            currentOption = INTERNET_RADIO;
+          }
+          break;
+      }
+      displayMenu();
+    }
+    else  // Regulacja głośności
     {
       if (digitalRead(DT_PIN1) == HIGH)
       {
@@ -1520,7 +1572,7 @@ void loop()
     timeDisplay = false;
     displayActive = true;
     displayStartTime = millis();
-    if ((currentOption == INTERNET_RADIO) && (menuEnable == false))
+    if (currentOption == INTERNET_RADIO)
     {
       if (digitalRead(DT_PIN2) == HIGH)
       {
@@ -1543,58 +1595,6 @@ void loop()
       printStationsToOLED();
       //Serial.print("Numer wybranej stacji: ");
       //Serial.println(station_nr);
-    }
-
-    if (menuEnable == true)
-    {
-      int DT_state2 = digitalRead(DT_PIN2);
-      switch(currentOption)
-      {
-        case PLAY_FILES:
-          if (DT_state2 == HIGH)
-          {
-            currentOption = BANK_LIST;
-          }
-          else
-          {
-            currentOption = FOLDERS_LIST;
-          }
-          break;
-          
-        case INTERNET_RADIO:
-          if (DT_state2 == HIGH)
-          {
-            currentOption = FOLDERS_LIST;
-          }
-          else
-          {
-            currentOption = BANK_LIST;
-          }
-          break;
-          
-        case BANK_LIST:
-          if (DT_state2 == HIGH)
-          {
-            currentOption = INTERNET_RADIO;
-          }
-          else
-          {
-            currentOption = PLAY_FILES;
-          }
-          break;
-          
-        case FOLDERS_LIST:
-          if (DT_state2 == HIGH)
-          {
-            currentOption = PLAY_FILES;
-          }
-          else
-          {
-            currentOption = INTERNET_RADIO;
-          }
-          break;
-      }
-      displayMenu();
     }
   }
   prev_CLK_state2 = CLK_state2;
@@ -1638,7 +1638,7 @@ void loop()
       displayActive = false;
       timeDisplay = true;
       listedStations = false;
-      menuEnable = true;
+      menuEnable = false;
     }
   }
   
