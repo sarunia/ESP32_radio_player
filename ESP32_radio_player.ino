@@ -131,7 +131,7 @@ enum MenuOption
 {
   PLAY_FILES,          // Odtwarzacz plików
   INTERNET_RADIO,      // Radio internetowe
-  STATIONS_LIST,       // Lista stacji radiowych
+  BANK_LIST,           // Lista banków stacji radiowych
   FOLDERS_LIST         // Lista katalogów na karcie SD
 };
 MenuOption currentOption = INTERNET_RADIO;  // Aktualnie wybrana opcja menu (domyślnie radio internetowe)
@@ -807,27 +807,27 @@ void displayMenu()
   {
     case PLAY_FILES:
       display.println(">> Odtwarzacz plik" + String((char)0x0F) + "w");
+      display.println("   Lista folder" + String((char)0x0F) + "w");
       display.println("   Radio internetowe");
-      display.println("   Lista stacji");
-      display.println("   Lista folder" + String((char)0x0F) + "w");
-      break;
-    case INTERNET_RADIO:
-      display.println("   Odtwarzacz plik" + String((char)0x0F) + "w");
-      display.println(">> Radio internetowe");
-      display.println("   Lista stacji");
-      display.println("   Lista folder" + String((char)0x0F) + "w");
-      break;
-    case STATIONS_LIST:
-      display.println("   Odtwarzacz plik" + String((char)0x0F) + "w");
-      display.println("   Radio internetowe");
-      display.println(">> Lista stacji");
-      display.println("   Lista folder" + String((char)0x0F) + "w");
+      display.println("   Lista bank"  + String((char)0x0F) + "w");
       break;
     case FOLDERS_LIST:
       display.println("   Odtwarzacz plik" + String((char)0x0F) + "w");
-      display.println("   Radio internetowe");
-      display.println("   Lista stacji");
       display.println(">> Lista folder" + String((char)0x0F) + "w");
+      display.println("   Radio internetowe");
+      display.println("   Lista bank"  + String((char)0x0F) + "w");
+      break;
+    case INTERNET_RADIO:
+      display.println("   Odtwarzacz plik" + String((char)0x0F) + "w");
+      display.println("   Lista folder" + String((char)0x0F) + "w");
+      display.println(">> Radio internetowe");
+      display.println("   Lista bank"  + String((char)0x0F) + "w");
+      break;
+    case BANK_LIST:
+      display.println("   Odtwarzacz plik" + String((char)0x0F) + "w");
+      display.println("   Lista folder" + String((char)0x0F) + "w");
+      display.println("   Radio internetowe");
+      display.println(">> Lista bank"  + String((char)0x0F) + "w");
       break;
   }
   display.display();
@@ -1525,19 +1525,19 @@ void loop()
     {
       if (digitalRead(DT_PIN2) == HIGH)
       {
-        station_nr--;
-        if (station_nr < 1)
+        encoderCounter2--;
+        if (encoderCounter2 < 1)
         {
-          station_nr = 1;
+          encoderCounter2 = 1;
         }
         scrollUp();
       }
       else
       {
-        station_nr++;
-        if (station_nr > stationsCount)
+        encoderCounter2++;
+        if (encoderCounter2 > stationsCount)
         {
-          station_nr = stationsCount;
+          encoderCounter2 = stationsCount;
         }
         scrollDown();
       }
@@ -1569,11 +1569,11 @@ void loop()
           }
           else
           {
-            currentOption = STATIONS_LIST;
+            currentOption = BANK_LIST;
           }
           break;
           
-        case STATIONS_LIST:
+        case BANK_LIST:
           if (DT_state2 == HIGH)
           {
             currentOption = INTERNET_RADIO;
@@ -1587,7 +1587,7 @@ void loop()
         case FOLDERS_LIST:
           if (DT_state2 == HIGH)
           {
-            currentOption = STATIONS_LIST;
+            currentOption = BANK_LIST;
           }
           else
           {
@@ -1689,10 +1689,11 @@ void loop()
   
     if (currentOption == INTERNET_RADIO) 
     {
+      station_nr = encoderCounter2;
       changeStation();
     }
 
-    if (currentOption == STATIONS_LIST)
+    if (currentOption == BANK_LIST)
     {
       printStationsToOLED();
       listedStations = true;
