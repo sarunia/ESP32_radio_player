@@ -58,7 +58,7 @@ int button_S1 = 17;               // Przycisk S1 podłączony do pinu 17
 int button_S2 = 18;               // Przycisk S2 podłączony do pinu 18
 int button_S3 = 15;               // Przycisk S3 podłączony do pinu 15
 int button_S4 = 16;               // Przycisk S4 podłączony do pinu 16
-int station_nr = 6;               // Numer aktualnie wybranej stacji radiowej z listy, domyślnie stacja nr 6
+int station_nr = 4;               // Numer aktualnie wybranej stacji radiowej z listy, domyślnie stacja nr 4
 int bank_nr = 1;                  // Numer aktualnie wybranego banku stacji z listy, domyślnie bank nr 1
 int encoderCounter1 = 12;         // Początkowa środkowa wartość ustawienia poziomu głośności - prawy encoder
 int encoderCounter2 = 1;          // Licznik lewy encoder, zaczynam od 1
@@ -91,6 +91,7 @@ bool aac = false;                 // Flaga określająca, czy aktualny plik audi
 bool noID3data = false;           // Flaga określająca, czy plik audio posiada dane ID3
 bool timeDisplay = true;          // Flaga określająca kiedy pokazać czas na wyświetlaczu, domyślnie od razu po starcie
 bool listedStations = false;      // Flaga określająca czy na ekranie jest pokazana lista stacji do wyboru
+bool menuEnable = true;           // Flaga określająca czy na ekranie można wyświetlić menu, domyślnie włączone
 unsigned long lastDebounceTime_S1 = 0;    // Czas ostatniego debouncingu dla przycisku S1.
 unsigned long lastDebounceTime_S2 = 0;    // Czas ostatniego debouncingu dla przycisku S2.
 unsigned long lastDebounceTime_S3 = 0;    // Czas ostatniego debouncingu dla przycisku S3.
@@ -129,7 +130,9 @@ const int   daylightOffset_sec = 3600;       // Przesunięcie czasu letniego w s
 enum MenuOption
 {
   PLAY_FILES,          // Odtwarzacz plików
-  INTERNET_RADIO       // Radio internetowe
+  INTERNET_RADIO,      // Radio internetowe
+  STATIONS_LIST,       // Lista stacji radiowych
+  FOLDERS_LIST         // Lista katalogów na karcie SD
 };
 MenuOption currentOption = INTERNET_RADIO;  // Aktualnie wybrana opcja menu (domyślnie radio internetowe)
 
@@ -791,6 +794,8 @@ void audio_eof_speech(const char *info)
 
 void displayMenu()
 {
+  timeDisplay = false;
+  menuEnable = true;
   display.clearDisplay();
   display.setTextSize(2);
   display.setTextColor(SH110X_WHITE);
@@ -803,10 +808,26 @@ void displayMenu()
     case PLAY_FILES:
       display.println(">> Odtwarzacz plik" + String((char)0x0F) + "w");
       display.println("   Radio internetowe");
+      display.println("   Lista stacji");
+      display.println("   Lista folder" + String((char)0x0F) + "w");
       break;
     case INTERNET_RADIO:
       display.println("   Odtwarzacz plik" + String((char)0x0F) + "w");
       display.println(">> Radio internetowe");
+      display.println("   Lista stacji");
+      display.println("   Lista folder" + String((char)0x0F) + "w");
+      break;
+    case STATIONS_LIST:
+      display.println("   Odtwarzacz plik" + String((char)0x0F) + "w");
+      display.println("   Radio internetowe");
+      display.println(">> Lista stacji");
+      display.println("   Lista folder" + String((char)0x0F) + "w");
+      break;
+    case FOLDERS_LIST:
+      display.println("   Odtwarzacz plik" + String((char)0x0F) + "w");
+      display.println("   Radio internetowe");
+      display.println("   Lista stacji");
+      display.println(">> Lista folder" + String((char)0x0F) + "w");
       break;
   }
   display.display();
@@ -1457,40 +1478,10 @@ void loop()
   CLK_state1 = digitalRead(CLK_PIN1);
   if (CLK_state1 != prev_CLK_state1 && CLK_state1 == HIGH)
   {
-    // Ustawienie flagi aktywnego wyświetlania na 5 sekund
+    timeDisplay = false;
     displayActive = true;
     displayStartTime = millis();
-
-    if (listedStations == true)
     {
-      station_nr = currentSelection + 1;
-      if (digitalRead(DT_PIN1) == HIGH)
-      {
-        station_nr--;
-        if (station_nr < 1)
-        {
-          station_nr = 1;
-        }
-        scrollUp();
-        printStationsToOLED();
-      }
-      else
-      {
-        station_nr++;
-        if (station_nr > stationsCount)
-        {
-          station_nr = stationsCount;
-        }
-        scrollDown();
-        printStationsToOLED();
-      }
-      Serial.print("Numer wybranej stacji: ");
-      Serial.println(station_nr);
-    }
-
-    else
-    {
-      timeDisplay = false;
       if (digitalRead(DT_PIN1) == HIGH)
       {
         encoderCounter1--;
@@ -1523,38 +1514,98 @@ void loop()
   }
   prev_CLK_state1 = CLK_state1;
 
-  CLK_state2 = digitalRead(CLK_PIN2); // Obsługa pokrętła lewego enkodera
+  CLK_state2 = digitalRead(CLK_PIN2);
   if (CLK_state2 != prev_CLK_state2 && CLK_state2 == HIGH)
   {
     timeDisplay = false;
-    directoryCount = 0;
-    // Ustawienie flagi aktywnego wyświetlania na 5 sekund
+    menuEnable = false;
     displayActive = true;
     displayStartTime = millis();
-    if (digitalRead(DT_PIN2) == HIGH)
+    if (currentOption == INTERNET_RADIO)
     {
-      Serial.println("Encoder lewy: obracam w lewo");
-      // Przełącz między opcjami menu
-      currentOption = (currentOption == PLAY_FILES) ? INTERNET_RADIO : PLAY_FILES;
-      // Wyświetl aktualne menu
-      displayMenu();
+      if (digitalRead(DT_PIN2) == HIGH)
+      {
+        station_nr--;
+        if (station_nr < 1)
+        {
+          station_nr = 1;
+        }
+        scrollUp();
+      }
+      else
+      {
+        station_nr++;
+        if (station_nr > stationsCount)
+        {
+          station_nr = stationsCount;
+        }
+        scrollDown();
+      }
+      printStationsToOLED();
+      //Serial.print("Numer wybranej stacji: ");
+      //Serial.println(station_nr);
     }
-    else
-    {
-      Serial.println("Encoder lewy: obracam w prawo");
-      // Przełącz między opcjami menu
-      currentOption = (currentOption == PLAY_FILES) ? INTERNET_RADIO : PLAY_FILES;
 
-      // Wyświetl aktualne menu
+    if (menuEnable == true)
+    {
+      int DT_state2 = digitalRead(DT_PIN2);
+      switch(currentOption)
+      {
+        case PLAY_FILES:
+          if (DT_state2 == HIGH)
+          {
+            currentOption = FOLDERS_LIST;
+          }
+          else
+          {
+            currentOption = INTERNET_RADIO;
+          }
+          break;
+          
+        case INTERNET_RADIO:
+          if (DT_state2 == HIGH)
+          {
+            currentOption = PLAY_FILES;
+          }
+          else
+          {
+            currentOption = STATIONS_LIST;
+          }
+          break;
+          
+        case STATIONS_LIST:
+          if (DT_state2 == HIGH)
+          {
+            currentOption = INTERNET_RADIO;
+          }
+          else
+          {
+            currentOption = FOLDERS_LIST;
+          }
+          break;
+          
+        case FOLDERS_LIST:
+          if (DT_state2 == HIGH)
+          {
+            currentOption = STATIONS_LIST;
+          }
+          else
+          {
+            currentOption = PLAY_FILES;
+          }
+          break;
+      }
       displayMenu();
     }
   }
   prev_CLK_state2 = CLK_state2;
+  
+
 
   if (displayActive && (millis() - displayStartTime >= displayTimeout))   // Przywracanie poprzedniej zawartości ekranu po 5 sekundach
   {
     
-    if (currentOption == INTERNET_RADIO)
+    //if (currentOption == INTERNET_RADIO)
     {
       display.clearDisplay();
       display.setTextSize(1);
@@ -1588,6 +1639,7 @@ void loop()
       displayActive = false;
       timeDisplay = true;
       listedStations = false;
+      menuEnable = true;
     }
   }
   
@@ -1603,29 +1655,21 @@ void loop()
       displayMenu();
     }
 
-    if ((currentOption == INTERNET_RADIO) && (listedStations == true))
-    {
-      listedStations = false;
-      changeStation();
-    }
-    else
-    {
-      timeDisplay = false;
-      printStationsToOLED();
-      listedStations = true;
-      displayActive = true;
-      displayStartTime = millis();
-    }
+    
   }
 
   if (button2.isPressed())  //Przycisk enkodera lewego wciśnięty
   {
     Serial.println("Przycisk enkodera lewego");
     display.clearDisplay();
-    audio.stopSong();
+    timeDisplay = false;
+    //audio.stopSong();
+    if (menuEnable == true)
+    {
+      displayMenu();
+    }
     if (currentOption == PLAY_FILES)
     {
-      timeDisplay = false;
       if (!SD.begin(SD_CS))
       {
         Serial.println("Błąd inicjalizacji karty SD!");
@@ -1643,10 +1687,22 @@ void loop()
       playFromSelectedFolder();
     }
   
-    if (currentOption == INTERNET_RADIO)
+    if (currentOption == INTERNET_RADIO) 
     {
-      timeDisplay = true;
       changeStation();
+    }
+
+    if (currentOption == STATIONS_LIST)
+    {
+      printStationsToOLED();
+      listedStations = true;
+      displayActive = true;
+      displayStartTime = millis();
+    }
+    if (currentOption == FOLDERS_LIST)
+    {
+      printFoldersToOLED();
+      
     }
   }
 
