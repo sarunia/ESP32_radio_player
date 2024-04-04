@@ -1613,9 +1613,9 @@ void loop()
       else
       {
         encoderCounter2++;
-        if (encoderCounter2 > 15)
+        if (encoderCounter2 > 16)
         {
-          encoderCounter2 = 15;
+          encoderCounter2 = 16;
         }
       }
       Serial.print("Numer banku: ");
