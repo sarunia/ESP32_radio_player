@@ -1532,6 +1532,8 @@ void loop()
       }
       displayMenu();
     }
+
+
     else  // Regulacja głośności
     {
       if (digitalRead(DT_PIN1) == HIGH)
@@ -1572,6 +1574,7 @@ void loop()
     timeDisplay = false;
     displayActive = true;
     displayStartTime = millis();
+
     if (currentOption == INTERNET_RADIO)
     {
       if (digitalRead(DT_PIN2) == HIGH)
@@ -1596,6 +1599,40 @@ void loop()
       //Serial.print("Numer wybranej stacji: ");
       //Serial.println(station_nr);
     }
+
+    if (currentOption == BANK_LIST)
+    {
+      if (digitalRead(DT_PIN2) == HIGH)
+      {
+        encoderCounter2--;
+        if (encoderCounter2 < 1)
+        {
+          encoderCounter2 = 1;
+        }
+      } 
+      else
+      {
+        encoderCounter2++;
+        if (encoderCounter2 > 15)
+        {
+          encoderCounter2 = 15;
+        }
+      }
+      Serial.print("Numer banku: ");
+      Serial.println(encoderCounter2);
+      display.clearDisplay();
+      display.setTextSize(2);
+      display.setTextColor(SH110X_WHITE);
+      display.setCursor(25, 0);
+      display.println("Bank nr");
+      display.setTextSize(3);
+      display.setCursor(55, 30);
+      display.println(encoderCounter2);
+      display.display();
+    }
+
+
+
   }
   prev_CLK_state2 = CLK_state2;
   
@@ -1646,11 +1683,33 @@ void loop()
   {
     display.clearDisplay();
     Serial.println("Przycisk enkodera prawego");
-    timeDisplay = false;
-    displayMenu();
-    menuEnable = true;
-    displayActive = true;
-    displayStartTime = millis();
+    if (currentOption == PLAY_FILES)
+    {
+      if (!SD.begin(SD_CS))
+      {
+        Serial.println("Błąd inicjalizacji karty SD!");
+        return;
+      }
+      display.setTextSize(1);
+      display.setTextColor(SH110X_WHITE);
+      display.setCursor(0, 0);
+      display.println("   LISTA KATALOG" + String((char)0x1F) + "W"); // Wyświetla komunikat "LISTA KATALOGÓW" na ekranie, 0x1F reprezentuje literę 'Ó'
+      display.display();
+      folderIndex = 1;
+      currentSelection = 0;
+      firstVisibleLine = 0;
+      listDirectories("/");
+      playFromSelectedFolder();
+    }
+    else
+    {
+      timeDisplay = false;
+      displayMenu();
+      menuEnable = true;
+      displayActive = true;
+      displayStartTime = millis();
+    }
+    
   }
 
   if (button2.isPressed())  //Przycisk enkodera lewego wciśnięty
@@ -1687,11 +1746,12 @@ void loop()
 
     if (currentOption == BANK_LIST)
     {
-      printStationsToOLED();
-      listedStations = true;
-      displayActive = true;
-      displayStartTime = millis();
+      bank_nr = encoderCounter2;
+      station_nr = 1;
+      fetchStationsFromServer();
+      changeStation();
     }
+
     if (currentOption == FOLDERS_LIST)
     {
       printFoldersToOLED();
@@ -1719,6 +1779,7 @@ void loop()
         Serial.println(station_nr);
         changeStation();
       }
+      
     }
   }
 
