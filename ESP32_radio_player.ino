@@ -1416,7 +1416,7 @@ void setup()
   pinMode(CLK_PIN1, INPUT);
   pinMode(DT_PIN1, INPUT);
 
-  // Ustaw czas odbicia dla przycisku enkodera na 50 milisekund
+  // Ustaw czas odbicia dla przycisków enkodera na 50 milisekund
   //button1.setDebounceTime(50);
   //button2.setDebounceTime(50);
 
@@ -1430,7 +1430,7 @@ void setup()
   pinMode(button_S3, INPUT_PULLUP);
   pinMode(button_S4, INPUT_PULLUP);
 
-  // Przypnij przerwania do enkodera (wywołanie funkcji zlicz_S1 -- zlicz_S4 przy opadającym zboczu)
+  // Przypnij przerwania do przycisków (wywołanie funkcji zlicz_S1 -- zlicz_S4 przy narastającym zboczu)
   attachInterrupt(LICZNIK_S1, zlicz_S1, RISING);
   attachInterrupt(LICZNIK_S2, zlicz_S2, RISING);
   attachInterrupt(LICZNIK_S3, zlicz_S3, RISING);
@@ -1466,7 +1466,6 @@ void setup()
   fetchStationsFromServer();
   changeStation();
 }
-
 
 
 void loop()
@@ -1532,7 +1531,6 @@ void loop()
       }
       displayMenu();
     }
-
 
     else  // Regulacja głośności
     {
@@ -1630,53 +1628,46 @@ void loop()
       display.println(encoderCounter2);
       display.display();
     }
-
-
-
   }
   prev_CLK_state2 = CLK_state2;
   
 
 
-  if (displayActive && (millis() - displayStartTime >= displayTimeout))   // Przywracanie poprzedniej zawartości ekranu po 5 sekundach
+  if (displayActive && (millis() - displayStartTime >= displayTimeout))   // Przywracanie poprzedniej zawartości ekranu po 6 sekundach
   {
-    
-    //if (currentOption == INTERNET_RADIO)
-    {
-      display.clearDisplay();
-      display.setTextSize(1);
-      display.setTextColor(SH110X_WHITE);
-      display.setCursor(0, 0);
-      display.println(stationName);
-      display.setCursor(0, 10);
-      display.println(stationString);
-      display.setCursor(0, 37);
-      display.println(sampleRateString.substring(1) + "Hz " + bitsPerSampleString + "bit");
+    display.clearDisplay();
+    display.setTextSize(1);
+    display.setTextColor(SH110X_WHITE);
+    display.setCursor(0, 0);
+    display.println(stationName);
+    display.setCursor(0, 10);
+    display.println(stationString);
+    display.setCursor(0, 37);
+    display.println(sampleRateString.substring(1) + "Hz " + bitsPerSampleString + "bit");
 
-      display.setCursor(102, 37);
-      if (mp3 == true)
-      {
-        display.print("MP3");
-      }
-      if (flac == true)
-      {
-        display.print("FLAC");
-      }
-      if (aac == true)
-      {
-        display.print("AAC");
-      }
-      
-      display.setCursor(0, 47);
-      display.println(bitrateString.substring(1) + "b/s  Bank " + String(bank_nr));
-      display.setCursor(66, 56);
-      display.println("Stacja " + String(station_nr));
-      display.display();
-      displayActive = false;
-      timeDisplay = true;
-      listedStations = false;
-      menuEnable = false;
+    display.setCursor(102, 37);
+    if (mp3 == true)
+    {
+      display.print("MP3");
     }
+    if (flac == true)
+    {
+      display.print("FLAC");
+    }
+    if (aac == true)
+    {
+      display.print("AAC");
+    }
+    
+    display.setCursor(0, 47);
+    display.println(bitrateString.substring(1) + "b/s  Bank " + String(bank_nr));
+    display.setCursor(66, 56);
+    display.println("Stacja " + String(station_nr));
+    display.display();
+    displayActive = false;
+    timeDisplay = true;
+    listedStations = false;
+    menuEnable = false;
   }
   
   if (button1.isPressed())  //Przycisk enkodera prawego wciśnięty
@@ -1709,7 +1700,6 @@ void loop()
       displayActive = true;
       displayStartTime = millis();
     }
-    
   }
 
   if (button2.isPressed())  //Przycisk enkodera lewego wciśnięty
@@ -1717,8 +1707,7 @@ void loop()
     Serial.println("Przycisk enkodera lewego");
     display.clearDisplay();
     timeDisplay = false;
-    //audio.stopSong();
-    
+
     if (currentOption == PLAY_FILES)
     {
       if (!SD.begin(SD_CS))
@@ -1775,11 +1764,9 @@ void loop()
         {
           station_nr = 1;
         }
-        ;
         Serial.println(station_nr);
         changeStation();
       }
-      
     }
   }
 
