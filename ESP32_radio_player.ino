@@ -131,7 +131,7 @@ enum MenuOption
   PLAY_FILES,          // Odtwarzacz plików
   INTERNET_RADIO,      // Radio internetowe
   BANK_LIST,           // Lista banków stacji radiowych
-  FOLDERS_LIST         // Lista katalogów na karcie SD
+  BLE_AUDIO            // Bluetooth audio
 };
 MenuOption currentOption = INTERNET_RADIO;  // Aktualnie wybrana opcja menu (domyślnie radio internetowe)
 
@@ -806,25 +806,25 @@ void displayMenu()
   {
     case PLAY_FILES:
       display.println(">> Odtwarzacz plik" + String((char)0x0F) + "w");
-      display.println("   Lista folder" + String((char)0x0F) + "w");
+      display.println("   Bluetooth audio  ");
       display.println("   Radio internetowe");
       display.println("   Lista bank"  + String((char)0x0F) + "w");
       break;
-    case FOLDERS_LIST:
+    case BLE_AUDIO:
       display.println("   Odtwarzacz plik" + String((char)0x0F) + "w");
-      display.println(">> Lista folder" + String((char)0x0F) + "w");
+      display.println(">> Bluetooth audio  ");
       display.println("   Radio internetowe");
       display.println("   Lista bank"  + String((char)0x0F) + "w");
       break;
     case INTERNET_RADIO:
       display.println("   Odtwarzacz plik" + String((char)0x0F) + "w");
-      display.println("   Lista folder" + String((char)0x0F) + "w");
+      display.println("   Bluetooth audio  ");
       display.println(">> Radio internetowe");
       display.println("   Lista bank"  + String((char)0x0F) + "w");
       break;
     case BANK_LIST:
       display.println("   Odtwarzacz plik" + String((char)0x0F) + "w");
-      display.println("   Lista folder" + String((char)0x0F) + "w");
+      display.println("   Bluetooth audio  ");
       display.println("   Radio internetowe");
       display.println(">> Lista bank"  + String((char)0x0F) + "w");
       break;
@@ -1491,14 +1491,14 @@ void loop()
           }
           else
           {
-            currentOption = FOLDERS_LIST;
+            currentOption = BLE_AUDIO;
           }
           break;
           
         case INTERNET_RADIO:
           if (DT_state1 == HIGH)
           {
-            currentOption = FOLDERS_LIST;
+            currentOption = BLE_AUDIO;
           }
           else
           {
@@ -1517,7 +1517,7 @@ void loop()
           }
           break;
           
-        case FOLDERS_LIST:
+        case BLE_AUDIO:
           if (DT_state1 == HIGH)
           {
             currentOption = PLAY_FILES;
@@ -1744,7 +1744,7 @@ void loop()
       changeStation();
     }
 
-    if (currentOption == FOLDERS_LIST)
+    if (currentOption == BLE_AUDIO)
     {
       printFoldersToOLED();
       
