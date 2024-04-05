@@ -1735,7 +1735,10 @@ void loop()
     if (currentOption == BANK_LIST)
     {
       bank_nr = encoderCounter2;
+      currentSelection = 0;
+      firstVisibleLine = 0;
       station_nr = 1;
+      currentOption = INTERNET_RADIO;
       fetchStationsFromServer();
       changeStation();
     }
