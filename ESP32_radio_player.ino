@@ -82,7 +82,7 @@ bool button_3 = false;            // Flaga określająca stan przycisku 3
 bool button_4 = false;            // Flaga określająca stan przycisku 4
 bool encoderButton1 = false;      // Flaga określająca, czy przycisk enkodera 1 został wciśnięty
 bool encoderButton2 = false;      // Flaga określająca, czy przycisk enkodera 2 został wciśnięty
-bool endFile = false;             // Flaga sygnalizująca koniec odtwarzania pliku audio
+bool fileEnd = false;             // Flaga sygnalizująca koniec odtwarzania pliku audio
 bool displayActive = false;       // Flaga określająca, czy wyświetlacz jest aktywny
 bool isPlaying = false;           // Flaga określająca, czy obecnie trwa odtwarzanie
 bool mp3 = false;                 // Flaga określająca, czy aktualny plik audio jest w formacie MP3
@@ -229,16 +229,14 @@ void saveStationToEEPROM(const char* station)
     else
     {
       // Informacja o błędzie w przypadku zbyt długiego linku do stacji.
-      Serial.println("Błąd: Link do stacji jest zbyt długi.");
+      Serial.println("Błąd: Link do stacji jest zbyt długi");
     }
   } else
   {
     // Informacja o błędzie w przypadku osiągnięcia maksymalnej liczby stacji.
-    Serial.println("Błąd: Osiągnięto maksymalną liczbę zapisanych stacji.");
+    Serial.println("Błąd: Osiągnięto maksymalną liczbę zapisanych stacji");
   }
 }
-
-
 
 // Funkcja odpowiedzialna za zmianę aktualnie wybranej stacji radiowej.
 void changeStation()
@@ -267,7 +265,7 @@ void changeStation()
     lastValidCharIndex--;
   }
 
-  // Wydrukuj nazwę stacji i link na Serialu
+  // Wydrukuj nazwę stacji i link na serialu
   Serial.print("Aktualnie wybrana stacja: ");
   Serial.println(station_nr);
   Serial.print("Link do stacji: ");
@@ -349,7 +347,7 @@ void fetchStationsFromServer()
       url = STATIONS_URL15;
       break;
     default:
-      Serial.println("Nieprawidłowy numer banku.");
+      Serial.println("Nieprawidłowy numer banku");
       return;
   }
 
@@ -453,21 +451,24 @@ void audio_info(const char *info)
   Serial.println(info);
   // Znajdź pozycję "BitRate:" w tekście
   int bitrateIndex = String(info).indexOf("BitRate:");
-  if (bitrateIndex != -1) {
+  if (bitrateIndex != -1)
+  {
     // Przytnij tekst od pozycji "BitRate:" do końca linii
     bitrateString = String(info).substring(bitrateIndex + 8, String(info).indexOf('\n', bitrateIndex));
   }
 
   // Znajdź pozycję "SampleRate:" w tekście
   int sampleRateIndex = String(info).indexOf("SampleRate:");
-  if (sampleRateIndex != -1) {
+  if (sampleRateIndex != -1)
+  {
     // Przytnij tekst od pozycji "SampleRate:" do końca linii
     sampleRateString = String(info).substring(sampleRateIndex + 11, String(info).indexOf('\n', sampleRateIndex));
   }
 
   // Znajdź pozycję "BitsPerSample:" w tekście
   int bitsPerSampleIndex = String(info).indexOf("BitsPerSample:");
-  if (bitsPerSampleIndex != -1) {
+  if (bitsPerSampleIndex != -1)
+  {
     // Przytnij tekst od pozycji "BitsPerSample:" do końca linii
     bitsPerSampleString = String(info).substring(bitsPerSampleIndex + 15, String(info).indexOf('\n', bitsPerSampleIndex));
   }
@@ -573,7 +574,6 @@ void audio_info(const char *info)
     display.display();
     seconds = 0;
   }
-
 }
 
 void processText(String &text)
@@ -661,7 +661,6 @@ void audio_id3data(const char *info)
     Serial.println(); // Nowa linia po zakończeniu drukowania bajtów*/
 
     processText(artistString);
-
   }
   
   // Znajdź pozycję "Title: " lub "TITLE " w tekście
@@ -689,7 +688,6 @@ void audio_id3data(const char *info)
     Serial.println(); // Nowa linia po zakończeniu drukowania bajtów*/
 
     processText(titleString);
-
   }
   
   display.clearDisplay();
@@ -714,9 +712,15 @@ void audio_id3data(const char *info)
   display.display();
 }
 
+void audio_bitrate(const char *info)
+{
+  Serial.print("bitrate     ");
+  Serial.println(info);
+}
+
 void audio_eof_mp3(const char *info)
 {
-  endFile = true;
+  fileEnd = true;
   Serial.print("eof_mp3     ");
   Serial.println(info);
 }
@@ -765,11 +769,6 @@ void audio_showstreamtitle(const char *info)
   display.display();
 }
 
-void audio_bitrate(const char *info)
-{
-  Serial.print("bitrate     ");
-  Serial.println(info);
-}
 void audio_commercial(const char *info)
 {
   Serial.print("commercial  ");
@@ -852,8 +851,6 @@ void printDirectoriesAndSavePaths(File dir, int numTabs, String currentPath)
       // Utwórz pełną ścieżkę do bieżącego katalogu
       String path = currentPath + "/" + entry.name();
 
-      
-      
       // Zapisz pełną ścieżkę do tablicy
       directories[directoryCount] = path;
       
@@ -1004,7 +1001,8 @@ void playFromSelectedFolder()
     String fileName = entry.name();
 
     // Pomijaj pliki, które nie są w zadeklarowanym formacie audio
-    if (!isAudioFile(fileName.c_str())) {
+    if (!isAudioFile(fileName.c_str()))
+    {
       Serial.println("Pominięto plik: " + fileName);
       continue;
     }
@@ -1090,9 +1088,9 @@ void playFromSelectedFolder()
         }
       } 
 
-      if (endFile == true) //Wymuszenie programowego przejścia do odtwarzania następnego pliku
+      if (fileEnd == true) //Wymuszenie programowego przejścia do odtwarzania następnego pliku
       {
-        endFile = false;
+        fileEnd = false;
         button_2 = true;
       }
 
@@ -1344,7 +1342,6 @@ void printStationsToOLED()
   display.display();
 }
 
-
 void updateTimer()  // Wywoływana co sekundę przez timer
 {
   // Zwiększ licznik sekund
@@ -1465,7 +1462,6 @@ void setup()
   fetchStationsFromServer();
   changeStation();
 }
-
 
 void loop()
 {
@@ -1629,8 +1625,6 @@ void loop()
     }
   }
   prev_CLK_state2 = CLK_state2;
-  
-
 
   if (displayActive && (millis() - displayStartTime >= displayTimeout))   // Przywracanie poprzedniej zawartości ekranu po 6 sekundach
   {
@@ -1746,8 +1740,7 @@ void loop()
 
     if (currentOption == BLE_AUDIO)
     {
-      printFoldersToOLED();
-      
+
     }
   }
 
