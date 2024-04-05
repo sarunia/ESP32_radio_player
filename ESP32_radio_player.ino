@@ -1735,6 +1735,7 @@ void loop()
     if (currentOption == BANK_LIST)
     {
       bank_nr = encoderCounter2;
+      encoderCounter2 = 0;
       currentSelection = 0;
       firstVisibleLine = 0;
       station_nr = 1;
