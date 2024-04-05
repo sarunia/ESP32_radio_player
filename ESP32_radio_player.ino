@@ -126,7 +126,6 @@ const char* ntpServer = "pool.ntp.org";      // Adres serwera NTP używany do sy
 const long  gmtOffset_sec = 3600;            // Przesunięcie czasu UTC w sekundach
 const int   daylightOffset_sec = 3600;       // Przesunięcie czasu letniego w sekundach, dla Polski to 1 godzina
 
-
 enum MenuOption
 {
   PLAY_FILES,          // Odtwarzacz plików
