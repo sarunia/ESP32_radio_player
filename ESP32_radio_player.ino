@@ -1465,7 +1465,7 @@ void setup()
   timer.attach(1, updateTimer);   // Ustaw timer, aby wywoływał funkcję updateTimer co sekundę
   Serial.println("Uruchomiono timer");
   fetchStationsFromServer();
-  Serial.println("Pobrano stacje z sererwa");
+  Serial.println("Pobrano stacje z serwera");
   changeStation();
   Serial.println("Uruchomiono odsłuch stacji");
 }
