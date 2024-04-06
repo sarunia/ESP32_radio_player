@@ -1459,15 +1459,10 @@ void setup()
   display.println("Radio");
   display.display();
   wifi_setup();
-  Serial.println("Zrobiono setup wifi");
   configTime(gmtOffset_sec, daylightOffset_sec, ntpServer);
-  Serial.println("Pobrano czas z internetu");
   timer.attach(1, updateTimer);   // Ustaw timer, aby wywoływał funkcję updateTimer co sekundę
-  Serial.println("Uruchomiono timer");
   fetchStationsFromServer();
-  Serial.println("Pobrano stacje z serwera");
   changeStation();
-  Serial.println("Uruchomiono odsłuch stacji");
 }
 
 void loop()
