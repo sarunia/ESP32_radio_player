@@ -357,6 +357,10 @@ void fetchStationsFromServer()
   // Wykonaj żądanie GET i zapisz kod odpowiedzi HTTP
   int httpCode = http.GET();
 
+  // Wydrukuj dodatkowe informacje diagnostyczne
+  Serial.print("Kod odpowiedzi HTTP: ");
+  Serial.println(httpCode);
+
   // Sprawdź, czy żądanie było udane (HTTP_CODE_OK)
   if (httpCode == HTTP_CODE_OK)
   {
@@ -378,6 +382,8 @@ void fetchStationsFromServer()
       // Sprawdź, czy stacja nie jest pusta, a następnie przetwórz i zapisz
       if (!station.isEmpty())
       {
+        Serial.print("Nowa stacja: ");
+        Serial.println(station);
         sanitizeAndSaveStation(station.c_str());
       }
       
