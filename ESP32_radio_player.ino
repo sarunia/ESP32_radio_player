@@ -1586,6 +1586,7 @@ void loop()
           encoderCounter2 = 1;
         }
         scrollUp();
+        printStationsToOLED();
       }
       else
       {
@@ -1595,8 +1596,8 @@ void loop()
           encoderCounter2 = stationsCount;
         }
         scrollDown();
+        printStationsToOLED();
       }
-      printStationsToOLED();
       //Serial.print("Numer wybranej stacji: ");
       //Serial.println(station_nr);
     }
