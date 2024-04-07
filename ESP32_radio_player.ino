@@ -382,8 +382,8 @@ void fetchStationsFromServer()
       // Sprawdź, czy stacja nie jest pusta, a następnie przetwórz i zapisz
       if (!station.isEmpty())
       {
-        Serial.print("Nowa stacja: ");
-        Serial.println(station);
+        //Serial.print("Nowa stacja: ");
+        //Serial.println(station);
         sanitizeAndSaveStation(station.c_str());
       }
       
