@@ -131,7 +131,7 @@ enum MenuOption
   PLAY_FILES,          // Odtwarzacz plików
   INTERNET_RADIO,      // Radio internetowe
   BANK_LIST,           // Lista banków stacji radiowych
-  BLE_AUDIO            // Bluetooth audio
+  REC_AUDIO            // Nagrywanie audio
 };
 MenuOption currentOption = INTERNET_RADIO;  // Aktualnie wybrana opcja menu (domyślnie radio internetowe)
 
@@ -813,25 +813,25 @@ void displayMenu()
   {
     case PLAY_FILES:
       display.println(">> Odtwarzacz plik" + String((char)0x0F) + "w");
-      display.println("   Bluetooth audio  ");
+      display.println("   Nagrywanie audio ");
       display.println("   Radio internetowe");
       display.println("   Lista bank"  + String((char)0x0F) + "w");
       break;
-    case BLE_AUDIO:
+    case REC_AUDIO:
       display.println("   Odtwarzacz plik" + String((char)0x0F) + "w");
-      display.println(">> Bluetooth audio  ");
+      display.println(">> Nagrywanie audio ");
       display.println("   Radio internetowe");
       display.println("   Lista bank"  + String((char)0x0F) + "w");
       break;
     case INTERNET_RADIO:
       display.println("   Odtwarzacz plik" + String((char)0x0F) + "w");
-      display.println("   Bluetooth audio  ");
+      display.println("   Nagrywanie audio ");
       display.println(">> Radio internetowe");
       display.println("   Lista bank"  + String((char)0x0F) + "w");
       break;
     case BANK_LIST:
       display.println("   Odtwarzacz plik" + String((char)0x0F) + "w");
-      display.println("   Bluetooth audio  ");
+      display.println("   Nagrywanie audio ");
       display.println("   Radio internetowe");
       display.println(">> Lista bank"  + String((char)0x0F) + "w");
       break;
@@ -1495,14 +1495,14 @@ void loop()
           }
           else
           {
-            currentOption = BLE_AUDIO;
+            currentOption = REC_AUDIO;
           }
           break;
           
         case INTERNET_RADIO:
           if (DT_state1 == HIGH)
           {
-            currentOption = BLE_AUDIO;
+            currentOption = REC_AUDIO;
           }
           else
           {
@@ -1521,7 +1521,7 @@ void loop()
           }
           break;
           
-        case BLE_AUDIO:
+        case REC_AUDIO:
           if (DT_state1 == HIGH)
           {
             currentOption = PLAY_FILES;
@@ -1745,11 +1745,6 @@ void loop()
       currentOption = INTERNET_RADIO;
       fetchStationsFromServer();
       changeStation();
-    }
-
-    if (currentOption == BLE_AUDIO)
-    {
-
     }
   }
 
