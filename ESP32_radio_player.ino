@@ -1105,26 +1105,29 @@ void playFromSelectedFolder()
       CLK_state1 = digitalRead(CLK_PIN1);
       if (CLK_state1 != prev_CLK_state1 && CLK_state1 == HIGH)
       {
-        // Ustawienie flagi aktywnego wyświetlania na 5 sekund
+        timeDisplay = false;
         displayActive = true;
         displayStartTime = millis();
         if (digitalRead(DT_PIN1) == HIGH)
         {
           encoderCounter1--;
-        } else
-        {
-          encoderCounter1++;
-        }
-        audio.setVolume(encoderCounter1); // zakres 0...21
-
-        // Wyświetlanie komunikatu przez 5 sekund
-        for (int y = 0; y <= 54; y++)
-        {
-          for (int x = 0; x < 127; x++)
+          if (encoderCounter1 < 5)
           {
-            display.drawPixel(x, y, SH110X_BLACK);
+            encoderCounter1 = 5;
           }
         }
+        else
+        {
+          encoderCounter1++;
+          if (encoderCounter1 > 15)
+          {
+            encoderCounter1 = 15;
+          }
+        }
+        audio.setVolume(encoderCounter1); // zakres 0...21
+        Serial.print("Wartość głośności: ");
+        Serial.println(encoderCounter1);
+        display.clearDisplay();
         display.setTextSize(2);
         display.setTextColor(SH110X_WHITE);
         display.setCursor(4, 0);
@@ -1133,15 +1136,6 @@ void playFromSelectedFolder()
         display.setCursor(48, 30);
         display.println(encoderCounter1);
         display.display();
-
-        if (encoderCounter1 > 15)
-        {
-          encoderCounter1 = 15;
-        }
-        if (encoderCounter1 < 5)
-        {
-          encoderCounter1 = 5;
-        }
       }
       prev_CLK_state1 = CLK_state1;
 
