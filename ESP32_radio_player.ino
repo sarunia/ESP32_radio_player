@@ -1290,9 +1290,7 @@ void printWiFiNetworksToOLED()
     }
     // Przesuń się do kolejnego wiersza
     displayRow++;
- 
   }
-
   display.display();
 }
 // Funkcja do drukowania folderów na ekranie OLED z uwzględnieniem zaznaczenia
