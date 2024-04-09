@@ -75,6 +75,7 @@ int directoryCount = 0;           // Licznik katalogów
 int fileIndex = 0;                // Numer aktualnie wybranego pliku audio ze wskazanego folderu
 int folderIndex = 1;              // Numer domyślnie wybranego folderu podczas przełączenia do odtwarzania z karty SD
 int totalFilesInFolder = 0;       // Zmienna przechowująca łączną liczbę plików w folderze
+int numberOfNetworks = 0;         // Liczba znalezionych sieci WiFi
 const int maxVisibleLines = 5;    // Maksymalna liczba widocznych linii na ekranie OLED
 bool button_1 = false;            // Flaga określająca stan przycisku 1
 bool button_2 = false;            // Flaga określająca stan przycisku 2
@@ -131,7 +132,7 @@ enum MenuOption
   PLAY_FILES,          // Odtwarzacz plików
   INTERNET_RADIO,      // Radio internetowe
   BANK_LIST,           // Lista banków stacji radiowych
-  REC_AUDIO            // Nagrywanie audio
+  WIFI_LIST            // Wybór sieci wifi
 };
 MenuOption currentOption = INTERNET_RADIO;  // Aktualnie wybrana opcja menu (domyślnie radio internetowe)
 
@@ -813,25 +814,25 @@ void displayMenu()
   {
     case PLAY_FILES:
       display.println(">> Odtwarzacz plik" + String((char)0x0F) + "w");
-      display.println("   Nagrywanie audio ");
+      display.println("   Lista sieci WiFi ");
       display.println("   Radio internetowe");
       display.println("   Lista bank"  + String((char)0x0F) + "w");
       break;
-    case REC_AUDIO:
+    case WIFI_LIST:
       display.println("   Odtwarzacz plik" + String((char)0x0F) + "w");
-      display.println(">> Nagrywanie audio ");
+      display.println(">> Lista sieci WiFi ");
       display.println("   Radio internetowe");
       display.println("   Lista bank"  + String((char)0x0F) + "w");
       break;
     case INTERNET_RADIO:
       display.println("   Odtwarzacz plik" + String((char)0x0F) + "w");
-      display.println("   Nagrywanie audio ");
+      display.println("   Lista sieci WiFi ");
       display.println(">> Radio internetowe");
       display.println("   Lista bank"  + String((char)0x0F) + "w");
       break;
     case BANK_LIST:
       display.println("   Odtwarzacz plik" + String((char)0x0F) + "w");
-      display.println("   Nagrywanie audio ");
+      display.println("   Lista sieci WiFi ");
       display.println("   Radio internetowe");
       display.println(">> Lista bank"  + String((char)0x0F) + "w");
       break;
@@ -969,10 +970,23 @@ void scrollDown()
       }
     }
   }
+  if (currentOption == WIFI_LIST)
+  {
+    if (currentSelection < numberOfNetworks - 1)
+    {
+      currentSelection++;
+      if (currentSelection >= firstVisibleLine + maxVisibleLines)
+      {
+        firstVisibleLine++;
+      }
+    }
+  }
   // Dodaj dodatkowy wydruk do diagnostyki
   //Serial.print("Scroll Down: CurrentSelection = ");
   //Serial.println(currentSelection);
 }
+
+
 
 void playFromSelectedFolder()
 {
@@ -1230,6 +1244,57 @@ void playFromSelectedFolder()
   root.close();
 }
 
+void printWiFiNetworksToOLED()
+{
+  display.clearDisplay();
+  display.setTextSize(1);
+  display.setTextColor(SH110X_WHITE);
+  display.setCursor(0, 0);
+  display.println("  Lista sieci WiFi:  ");
+
+  for (int i = 0; i < numberOfNetworks; i++)
+  {
+    Serial.printf("  %s  %d dBm\n", WiFi.SSID(i).c_str(), WiFi.RSSI(i)); // Wyświetl nazwę sieci WiFi i siłę sygnału 
+  }
+
+  int displayRow = 1;  // Zaczynamy od drugiego wiersza (pierwszy to nagłówek)
+  for (int i = firstVisibleLine; i < min(firstVisibleLine + 7, numberOfNetworks); i++)
+  {
+    // Podświetlenie zaznaczenia
+    if (i == currentSelection)
+    {
+      display.setTextColor(SH110X_BLACK, SH110X_WHITE);
+    }
+    else
+    {
+      display.setTextColor(SH110X_WHITE);
+    }
+
+    // Wyświetl wiersz
+    display.setCursor(0, displayRow * 9);
+    String ssidName = WiFi.SSID(i);
+    if (ssidName.length() > 14)
+    {
+      ssidName = ssidName.substring(0, 14);
+    }
+    display.print(ssidName);
+    display.print(" ");
+    display.print(WiFi.RSSI(i));
+    display.println("dBm");
+    for (int y = 61; y <= 63; y++) // Wygaszenie 2 ostatnich linii wyświetlacza
+    {
+      for (int x = 0; x < 127; x++)
+      {
+        display.drawPixel(x, y, SH110X_BLACK);
+      }
+    }
+    // Przesuń się do kolejnego wiersza
+    displayRow++;
+ 
+  }
+
+  display.display();
+}
 // Funkcja do drukowania folderów na ekranie OLED z uwzględnieniem zaznaczenia
 void printFoldersToOLED()
 {
@@ -1477,7 +1542,7 @@ void loop()
     timeDisplay = false;
     displayActive = true;
     displayStartTime = millis();
-    if (menuEnable == true)  // Przewijanie menu enkoderem prawym
+    if (menuEnable == true)  // Przewijanie menu prawym enkoderem
     {
       int DT_state1 = digitalRead(DT_PIN1);
       switch(currentOption)
@@ -1489,14 +1554,14 @@ void loop()
           }
           else
           {
-            currentOption = REC_AUDIO;
+            currentOption = WIFI_LIST;
           }
           break;
           
         case INTERNET_RADIO:
           if (DT_state1 == HIGH)
           {
-            currentOption = REC_AUDIO;
+            currentOption = WIFI_LIST;
           }
           else
           {
@@ -1515,7 +1580,7 @@ void loop()
           }
           break;
           
-        case REC_AUDIO:
+        case WIFI_LIST:
           if (DT_state1 == HIGH)
           {
             currentOption = PLAY_FILES;
@@ -1570,7 +1635,7 @@ void loop()
     displayActive = true;
     displayStartTime = millis();
 
-    if (currentOption == INTERNET_RADIO)
+    if (currentOption == INTERNET_RADIO)  // Przewijanie listy stacji radiowych
     {
       if (digitalRead(DT_PIN2) == HIGH)
       {
@@ -1592,11 +1657,9 @@ void loop()
         scrollDown();
         printStationsToOLED();
       }
-      //Serial.print("Numer wybranej stacji: ");
-      //Serial.println(station_nr);
     }
 
-    if (currentOption == BANK_LIST)
+    if (currentOption == BANK_LIST) // Przewijanie listy banków stacji radiowych
     {
       if (digitalRead(DT_PIN2) == HIGH)
       {
@@ -1625,6 +1688,30 @@ void loop()
       display.setCursor(55, 30);
       display.println(encoderCounter2);
       display.display();
+    }
+
+    if (currentOption == WIFI_LIST) // Przewijanie listy znalezionych sieci WiFi
+    {
+      if (digitalRead(DT_PIN2) == HIGH)
+      {
+        encoderCounter2--;
+        if (encoderCounter2 < 1)
+        {
+          encoderCounter2 = 1;
+        }
+        scrollUp();
+        printWiFiNetworksToOLED();
+      }
+      else
+      {
+        encoderCounter2++;
+        if (encoderCounter2 > numberOfNetworks)
+        {
+          encoderCounter2 = numberOfNetworks;
+        }
+        scrollDown();
+        printWiFiNetworksToOLED();
+      }
     }
   }
   prev_CLK_state2 = CLK_state2;
@@ -1668,34 +1755,12 @@ void loop()
   
   if (button1.isPressed())  //Przycisk enkodera prawego wciśnięty
   {
-    display.clearDisplay();
     Serial.println("Przycisk enkodera prawego");
-    if (currentOption == PLAY_FILES)
-    {
-      if (!SD.begin(SD_CS))
-      {
-        Serial.println("Błąd inicjalizacji karty SD!");
-        return;
-      }
-      display.setTextSize(1);
-      display.setTextColor(SH110X_WHITE);
-      display.setCursor(0, 0);
-      display.println("   LISTA KATALOG" + String((char)0x1F) + "W"); // Wyświetla komunikat "LISTA KATALOGÓW" na ekranie, 0x1F reprezentuje literę 'Ó'
-      display.display();
-      folderIndex = 1;
-      currentSelection = 0;
-      firstVisibleLine = 0;
-      listDirectories("/");
-      playFromSelectedFolder();
-    }
-    else
-    {
-      timeDisplay = false;
-      displayMenu();
-      menuEnable = true;
-      displayActive = true;
-      displayStartTime = millis();
-    }
+    timeDisplay = false;
+    displayMenu();
+    menuEnable = true;
+    displayActive = true;
+    displayStartTime = millis();
   }
 
   if (button2.isPressed())  //Przycisk enkodera lewego wciśnięty
@@ -1739,6 +1804,31 @@ void loop()
       currentOption = INTERNET_RADIO;
       fetchStationsFromServer();
       changeStation();
+    }
+    
+    if (currentOption == WIFI_LIST)
+    {
+      display.clearDisplay();
+      display.setTextSize(2);
+      display.setTextColor(SH110X_WHITE);
+      display.setCursor(5, 5);
+      display.println("Skanowanie");
+      display.setTextSize(2);
+      display.setCursor(35, 35);
+      display.println("sieci");
+      display.display();
+      Serial.println("Wyszukiwanie dostępnych sieci WiFi...");
+      numberOfNetworks = WiFi.scanNetworks(); // Skanuj dostępne sieci WiFi
+
+      if (numberOfNetworks == 0)
+      {
+        Serial.println("Nie znaleziono żadnych sieci WiFi.");
+      }
+      else
+      {
+        Serial.printf("Znaleziono %d sieci WiFi.\n", numberOfNetworks);
+        printWiFiNetworksToOLED();
+      }
     }
   }
 
