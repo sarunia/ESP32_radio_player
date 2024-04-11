@@ -52,8 +52,8 @@
 #define LICZNIK_S4 16             // Numer pinu dla enkodera/licznika S4
 #define MAX_FILES 100             // Maksymalna liczba plików lub katalogów w tablicy directories
 
-int currentSelection = 0;         // Numer domyślnie zaznaczonego pierwszego katalogu na ekranie OLED
-int firstVisibleLine = 0;         // Numer pierwszej widocznej linii na ekranie OLED z wyborem katalogów odczytanych z karty SD
+int currentSelection = 0;         // Numer aktualnego wyboru na ekranie OLED
+int firstVisibleLine = 0;         // Numer pierwszej widocznej linii na ekranie OLED
 int button_S1 = 17;               // Przycisk S1 podłączony do pinu 17
 int button_S2 = 18;               // Przycisk S2 podłączony do pinu 18
 int button_S3 = 15;               // Przycisk S3 podłączony do pinu 15
@@ -92,7 +92,8 @@ bool aac = false;                 // Flaga określająca, czy aktualny plik audi
 bool noID3data = false;           // Flaga określająca, czy plik audio posiada dane ID3
 bool timeDisplay = true;          // Flaga określająca kiedy pokazać czas na wyświetlaczu, domyślnie od razu po starcie
 bool listedStations = false;      // Flaga określająca czy na ekranie jest pokazana lista stacji do wyboru
-bool menuEnable = false;           // Flaga określająca czy na ekranie można wyświetlić menu
+bool menuEnable = false;          // Flaga określająca czy na ekranie można wyświetlić menu
+bool enterWiFiPassword = false;   // Flaga określająca czy na ekranie można wpisać hasło sieci
 unsigned long lastDebounceTime_S1 = 0;    // Czas ostatniego debouncingu dla przycisku S1.
 unsigned long lastDebounceTime_S2 = 0;    // Czas ostatniego debouncingu dla przycisku S2.
 unsigned long lastDebounceTime_S3 = 0;    // Czas ostatniego debouncingu dla przycisku S3.
@@ -112,6 +113,7 @@ String bitsPerSampleString;               // Zmienna przechowująca informację 
 String artistString;                      // Zmienna przechowująca informację o wykonawcy
 String titleString;                       // Zmienna przechowująca informację o tytule utworu
 String fileNameString;                    // Zmienna przechowująca informację o nazwie pliku
+String ssidName;
 
 Adafruit_SH1106G display = Adafruit_SH1106G(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);    //Inicjalizacja obiektu wyświetlacza OLED
 ezButton button1(SW_PIN1);                // Utworzenie obiektu przycisku z enkodera 1 ezButton, podłączonego do pinu 4
@@ -942,8 +944,8 @@ void scrollUp()
     }
   }
   // Dodaj dodatkowy wydruk do diagnostyki
-  //Serial.print("Scroll Up: CurrentSelection = ");
-  //Serial.println(currentSelection);
+  Serial.print("Scroll Up: CurrentSelection = ");
+  Serial.println(currentSelection);
 }
 
 void scrollDown()
@@ -982,8 +984,8 @@ void scrollDown()
     }
   }
   // Dodaj dodatkowy wydruk do diagnostyki
-  //Serial.print("Scroll Down: CurrentSelection = ");
-  //Serial.println(currentSelection);
+  Serial.print("Scroll Down: CurrentSelection = ");
+  Serial.println(currentSelection);
 }
 
 
@@ -1252,10 +1254,10 @@ void printWiFiNetworksToOLED()
   display.setCursor(0, 0);
   display.println("  Lista sieci WiFi:  ");
 
-  for (int i = 0; i < numberOfNetworks; i++)
+  /*for (int i = 0; i < numberOfNetworks; i++)
   {
     Serial.printf("  %s  %d dBm\n", WiFi.SSID(i).c_str(), WiFi.RSSI(i)); // Wyświetl nazwę sieci WiFi i siłę sygnału 
-  }
+  }*/
 
   int displayRow = 1;  // Zaczynamy od drugiego wiersza (pierwszy to nagłówek)
   for (int i = firstVisibleLine; i < min(firstVisibleLine + 7, numberOfNetworks); i++)
@@ -1272,7 +1274,7 @@ void printWiFiNetworksToOLED()
 
     // Wyświetl wiersz
     display.setCursor(0, displayRow * 9);
-    String ssidName = WiFi.SSID(i);
+    ssidName = WiFi.SSID(i);
     if (ssidName.length() > 14)
     {
       ssidName = ssidName.substring(0, 14);
@@ -1291,6 +1293,8 @@ void printWiFiNetworksToOLED()
     // Przesuń się do kolejnego wiersza
     displayRow++;
   }
+  // Przywróć domyślne kolory tekstu
+  display.setTextColor(SH110X_WHITE);
   display.display();
 }
 // Funkcja do drukowania folderów na ekranie OLED z uwzględnieniem zaznaczenia
@@ -1703,9 +1707,9 @@ void loop()
       else
       {
         encoderCounter2++;
-        if (encoderCounter2 > numberOfNetworks)
+        if (encoderCounter2 > stationsCount)
         {
-          encoderCounter2 = numberOfNetworks;
+          encoderCounter2 = stationsCount;
         }
         scrollDown();
         printWiFiNetworksToOLED();
@@ -1806,28 +1810,49 @@ void loop()
     
     if (currentOption == WIFI_LIST)
     {
-      display.clearDisplay();
-      display.setTextSize(2);
-      display.setTextColor(SH110X_WHITE);
-      display.setCursor(5, 5);
-      display.println("Skanowanie");
-      display.setTextSize(2);
-      display.setCursor(35, 35);
-      display.println("sieci");
-      display.display();
-      Serial.println("Wyszukiwanie dostępnych sieci WiFi...");
-      numberOfNetworks = WiFi.scanNetworks(); // Skanuj dostępne sieci WiFi
-
-      if (numberOfNetworks == 0)
+      audio.stopSong();
+      if (enterWiFiPassword == true)
       {
-        Serial.println("Nie znaleziono żadnych sieci WiFi.");
+        Serial.println("Wprowadz haslo sieci:");
+        display.clearDisplay();
+        display.setTextSize(1);
+        display.setTextColor(SH110X_WHITE);
+        display.setCursor(0, 0);
+        display.println("Wprowadz haslo sieci:");
+        display.setCursor(0, 20);
+        display.println(ssidName);
+        
       }
       else
       {
-        Serial.printf("Znaleziono %d sieci WiFi.\n", numberOfNetworks);
-        printWiFiNetworksToOLED();
+        displayActive = false;
+        encoderCounter2 = 0;
+        currentSelection = 0;
+        firstVisibleLine = 0;
+        display.clearDisplay();
+        display.setTextSize(2);
+        display.setTextColor(SH110X_WHITE);
+        display.setCursor(5, 5);
+        display.println("Skanowanie");
+        display.setTextSize(2);
+        display.setCursor(35, 35);
+        display.println("sieci");
+        display.display();
+        Serial.println("Wyszukiwanie dostępnych sieci WiFi...");
+        numberOfNetworks = WiFi.scanNetworks(); // Skanuj dostępne sieci WiFi
+
+        if (numberOfNetworks == 0)
+        {
+          Serial.println("Nie znaleziono żadnych sieci WiFi.");
+        }
+        else
+        {
+          Serial.printf("Znaleziono %d sieci WiFi.\n", numberOfNetworks);
+          printWiFiNetworksToOLED();
+        }
       }
     }
+    
   }
 
   // Obsługa przycisku S1
@@ -1885,6 +1910,7 @@ void loop()
       Serial.println("Przycisk S3 został wciśnięty");
       if (currentOption == INTERNET_RADIO)
       {
+        timeDisplay = false;
         currentSelection = 0;
         firstVisibleLine = 0;
         bank_nr++;
@@ -1901,6 +1927,7 @@ void loop()
         display.display();
         fetchStationsFromServer();
         changeStation();
+        timeDisplay = true;
       }
     }
   }
@@ -1916,6 +1943,7 @@ void loop()
       Serial.println("Przycisk S4 został wciśnięty");
       if (currentOption == INTERNET_RADIO)
       {
+        timeDisplay = false;
         currentSelection = 0;
         firstVisibleLine = 0;
         bank_nr--;
@@ -1936,6 +1964,7 @@ void loop()
         display.display();
         fetchStationsFromServer();
         changeStation();
+        timeDisplay = true;
       }
     }
   }
