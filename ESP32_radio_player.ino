@@ -73,7 +73,7 @@ int licznik_S4 = 0;               // Licznik dla przycisku S4
 int stationsCount = 0;            // Aktualna liczba przechowywanych stacji w tablicy
 int directoryCount = 0;           // Licznik katalogów
 int fileIndex = 0;                // Numer aktualnie wybranego pliku audio ze wskazanego folderu
-int folderIndex = 1;              // Numer domyślnie wybranego folderu podczas przełączenia do odtwarzania z karty SD
+int folderIndex = 0;              // Numer aktualnie wybranego folderu podczas przełączenia do odtwarzania z karty SD
 int totalFilesInFolder = 0;       // Zmienna przechowująca łączną liczbę plików w folderze
 int numberOfNetworks = 0;         // Liczba znalezionych sieci WiFi
 int volumeValue = 12;             // Wartość głośności, domyślnie ustawiona na 12
@@ -1052,10 +1052,10 @@ void playFromSelectedFolder()
       button1.loop();
       button2.loop();
 
-      if (button_2) //Przejście do kolejnego pliku w folderze
+      if (button_1) //Przejście do kolejnego pliku w folderze
       {
-        licznik_S2 = 0;
-        button_2 = false;
+        licznik_S1 = 0;
+        button_1 = false;
         isPlaying = false;
         audio.stopSong();
         fileIndex++;
@@ -1068,10 +1068,10 @@ void playFromSelectedFolder()
         break;            // Wyjdź z pętli
       }
 
-      if (button_1) //Przejście do poprzedniego pliku w folderze
+      if (button_2) //Przejście do poprzedniego pliku w folderze
       {
-        licznik_S1 = 0;
-        button_1 = false;
+        licznik_S2 = 0;
+        button_2 = false;
         audio.stopSong();
         fileIndex--;
         if (fileIndex < 1)
@@ -1159,28 +1159,29 @@ void playFromSelectedFolder()
       CLK_state2 = digitalRead(CLK_PIN2);
       if (CLK_state2 != prev_CLK_state2 && CLK_state2 == HIGH)
       {
+        folderIndex = currentSelection;
         timeDisplay = false;
         if (digitalRead(DT_PIN2) == HIGH)
         {
-          encoderCounter2--;
-          if (encoderCounter2 < 1)
+          folderIndex--;
+          if (folderIndex < 1)
           {
-            encoderCounter2 = 1;
+            folderIndex = 1;
           }
-          Serial.print("Wartość licznika lewego enkodera: ");
-          Serial.println(encoderCounter2);
+          Serial.print("Numer folderu: ");
+          Serial.println(folderIndex);
           scrollUp();
           printFoldersToOLED();
         }
         else
         {
-          encoderCounter2++;
-          if (encoderCounter2 > (directoryCount - 1))
+          folderIndex++;
+          if (folderIndex > (directoryCount - 1))
           {
-            encoderCounter2 = directoryCount - 1;
+            folderIndex = directoryCount - 1;
           }
-          Serial.print("Wartość licznika lewego enkodera: ");
-          Serial.println(encoderCounter2);
+          Serial.print("Numer folderu: ");
+          Serial.println(folderIndex);
           scrollDown();
           printFoldersToOLED();
         }
@@ -1224,7 +1225,6 @@ void playFromSelectedFolder()
       if (button2.isPressed())
       {
         audio.stopSong();
-        folderIndex = encoderCounter2;
         playFromSelectedFolder();
       }
 
