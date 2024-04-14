@@ -946,6 +946,8 @@ void scrollUp()
   // Dodaj dodatkowy wydruk do diagnostyki
   Serial.print("Scroll Up: CurrentSelection = ");
   Serial.println(currentSelection);
+  Serial.print("Scroll Up: firstVisibleLine = ");
+  Serial.println(firstVisibleLine);
 }
 
 void scrollDown()
@@ -986,6 +988,8 @@ void scrollDown()
   // Dodaj dodatkowy wydruk do diagnostyki
   Serial.print("Scroll Down: CurrentSelection = ");
   Serial.println(currentSelection);
+  Serial.print("Scroll Down: firstVisibleLine = ");
+  Serial.println(firstVisibleLine);
 }
 
 
@@ -1055,6 +1059,7 @@ void playFromSelectedFolder()
 
       if (button_2) //Przejście do kolejnego pliku w folderze
       {
+        licznik_S2 = 0;
         button_2 = false;
         isPlaying = false;
         audio.stopSong();
@@ -1070,6 +1075,7 @@ void playFromSelectedFolder()
 
       if (button_1) //Przejście do poprzedniego pliku w folderze
       {
+        licznik_S1 = 0;
         button_1 = false;
         audio.stopSong();
         fileIndex--;
@@ -1297,6 +1303,7 @@ void printWiFiNetworksToOLED()
   display.setTextColor(SH110X_WHITE);
   display.display();
 }
+
 // Funkcja do drukowania folderów na ekranie OLED z uwzględnieniem zaznaczenia
 void printFoldersToOLED()
 {
@@ -1471,6 +1478,274 @@ void updateTimer()  // Wywoływana co sekundę przez timer
   }
 }
 
+/*void enterPassword()
+{
+  String password = ""; // Zmienna przechowująca wprowadzone hasło
+  int cursorPosition = 0; // Pozycja kursora (aktualnie wpisywanego znaku)
+  int charactersEntered = 0; // Licznik wprowadzonych znaków
+  char selectedChar = '0'; // Znak drukowalny, zaczynam od "0"
+  bool buttonPressed = false; // Flaga informująca o naciśnięciu przycisku
+
+  Serial.println("Tryb wprowadzania hasła WiFi...");
+
+  for (int y = 45; y <= 63; y++)
+  {
+    for (int x = 0; x < 127; x++)
+    {
+      display.drawPixel(x, y, SH110X_BLACK);
+    }
+  }
+  display.setTextSize(1);
+  display.setTextColor(SH110X_WHITE);
+  display.setCursor(0, 45);
+  display.print("Haslo: _");
+  display.display();
+
+  while (charactersEntered < 8) // Wyjście z pętli po wprowadzeniu 8 znaków
+  { 
+    if (digitalRead(SW_PIN2) == LOW)  // Przerwanie pętli i wyjście do odtwarzania radia
+    {
+      Serial.println("Przełączam się na radio");
+      currentOption = INTERNET_RADIO;
+      changeStation();
+      timeDisplay = true;
+      break;
+    }
+    // Poniżej wybór znaków kółkiem enkodera
+    CLK_state1 = digitalRead(CLK_PIN1);
+    if (CLK_state1 != prev_CLK_state1)
+    {
+      Serial.print("CLK_state1: ");
+      Serial.println(CLK_state1);
+    }
+    if (CLK_state1 != prev_CLK_state1 && CLK_state1 == HIGH)
+    {
+      if (digitalRead(DT_PIN1) == HIGH)
+      {
+        selectedChar--;
+        if (selectedChar < 0x30)
+        {
+          selectedChar = 0x30;
+        }
+        Serial.print("Wybrany znak: ");
+        Serial.println(selectedChar);
+      }
+      else
+      {
+        
+        selectedChar++;
+        Serial.print("Wybrany znak: ");
+        Serial.println(selectedChar);
+      }
+      for (int y = 45; y <= 63; y++)
+      {
+        for (int x = 0; x < 127; x++)
+        {
+          display.drawPixel(x, y, SH110X_BLACK);
+        }
+      }
+      display.setTextSize(1);
+      display.setTextColor(SH110X_WHITE);
+      display.setCursor(0, 45);
+      display.print("Haslo: ");
+      display.display();
+      display.print(selectedChar);
+      display.display();
+      
+    }
+    prev_CLK_state1 = CLK_state1;
+    if (CLK_state1 != prev_CLK_state1)
+    {
+      Serial.print("prev_CLK_state1: ");
+      Serial.println(prev_CLK_state1);
+    }
+
+    // Obsługa przycisku enkodera (potwierdzenie wprowadzonego znaku)
+    if (digitalRead(SW_PIN1) == LOW && !buttonPressed)
+    {
+      Serial.println("Przesuń kursor na kolejną pozycję");
+      
+      // Zachowanie poprzednio wybranego znaku jako pierwszy znak hasła
+      if (cursorPosition == password.length() - 1)
+      {
+        password = selectedChar + password;
+      }
+      else
+      {
+        password += selectedChar;
+      }
+
+      // Przesunięcie kursora
+      cursorPosition++;
+
+      // Zwiększenie licznika wprowadzonych znaków
+      charactersEntered++;
+
+      // Ustawienie flagi informującej o naciśnięciu przycisku
+      buttonPressed = true;
+    }
+    else if (digitalRead(SW_PIN1) == HIGH && buttonPressed)
+    {
+      // Wyzerowanie flagi, gdy przycisk zostanie zwolniony
+      buttonPressed = false;
+    }
+
+    // Wydruki diagnostyczne tylko w przypadku zmiany hasła, pozycji kursora lub liczby wprowadzonych znaków
+    static String prevPassword = "";
+    static int prevCursorPosition = -1;
+    static int prevCharactersEntered = -1;
+    if (password != prevPassword || cursorPosition != prevCursorPosition || charactersEntered != prevCharactersEntered)
+    {
+      Serial.print("Password: ");
+      Serial.println(password);
+      Serial.print("Cursor position: ");
+      Serial.println(cursorPosition);
+      Serial.print("Characters entered: ");
+      Serial.println(charactersEntered);
+
+      prevPassword = password;
+      prevCursorPosition = cursorPosition;
+      prevCharactersEntered = charactersEntered;
+    }
+  }
+  Serial.println("Wyjście z trybu wprowadzania hasła WiFi...");
+}*/
+
+
+
+void enterPassword()
+{
+  String password = ""; // Zmienna przechowująca wprowadzone hasło
+  int cursorPosition = 0; // Pozycja kursora (aktualnie wpisywanego znaku)
+  int charactersEntered = 0; // Licznik wprowadzonych znaków
+  char selectedChar = '0'; // Znak drukowalny, zaczynam od "0"
+  bool buttonPressed = false; // Flaga informująca o naciśnięciu przycisku
+
+  Serial.println("Tryb wprowadzania hasła WiFi...");
+
+  // Wyświetlenie początkowego hasła na ekranie OLED
+  for (int y = 45; y <= 63; y++)
+  {
+    for (int x = 0; x < 127; x++)
+    {
+      display.drawPixel(x, y, SH110X_BLACK);
+    }
+  }
+  display.setTextSize(1);
+  display.setTextColor(SH110X_WHITE);
+  display.setCursor(0, 45);
+  display.print("Haslo: _");
+  display.display();
+
+  while (charactersEntered < 8) // Wyjście z pętli po wprowadzeniu 8 znaków
+  { 
+    CLK_state1 = digitalRead(CLK_PIN1);
+    if (CLK_state1 != prev_CLK_state1 && CLK_state1 == HIGH)
+    {
+      if (digitalRead(DT_PIN1) == HIGH)
+      {
+        selectedChar--;
+        if (selectedChar < 0x30)
+        {
+          selectedChar = 0x7F;
+        }
+        Serial.print("Wybrany znak do tyłu: ");
+        Serial.println(selectedChar);
+        // Aktualizacja wyświetlacza OLED po obróceniu enkodera
+        for (int y = 45; y <= 63; y++)
+        {
+          for (int x = 0; x < 127; x++)
+          {
+            display.drawPixel(x, y, SH110X_BLACK);
+          }
+        }
+        display.setTextSize(1);
+        display.setTextColor(SH110X_WHITE);
+        display.setCursor(0, 45);
+        display.print("Haslo: ");
+        display.print(selectedChar);
+        display.print(password.substring(1)); // Wyświetlanie reszty hasła
+        display.display();
+      }
+      else
+      {
+         selectedChar++;
+        if (selectedChar > 0x7F)
+        {
+          selectedChar = 0x30;
+        }
+        Serial.print("Wybrany znak do przodu: ");
+        Serial.println(selectedChar);
+        // Aktualizacja wyświetlacza OLED po obróceniu enkodera
+        for (int y = 45; y <= 63; y++)
+        {
+          for (int x = 0; x < 127; x++)
+          {
+            display.drawPixel(x, y, SH110X_BLACK);
+          }
+        }
+        display.setTextSize(1);
+        display.setTextColor(SH110X_WHITE);
+        display.setCursor(0, 45);
+        display.print("Haslo: ");
+        display.print(selectedChar);
+        display.print(password.substring(1)); // Wyświetlanie reszty hasła
+        display.display();
+      }
+    }
+    prev_CLK_state1 = CLK_state1;
+
+    // Obsługa przycisku enkodera (potwierdzenie wprowadzonego znaku)
+    if (digitalRead(SW_PIN1) == LOW && !buttonPressed)
+    {
+      Serial.println("Przesuń kursor na kolejną pozycję");
+
+      // Dodanie wprowadzonego znaku do hasła na odpowiedniej pozycji
+      if (cursorPosition == password.length() - 1)
+      {
+        password = selectedChar + password;
+      }
+      else
+      {
+        password += selectedChar;
+      }
+
+      // Przesunięcie kursora
+      cursorPosition++;
+
+      // Zwiększenie licznika wprowadzonych znaków
+      charactersEntered++;
+
+      // Ustawienie flagi informującej o naciśnięciu przycisku
+      buttonPressed = true;
+      Serial.println(password);
+      // Aktualizacja wyświetlacza OLED po zatwierdzeniu znaku
+      display.clearDisplay();
+      display.setTextSize(1);
+      display.setTextColor(SH110X_WHITE);
+      display.setCursor(0, 45);
+      display.print("Haslo: ");
+      display.print(password);
+      display.print("_");
+      display.display();
+    }
+    else if (digitalRead(SW_PIN1) == HIGH && buttonPressed)
+    {
+      // Wyzerowanie flagi, gdy przycisk zostanie zwolniony
+      buttonPressed = false;
+    }
+  }
+
+  Serial.println("Wyjście z trybu wprowadzania hasła WiFi...");
+}
+
+
+
+
+
+
+
+
 void setup()
 {
   // Ustaw pin CS dla karty SD jako wyjście i ustaw go na wysoki stan
@@ -1480,6 +1755,8 @@ void setup()
   // Konfiguruj piny enkodera jako wejścia
   pinMode(CLK_PIN1, INPUT);
   pinMode(DT_PIN1, INPUT);
+  pinMode(CLK_PIN2, INPUT);
+  pinMode(DT_PIN2, INPUT);
 
   // Ustaw czas odbicia dla przycisków enkodera na 50 milisekund
   //button1.setDebounceTime(50);
@@ -1574,7 +1851,7 @@ void loop()
         case BANK_LIST:
           if (DT_state1 == HIGH)
           {
-            currentOption = INTERNET_RADIO;
+            
           }
           else
           {
@@ -1703,6 +1980,7 @@ void loop()
         }
         scrollUp();
         printWiFiNetworksToOLED();
+        enterWiFiPassword = true;
       }
       else
       {
@@ -1713,6 +1991,7 @@ void loop()
         }
         scrollDown();
         printWiFiNetworksToOLED();
+        enterWiFiPassword = true;
       }
     }
   }
@@ -1755,9 +2034,40 @@ void loop()
     menuEnable = false;
   }
   
-  if (button1.isPressed())  //Przycisk enkodera prawego wciśnięty
+  
+
+
+  if ((currentOption == PLAY_FILES) && (button1.isPressed()) && (menuEnable == true))
   {
-    Serial.println("Przycisk enkodera prawego");
+    if (!SD.begin(SD_CS))
+    {
+      Serial.println("Błąd inicjalizacji karty SD!");
+      return;
+    }
+    display.clearDisplay();
+    display.setTextSize(1);
+    display.setTextColor(SH110X_WHITE);
+    display.setCursor(0, 0);
+    display.println("   LISTA KATALOG" + String((char)0x1F) + "W"); // Wyświetla komunikat "LISTA KATALOGÓW" na ekranie, 0x1F reprezentuje literę 'Ó'
+    display.display();
+    folderIndex = 1;
+    currentSelection = 0;
+    firstVisibleLine = 0;
+    listDirectories("/");
+    playFromSelectedFolder();
+  }
+
+  if ((currentOption == INTERNET_RADIO) && (button1.isPressed()) && (menuEnable == true))
+  {
+    display.clearDisplay();
+    station_nr = encoderCounter2;
+    changeStation();
+  }
+
+
+  
+  if (button1.isPressed())
+  {
     timeDisplay = false;
     displayMenu();
     menuEnable = true;
@@ -1765,207 +2075,168 @@ void loop()
     displayStartTime = millis();
   }
 
-  if (button2.isPressed())  //Przycisk enkodera lewego wciśnięty
+  if ((currentOption == INTERNET_RADIO) && (button2.isPressed()))
   {
-    Serial.println("Przycisk enkodera lewego");
     display.clearDisplay();
-    timeDisplay = false;
+    station_nr = encoderCounter2;
+    changeStation();
+  }
 
-    if (currentOption == PLAY_FILES)
+  if ((currentOption == BANK_LIST) && (button2.isPressed()))
+  {
+    display.clearDisplay();
+    bank_nr = encoderCounter2;
+    encoderCounter2 = 0;
+    currentSelection = 0;
+    firstVisibleLine = 0;
+    station_nr = 1;
+    currentOption = INTERNET_RADIO;
+    fetchStationsFromServer();
+    changeStation();
+  }
+
+  if ((currentOption == WIFI_LIST) && (button1.isPressed()))
+  {
+    audio.stopSong();
+    displayActive = false;
+    if (enterWiFiPassword == true)
     {
-      if (!SD.begin(SD_CS))
-      {
-        Serial.println("Błąd inicjalizacji karty SD!");
-        return;
-      }
+      Serial.println("Wprowadz haslo sieci:");
+      display.clearDisplay();
       display.setTextSize(1);
       display.setTextColor(SH110X_WHITE);
       display.setCursor(0, 0);
-      display.println("   LISTA KATALOG" + String((char)0x1F) + "W"); // Wyświetla komunikat "LISTA KATALOGÓW" na ekranie, 0x1F reprezentuje literę 'Ó'
-      display.display();
-      folderIndex = 1;
-      currentSelection = 0;
-      firstVisibleLine = 0;
-      listDirectories("/");
-      playFromSelectedFolder();
+      display.println("Wprowadz haslo sieci:");
+      display.setCursor(0, 20);
+      display.println(ssidName);
+      enterPassword();
     }
-  
-    if (currentOption == INTERNET_RADIO) 
+    else
     {
-      station_nr = encoderCounter2;
-      changeStation();
-    }
-
-    if (currentOption == BANK_LIST)
-    {
-      bank_nr = encoderCounter2;
       encoderCounter2 = 0;
       currentSelection = 0;
       firstVisibleLine = 0;
-      station_nr = 1;
-      currentOption = INTERNET_RADIO;
-      fetchStationsFromServer();
-      changeStation();
-    }
-    
-    if (currentOption == WIFI_LIST)
-    {
-      audio.stopSong();
-      if (enterWiFiPassword == true)
+      display.clearDisplay();
+      display.setTextSize(2);
+      display.setTextColor(SH110X_WHITE);
+      display.setCursor(5, 5);
+      display.println("Skanowanie");
+      display.setTextSize(2);
+      display.setCursor(35, 35);
+      display.println("sieci");
+      display.display();
+      Serial.println("Wyszukiwanie dostępnych sieci WiFi...");
+      numberOfNetworks = WiFi.scanNetworks(); // Skanuj dostępne sieci WiFi
+
+      if (numberOfNetworks == 0)
       {
-        Serial.println("Wprowadz haslo sieci:");
-        display.clearDisplay();
-        display.setTextSize(1);
-        display.setTextColor(SH110X_WHITE);
-        display.setCursor(0, 0);
-        display.println("Wprowadz haslo sieci:");
-        display.setCursor(0, 20);
-        display.println(ssidName);
-        
+        Serial.println("Nie znaleziono żadnych sieci WiFi.");
       }
       else
       {
-        displayActive = false;
-        encoderCounter2 = 0;
-        currentSelection = 0;
-        firstVisibleLine = 0;
-        display.clearDisplay();
-        display.setTextSize(2);
-        display.setTextColor(SH110X_WHITE);
-        display.setCursor(5, 5);
-        display.println("Skanowanie");
-        display.setTextSize(2);
-        display.setCursor(35, 35);
-        display.println("sieci");
-        display.display();
-        Serial.println("Wyszukiwanie dostępnych sieci WiFi...");
-        numberOfNetworks = WiFi.scanNetworks(); // Skanuj dostępne sieci WiFi
-
-        if (numberOfNetworks == 0)
-        {
-          Serial.println("Nie znaleziono żadnych sieci WiFi.");
-        }
-        else
-        {
-          Serial.printf("Znaleziono %d sieci WiFi.\n", numberOfNetworks);
-          printWiFiNetworksToOLED();
-        }
+        Serial.printf("Znaleziono %d sieci WiFi.\n", numberOfNetworks);
+        printWiFiNetworksToOLED();
       }
     }
-    
   }
+
+
 
   // Obsługa przycisku S1
   if (button_1)
   {
-    if ((millis() - lastDebounceTime_S1) > debounceDelay)
+    licznik_S1 = 0;
+    button_1 = mp3 = aac = flac = false;
+    Serial.println("Przycisk S1 został wciśnięty");
+    if (currentOption == INTERNET_RADIO)
     {
-      licznik_S1 = 0;
-      lastDebounceTime_S1 = millis();
-      button_1 = mp3 = aac = flac = false;
-      Serial.println("Przycisk S1 został wciśnięty");
-      if (currentOption == INTERNET_RADIO)
+      station_nr++;
+      if (station_nr > stationsCount)
       {
-        station_nr++;
-        if (station_nr > stationsCount)
-        {
-          station_nr = 1;
-        }
-        Serial.println(station_nr);
-        changeStation();
+        station_nr = 1;
       }
+      Serial.println(station_nr);
+      changeStation();
     }
   }
 
   // Obsługa przycisku S2
   if (button_2)
   {
-    if ((millis() - lastDebounceTime_S2) > debounceDelay)
+    licznik_S2 = 0;
+    button_2 = mp3 = aac = flac = false;
+    Serial.println("Przycisk S2 został wciśnięty");
+    if (currentOption == INTERNET_RADIO)
     {
-      licznik_S2 = 0;
-      lastDebounceTime_S2 = millis();
-      button_2 = mp3 = aac = flac = false;
-      Serial.println("Przycisk S2 został wciśnięty");
-      if (currentOption == INTERNET_RADIO)
+      station_nr--;
+      if (station_nr < 1)
       {
-        station_nr--;
-        if (station_nr < 1)
-        {
-          station_nr = stationsCount;
-        }
-        Serial.println(station_nr);
-        changeStation();
+        station_nr = stationsCount;
       }
+      Serial.println(station_nr);
+      changeStation();
     }
   }
 
   // Obsługa przycisku S3
   if (button_3)
   {
-    if ((millis() - lastDebounceTime_S3) > debounceDelay)
+    licznik_S3 = 0;
+    button_3 = mp3 = aac = flac = false;
+    Serial.println("Przycisk S3 został wciśnięty");
+    if (currentOption == INTERNET_RADIO)
     {
-      licznik_S3 = 0;
-      lastDebounceTime_S3 = millis();
-      button_3 = mp3 = aac = flac = false;
-      Serial.println("Przycisk S3 został wciśnięty");
-      if (currentOption == INTERNET_RADIO)
-      {
-        timeDisplay = false;
-        currentSelection = 0;
-        firstVisibleLine = 0;
-        bank_nr++;
-        station_nr = 1;
-        Serial.println(bank_nr);
-        display.clearDisplay();
-        display.setTextSize(2);
-        display.setTextColor(SH110X_WHITE);
-        display.setCursor(25, 0);
-        display.println("Bank nr");
-        display.setTextSize(3);
-        display.setCursor(55, 30);
-        display.println(bank_nr);
-        display.display();
-        fetchStationsFromServer();
-        changeStation();
-        timeDisplay = true;
-      }
+      timeDisplay = false;
+      currentSelection = 0;
+      firstVisibleLine = 0;
+      bank_nr++;
+      station_nr = 1;
+      Serial.println(bank_nr);
+      display.clearDisplay();
+      display.setTextSize(2);
+      display.setTextColor(SH110X_WHITE);
+      display.setCursor(25, 0);
+      display.println("Bank nr");
+      display.setTextSize(3);
+      display.setCursor(55, 30);
+      display.println(bank_nr);
+      display.display();
+      fetchStationsFromServer();
+      changeStation();
+      timeDisplay = true;
     }
   }
 
   // Obsługa przycisku S4
   if (button_4)
   {
-    if ((millis() - lastDebounceTime_S4) > debounceDelay)
+    licznik_S4 = 0;
+    button_4 = mp3 = aac = flac = false;
+    Serial.println("Przycisk S4 został wciśnięty");
+    if (currentOption == INTERNET_RADIO)
     {
-      licznik_S4 = 0;
-      lastDebounceTime_S4 = millis();
-      button_4 = mp3 = aac = flac = false;
-      Serial.println("Przycisk S4 został wciśnięty");
-      if (currentOption == INTERNET_RADIO)
+      timeDisplay = false;
+      currentSelection = 0;
+      firstVisibleLine = 0;
+      bank_nr--;
+      if (bank_nr < 1)
       {
-        timeDisplay = false;
-        currentSelection = 0;
-        firstVisibleLine = 0;
-        bank_nr--;
-        if (bank_nr < 1)
-        {
-          bank_nr = 1;
-        }
-        station_nr = 1;
-        Serial.println(bank_nr);
-        display.clearDisplay();
-        display.setTextSize(2);
-        display.setTextColor(SH110X_WHITE);
-        display.setCursor(25, 0);
-        display.println("Bank nr");
-        display.setTextSize(3);
-        display.setCursor(55, 30);
-        display.println(bank_nr);
-        display.display();
-        fetchStationsFromServer();
-        changeStation();
-        timeDisplay = true;
+        bank_nr = 1;
       }
+      station_nr = 1;
+      Serial.println(bank_nr);
+      display.clearDisplay();
+      display.setTextSize(2);
+      display.setTextColor(SH110X_WHITE);
+      display.setCursor(25, 0);
+      display.println("Bank nr");
+      display.setTextSize(3);
+      display.setCursor(55, 30);
+      display.println(bank_nr);
+      display.display();
+      fetchStationsFromServer();
+      changeStation();
+      timeDisplay = true;
     }
   }
 }
