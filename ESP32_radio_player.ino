@@ -59,6 +59,7 @@ int button_S2 = 18;               // Przycisk S2 podłączony do pinu 18
 int button_S3 = 15;               // Przycisk S3 podłączony do pinu 15
 int button_S4 = 16;               // Przycisk S4 podłączony do pinu 16
 int station_nr = 4;               // Numer aktualnie wybranej stacji radiowej z listy, domyślnie stacja nr 4
+int stationFromBuffer = 0;        // Numer stacji radiowej przechowywanej w buforze do przywrocenia na ekran po bezczynności
 int bank_nr = 1;                  // Numer aktualnie wybranego banku stacji z listy, domyślnie bank nr 1
 int encoderCounter1 = 0;          // Licznik prawego encodera
 int encoderCounter2 = 0;          // Licznik lewego encodera
@@ -290,6 +291,7 @@ void changeStation()
   // Połącz z daną stacją
   audio.connecttohost(station);
   seconds = 0;
+  stationFromBuffer = station_nr;
 }
 
 void fetchStationsFromServer()
@@ -950,42 +952,34 @@ void scrollUp()
 
 void scrollDown()
 {
+  if (currentSelection < maxSelection())
+  {
+    currentSelection++;
+    if (currentSelection >= firstVisibleLine + maxVisibleLines)
+    {
+      firstVisibleLine++;
+    }
+    // Dodaj dodatkowy wydruk do diagnostyki
+    Serial.print("Scroll Down: CurrentSelection = ");
+    Serial.println(currentSelection);
+  }
+}
+
+int maxSelection()
+{
   if (currentOption == INTERNET_RADIO)
   {
-    if (currentSelection < stationsCount - 1)
-    {
-      currentSelection++;
-      if (currentSelection >= firstVisibleLine + maxVisibleLines)
-      {
-        firstVisibleLine++;
-      }
-    }
+    return stationsCount - 1;
   }
-  if (currentOption == PLAY_FILES)
+  else if (currentOption == PLAY_FILES)
   {
-    if (currentSelection < directoryCount - 1)
-    {
-      currentSelection++;
-      if (currentSelection >= firstVisibleLine + maxVisibleLines)
-      {
-        firstVisibleLine++;
-      }
-    }
+    return directoryCount - 1;
   }
-  if (currentOption == WIFI_LIST)
+  else if (currentOption == WIFI_LIST)
   {
-    if (currentSelection < numberOfNetworks - 1)
-    {
-      currentSelection++;
-      if (currentSelection >= firstVisibleLine + maxVisibleLines)
-      {
-        firstVisibleLine++;
-      }
-    }
+    return numberOfNetworks - 1;
   }
-  // Dodaj dodatkowy wydruk do diagnostyki
-  Serial.print("Scroll Down: CurrentSelection = ");
-  Serial.println(currentSelection);
+  return 0; // Zwraca 0, jeśli żaden warunek nie jest spełniony
 }
 
 
@@ -2052,7 +2046,7 @@ void loop()
     display.setCursor(0, 47);
     display.println(bitrateString.substring(1) + "b/s  Bank " + String(bank_nr));
     display.setCursor(66, 56);
-    display.println("Stacja " + String(station_nr));
+    display.println("Stacja " + String(stationFromBuffer));
     display.display();
     displayActive = false;
     timeDisplay = true;
