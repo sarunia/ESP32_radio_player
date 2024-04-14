@@ -60,8 +60,8 @@ int button_S3 = 15;               // Przycisk S3 podłączony do pinu 15
 int button_S4 = 16;               // Przycisk S4 podłączony do pinu 16
 int station_nr = 4;               // Numer aktualnie wybranej stacji radiowej z listy, domyślnie stacja nr 4
 int bank_nr = 1;                  // Numer aktualnie wybranego banku stacji z listy, domyślnie bank nr 1
-int encoderCounter1 = 12;         // Początkowa środkowa wartość ustawienia poziomu głośności - prawy encoder
-int encoderCounter2 = 1;          // Licznik lewy encoder, zaczynam od 1
+int encoderCounter1 = 0;          // Licznik prawego encodera
+int encoderCounter2 = 0;          // Licznik lewego encodera
 int CLK_state1;                   // Aktualny stan CLK enkodera prawego
 int prev_CLK_state1;              // Poprzedni stan CLK enkodera prawego    
 int CLK_state2;                   // Aktualny stan CLK enkodera lewego
@@ -76,6 +76,7 @@ int fileIndex = 0;                // Numer aktualnie wybranego pliku audio ze ws
 int folderIndex = 1;              // Numer domyślnie wybranego folderu podczas przełączenia do odtwarzania z karty SD
 int totalFilesInFolder = 0;       // Zmienna przechowująca łączną liczbę plików w folderze
 int numberOfNetworks = 0;         // Liczba znalezionych sieci WiFi
+int volumeValue = 12;             // Wartość głośności, domyślnie ustawiona na 12
 const int maxVisibleLines = 5;    // Maksymalna liczba widocznych linii na ekranie OLED
 bool button_1 = false;            // Flaga określająca stan przycisku 1
 bool button_2 = false;            // Flaga określająca stan przycisku 2
@@ -442,8 +443,6 @@ void wifi_setup()
     wifiMulti.run();
   }
   Serial.println("Połączono z siecią WiFi");
-  audio.setPinout(I2S_BCLK, I2S_LRC, I2S_DOUT); // Konfiguruj pinout dla interfejsu I2S audio
-  audio.setVolume(encoderCounter1); // Ustaw głośność na podstawie wartości zmiennej encoderCounter1 w zakresie 0...21
   display.clearDisplay();
   display.setTextSize(2);
   display.setTextColor(SH110X_WHITE);
@@ -946,8 +945,6 @@ void scrollUp()
   // Dodaj dodatkowy wydruk do diagnostyki
   Serial.print("Scroll Up: CurrentSelection = ");
   Serial.println(currentSelection);
-  Serial.print("Scroll Up: firstVisibleLine = ");
-  Serial.println(firstVisibleLine);
 }
 
 void scrollDown()
@@ -988,8 +985,6 @@ void scrollDown()
   // Dodaj dodatkowy wydruk do diagnostyki
   Serial.print("Scroll Down: CurrentSelection = ");
   Serial.println(currentSelection);
-  Serial.print("Scroll Down: firstVisibleLine = ");
-  Serial.println(firstVisibleLine);
 }
 
 
@@ -1132,23 +1127,23 @@ void playFromSelectedFolder()
         displayStartTime = millis();
         if (digitalRead(DT_PIN1) == HIGH)
         {
-          encoderCounter1--;
-          if (encoderCounter1 < 5)
+          volumeValue--;
+          if (volumeValue < 5)
           {
-            encoderCounter1 = 5;
+            volumeValue = 5;
           }
         }
         else
         {
-          encoderCounter1++;
-          if (encoderCounter1 > 15)
+          volumeValue++;
+          if (volumeValue > 15)
           {
-            encoderCounter1 = 15;
+            volumeValue = 15;
           }
         }
-        audio.setVolume(encoderCounter1); // zakres 0...21
+        audio.setVolume(volumeValue); // zakres 0...21
         Serial.print("Wartość głośności: ");
-        Serial.println(encoderCounter1);
+        Serial.println(volumeValue);
         display.clearDisplay();
         display.setTextSize(2);
         display.setTextColor(SH110X_WHITE);
@@ -1156,7 +1151,7 @@ void playFromSelectedFolder()
         display.println("Volume set");
         display.setTextSize(3);
         display.setCursor(48, 30);
-        display.println(encoderCounter1);
+        display.println(volumeValue);
         display.display();
       }
       prev_CLK_state1 = CLK_state1;
@@ -1778,6 +1773,9 @@ void setup()
   attachInterrupt(LICZNIK_S3, zlicz_S3, RISING);
   attachInterrupt(LICZNIK_S4, zlicz_S4, RISING);
 
+  audio.setPinout(I2S_BCLK, I2S_LRC, I2S_DOUT); // Konfiguruj pinout dla interfejsu I2S audio
+  audio.setVolume(volumeValue); // Ustaw głośność na podstawie wartości zmiennej encoderCounter1 w zakresie 0...21
+
   // Inicjalizuj interfejs SPI dla obsługi wyświetlacza OLED
   SPI.begin(SPI_SCK, SPI_MISO, SPI_MOSI);
   SPI.setFrequency(1000000);
@@ -1877,23 +1875,23 @@ void loop()
     {
       if (digitalRead(DT_PIN1) == HIGH)
       {
-        encoderCounter1--;
-        if (encoderCounter1 < 5)
+        volumeValue--;
+        if (volumeValue < 5)
         {
-          encoderCounter1 = 5;
+          volumeValue = 5;
         }
       } 
       else
       {
-        encoderCounter1++;
-        if (encoderCounter1 > 15)
+        volumeValue++;
+        if (volumeValue > 15)
         {
-          encoderCounter1 = 15;
+          volumeValue = 15;
         }
       }
       Serial.print("Wartość głośności: ");
-      Serial.println(encoderCounter1);
-      audio.setVolume(encoderCounter1); // zakres 0...21
+      Serial.println(volumeValue);
+      audio.setVolume(volumeValue); // zakres 0...21
       display.clearDisplay();
       display.setTextSize(2);
       display.setTextColor(SH110X_WHITE);
@@ -1901,7 +1899,7 @@ void loop()
       display.println("Volume set");
       display.setTextSize(3);
       display.setCursor(48, 30);
-      display.println(encoderCounter1);
+      display.println(volumeValue);
       display.display();
     }
   }
@@ -1916,23 +1914,28 @@ void loop()
 
     if (currentOption == INTERNET_RADIO)  // Przewijanie listy stacji radiowych
     {
+      station_nr = currentSelection + 1;
       if (digitalRead(DT_PIN2) == HIGH)
       {
-        encoderCounter2--;
-        if (encoderCounter2 < 1)
+        station_nr--;
+        if (station_nr < 1)
         {
-          encoderCounter2 = 1;
+          station_nr = 1;
         }
+        Serial.print("Numer stacji: ");
+        Serial.println(station_nr);
         scrollUp();
         printStationsToOLED();
       }
       else
       {
-        encoderCounter2++;
-        if (encoderCounter2 > stationsCount)
+        station_nr++;
+        if (station_nr > stationsCount)
         {
-          encoderCounter2 = stationsCount;
+          station_nr = stationsCount;
         }
+        Serial.print("Numer stacji: ");
+        Serial.println(station_nr);
         scrollDown();
         printStationsToOLED();
       }
@@ -1942,22 +1945,22 @@ void loop()
     {
       if (digitalRead(DT_PIN2) == HIGH)
       {
-        encoderCounter2--;
-        if (encoderCounter2 < 1)
+        bank_nr--;
+        if (bank_nr < 1)
         {
-          encoderCounter2 = 1;
+          bank_nr = 1;
         }
       } 
       else
       {
-        encoderCounter2++;
-        if (encoderCounter2 > 16)
+        bank_nr++;
+        if (bank_nr > 16)
         {
-          encoderCounter2 = 16;
+          bank_nr = 16;
         }
       }
       Serial.print("Numer banku: ");
-      Serial.println(encoderCounter2);
+      Serial.println(bank_nr);
       display.clearDisplay();
       display.setTextSize(2);
       display.setTextColor(SH110X_WHITE);
@@ -1965,7 +1968,7 @@ void loop()
       display.println("Bank nr");
       display.setTextSize(3);
       display.setCursor(55, 30);
-      display.println(encoderCounter2);
+      display.println(bank_nr);
       display.display();
     }
 
@@ -2059,8 +2062,6 @@ void loop()
 
   if ((currentOption == INTERNET_RADIO) && (button1.isPressed()) && (menuEnable == true))
   {
-    display.clearDisplay();
-    station_nr = encoderCounter2;
     changeStation();
   }
 
@@ -2077,15 +2078,12 @@ void loop()
 
   if ((currentOption == INTERNET_RADIO) && (button2.isPressed()))
   {
-    display.clearDisplay();
-    station_nr = encoderCounter2;
     changeStation();
   }
 
   if ((currentOption == BANK_LIST) && (button2.isPressed()))
   {
     display.clearDisplay();
-    bank_nr = encoderCounter2;
     encoderCounter2 = 0;
     currentSelection = 0;
     firstVisibleLine = 0;
@@ -2190,6 +2188,10 @@ void loop()
       currentSelection = 0;
       firstVisibleLine = 0;
       bank_nr++;
+      if (bank_nr > 16)
+      {
+        bank_nr = 16;
+      }
       station_nr = 1;
       Serial.println(bank_nr);
       display.clearDisplay();
