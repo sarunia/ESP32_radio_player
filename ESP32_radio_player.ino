@@ -74,6 +74,7 @@ int stationsCount = 0;            // Aktualna liczba przechowywanych stacji w ta
 int directoryCount = 0;           // Licznik katalogów
 int fileIndex = 0;                // Numer aktualnie wybranego pliku audio ze wskazanego folderu
 int folderIndex = 0;              // Numer aktualnie wybranego folderu podczas przełączenia do odtwarzania z karty SD
+int wifiIndex = 0;                // Numer aktualnie wybranej sieci WiFi z listy
 int totalFilesInFolder = 0;       // Zmienna przechowująca łączną liczbę plików w folderze
 int numberOfNetworks = 0;         // Liczba znalezionych sieci WiFi
 int volumeValue = 12;             // Wartość głośności, domyślnie ustawiona na 12
@@ -1613,7 +1614,7 @@ void enterPassword()
   String password = ""; // Zmienna przechowująca wprowadzone hasło
   int cursorPosition = 0; // Pozycja kursora (aktualnie wpisywanego znaku)
   int charactersEntered = 0; // Licznik wprowadzonych znaków
-  char selectedChar = '0'; // Znak drukowalny, zaczynam od "0"
+  char selectedChar = 0x30; // Znak drukowalny, zaczynam od "0"
   bool buttonPressed = false; // Flaga informująca o naciśnięciu przycisku
 
   Serial.println("Tryb wprowadzania hasła WiFi...");
@@ -1637,6 +1638,7 @@ void enterPassword()
     CLK_state1 = digitalRead(CLK_PIN1);
     if (CLK_state1 != prev_CLK_state1 && CLK_state1 == HIGH)
     {
+      selectedChar = currentSelection + 0x30;
       if (digitalRead(DT_PIN1) == HIGH)
       {
         selectedChar--;
@@ -1664,7 +1666,7 @@ void enterPassword()
       }
       else
       {
-         selectedChar++;
+        selectedChar++;
         if (selectedChar > 0x7F)
         {
           selectedChar = 0x30;
@@ -1715,7 +1717,13 @@ void enterPassword()
       buttonPressed = true;
       Serial.println(password);
       // Aktualizacja wyświetlacza OLED po zatwierdzeniu znaku
-      display.clearDisplay();
+      for (int y = 45; y <= 63; y++)
+        {
+          for (int x = 0; x < 127; x++)
+          {
+            display.drawPixel(x, y, SH110X_BLACK);
+          }
+        }
       display.setTextSize(1);
       display.setTextColor(SH110X_WHITE);
       display.setCursor(0, 45);
@@ -1729,6 +1737,18 @@ void enterPassword()
       // Wyzerowanie flagi, gdy przycisk zostanie zwolniony
       buttonPressed = false;
     }
+
+    if (digitalRead(SW_PIN2) == LOW)  // Przerwanie pętli i wyjście do odtwarzania radia
+    {
+      Serial.println("Przełączam się na radio");
+      currentOption = INTERNET_RADIO;
+      changeStation();
+      timeDisplay = true;
+      menuEnable = false;
+      break;
+    }
+
+
   }
 
   Serial.println("Wyjście z trybu wprowadzania hasła WiFi...");
@@ -1974,12 +1994,13 @@ void loop()
 
     if (currentOption == WIFI_LIST) // Przewijanie listy znalezionych sieci WiFi
     {
+      wifiIndex = currentSelection + 1;
       if (digitalRead(DT_PIN2) == HIGH)
       {
-        encoderCounter2--;
-        if (encoderCounter2 < 1)
+        wifiIndex--;
+        if (wifiIndex < 1)
         {
-          encoderCounter2 = 1;
+          wifiIndex = 1;
         }
         scrollUp();
         printWiFiNetworksToOLED();
@@ -1987,15 +2008,17 @@ void loop()
       }
       else
       {
-        encoderCounter2++;
-        if (encoderCounter2 > stationsCount)
+        wifiIndex++;
+        if (wifiIndex > numberOfNetworks)
         {
-          encoderCounter2 = stationsCount;
+          wifiIndex = numberOfNetworks;
         }
         scrollDown();
         printWiFiNetworksToOLED();
         enterWiFiPassword = true;
       }
+      Serial.print("Numer sieci WiFi: ");
+      Serial.println(wifiIndex);
     }
   }
   prev_CLK_state2 = CLK_state2;
@@ -2111,7 +2134,6 @@ void loop()
     }
     else
     {
-      encoderCounter2 = 0;
       currentSelection = 0;
       firstVisibleLine = 0;
       display.clearDisplay();
