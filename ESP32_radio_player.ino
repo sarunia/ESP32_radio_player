@@ -288,6 +288,28 @@ void changeStation()
   display.println(stationName);
   display.display();
 
+  /*Serial.print("Wartość station_nr przed zapisem: ");
+  Serial.println(station_nr);
+  Serial.print("Wartość bank_nr przed zapisem: ");
+  Serial.println(bank_nr);
+
+  // Zapisz zmienne do pamięci EEPROM pod adresami
+  EEPROM.put(((MAX_STATIONS * (MAX_LINK_LENGTH + 1)) + 2), station_nr);
+  EEPROM.put(((MAX_STATIONS * (MAX_LINK_LENGTH + 1)) + 4), bank_nr);
+
+  // Oczekiwanie na zakończenie zapisu
+  EEPROM.commit();
+
+  // Odczytaj dane z pamięci EEPROM
+  EEPROM.get(((MAX_STATIONS * (MAX_LINK_LENGTH + 1)) + 2), station_nr);
+  EEPROM.get(((MAX_STATIONS * (MAX_LINK_LENGTH + 1)) + 4), bank_nr);
+    
+  // Wyświetl odczytane wartości na Serial Monitorze
+  Serial.print("Odczytana wartość station_nr po zapisie: ");
+  Serial.println(station_nr);
+  Serial.print("Odczytana wartość bank_nr po zapisie: ");
+  Serial.println(bank_nr);*/
+
   // Połącz z daną stacją
   audio.connecttohost(station);
   seconds = 0;
@@ -1292,6 +1314,7 @@ void printWiFiNetworksToOLED()
   // Przywróć domyślne kolory tekstu
   display.setTextColor(SH110X_WHITE);
   display.display();
+  displayActive = false;
 }
 
 // Funkcja do drukowania folderów na ekranie OLED z uwzględnieniem zaznaczenia
@@ -1468,140 +1491,6 @@ void updateTimer()  // Wywoływana co sekundę przez timer
   }
 }
 
-/*void enterPassword()
-{
-  String password = ""; // Zmienna przechowująca wprowadzone hasło
-  int cursorPosition = 0; // Pozycja kursora (aktualnie wpisywanego znaku)
-  int charactersEntered = 0; // Licznik wprowadzonych znaków
-  char selectedChar = '0'; // Znak drukowalny, zaczynam od "0"
-  bool buttonPressed = false; // Flaga informująca o naciśnięciu przycisku
-
-  Serial.println("Tryb wprowadzania hasła WiFi...");
-
-  for (int y = 45; y <= 63; y++)
-  {
-    for (int x = 0; x < 127; x++)
-    {
-      display.drawPixel(x, y, SH110X_BLACK);
-    }
-  }
-  display.setTextSize(1);
-  display.setTextColor(SH110X_WHITE);
-  display.setCursor(0, 45);
-  display.print("Haslo: _");
-  display.display();
-
-  while (charactersEntered < 8) // Wyjście z pętli po wprowadzeniu 8 znaków
-  { 
-    if (digitalRead(SW_PIN2) == LOW)  // Przerwanie pętli i wyjście do odtwarzania radia
-    {
-      Serial.println("Przełączam się na radio");
-      currentOption = INTERNET_RADIO;
-      changeStation();
-      timeDisplay = true;
-      break;
-    }
-    // Poniżej wybór znaków kółkiem enkodera
-    CLK_state1 = digitalRead(CLK_PIN1);
-    if (CLK_state1 != prev_CLK_state1)
-    {
-      Serial.print("CLK_state1: ");
-      Serial.println(CLK_state1);
-    }
-    if (CLK_state1 != prev_CLK_state1 && CLK_state1 == HIGH)
-    {
-      if (digitalRead(DT_PIN1) == HIGH)
-      {
-        selectedChar--;
-        if (selectedChar < 0x30)
-        {
-          selectedChar = 0x30;
-        }
-        Serial.print("Wybrany znak: ");
-        Serial.println(selectedChar);
-      }
-      else
-      {
-        
-        selectedChar++;
-        Serial.print("Wybrany znak: ");
-        Serial.println(selectedChar);
-      }
-      for (int y = 45; y <= 63; y++)
-      {
-        for (int x = 0; x < 127; x++)
-        {
-          display.drawPixel(x, y, SH110X_BLACK);
-        }
-      }
-      display.setTextSize(1);
-      display.setTextColor(SH110X_WHITE);
-      display.setCursor(0, 45);
-      display.print("Haslo: ");
-      display.display();
-      display.print(selectedChar);
-      display.display();
-      
-    }
-    prev_CLK_state1 = CLK_state1;
-    if (CLK_state1 != prev_CLK_state1)
-    {
-      Serial.print("prev_CLK_state1: ");
-      Serial.println(prev_CLK_state1);
-    }
-
-    // Obsługa przycisku enkodera (potwierdzenie wprowadzonego znaku)
-    if (digitalRead(SW_PIN1) == LOW && !buttonPressed)
-    {
-      Serial.println("Przesuń kursor na kolejną pozycję");
-      
-      // Zachowanie poprzednio wybranego znaku jako pierwszy znak hasła
-      if (cursorPosition == password.length() - 1)
-      {
-        password = selectedChar + password;
-      }
-      else
-      {
-        password += selectedChar;
-      }
-
-      // Przesunięcie kursora
-      cursorPosition++;
-
-      // Zwiększenie licznika wprowadzonych znaków
-      charactersEntered++;
-
-      // Ustawienie flagi informującej o naciśnięciu przycisku
-      buttonPressed = true;
-    }
-    else if (digitalRead(SW_PIN1) == HIGH && buttonPressed)
-    {
-      // Wyzerowanie flagi, gdy przycisk zostanie zwolniony
-      buttonPressed = false;
-    }
-
-    // Wydruki diagnostyczne tylko w przypadku zmiany hasła, pozycji kursora lub liczby wprowadzonych znaków
-    static String prevPassword = "";
-    static int prevCursorPosition = -1;
-    static int prevCharactersEntered = -1;
-    if (password != prevPassword || cursorPosition != prevCursorPosition || charactersEntered != prevCharactersEntered)
-    {
-      Serial.print("Password: ");
-      Serial.println(password);
-      Serial.print("Cursor position: ");
-      Serial.println(cursorPosition);
-      Serial.print("Characters entered: ");
-      Serial.println(charactersEntered);
-
-      prevPassword = password;
-      prevCursorPosition = cursorPosition;
-      prevCharactersEntered = charactersEntered;
-    }
-  }
-  Serial.println("Wyjście z trybu wprowadzania hasła WiFi...");
-}*/
-
-
 
 void enterPassword()
 {
@@ -1742,17 +1631,10 @@ void enterPassword()
       break;
     }
 
-
   }
 
   Serial.println("Wyjście z trybu wprowadzania hasła WiFi...");
 }
-
-
-
-
-
-
 
 
 void setup()
@@ -1798,7 +1680,7 @@ void setup()
   Serial.begin(115200);
 
   // Inicjalizuj pamięć EEPROM z odpowiednim rozmiarem
-  EEPROM.begin(MAX_STATIONS * (MAX_LINK_LENGTH + 1));
+  EEPROM.begin((MAX_STATIONS * (MAX_LINK_LENGTH + 1)) + 8);
 
   // Oczekaj 250 milisekund na włączenie się wyświetlacza OLED
   delay(250);
@@ -1817,6 +1699,17 @@ void setup()
   wifi_setup();
   configTime(gmtOffset_sec, daylightOffset_sec, ntpServer);
   timer.attach(1, updateTimer);   // Ustaw timer, aby wywoływał funkcję updateTimer co sekundę
+  
+  /*
+  EEPROM.get(((MAX_STATIONS * (MAX_LINK_LENGTH + 1)) + 2), station_nr);
+  EEPROM.get(((MAX_STATIONS * (MAX_LINK_LENGTH + 1)) + 4), bank_nr);
+
+  // Wyświetl odczytane wartości na Serial Monitorze
+  Serial.print("Odczytana wartość station_nr przy rozruchu: ");
+  Serial.println(station_nr);
+  Serial.print("Odczytana wartość bank_nr przy rozruchu: ");
+  Serial.println(bank_nr);*/
+
   fetchStationsFromServer();
   changeStation();
 }
@@ -1988,7 +1881,6 @@ void loop()
 
     if (currentOption == WIFI_LIST) // Przewijanie listy znalezionych sieci WiFi
     {
-      wifiIndex = currentSelection + 1;
       if (digitalRead(DT_PIN2) == HIGH)
       {
         wifiIndex--;
@@ -2130,6 +2022,7 @@ void loop()
     {
       currentSelection = 0;
       firstVisibleLine = 0;
+      wifiIndex = 1;
       display.clearDisplay();
       display.setTextSize(2);
       display.setTextColor(SH110X_WHITE);
