@@ -288,27 +288,27 @@ void changeStation()
   display.println(stationName);
   display.display();
 
-  /*Serial.print("Wartość station_nr przed zapisem: ");
+  Serial.print("Wartość station_nr przed zapisem: ");
   Serial.println(station_nr);
   Serial.print("Wartość bank_nr przed zapisem: ");
   Serial.println(bank_nr);
 
   // Zapisz zmienne do pamięci EEPROM pod adresami
-  EEPROM.put(((MAX_STATIONS * (MAX_LINK_LENGTH + 1)) + 2), station_nr);
-  EEPROM.put(((MAX_STATIONS * (MAX_LINK_LENGTH + 1)) + 4), bank_nr);
+  EEPROM.put(((MAX_STATIONS * (MAX_LINK_LENGTH + 1)) + 4), station_nr);
+  EEPROM.put(((MAX_STATIONS * (MAX_LINK_LENGTH + 1)) + 8), bank_nr);
 
   // Oczekiwanie na zakończenie zapisu
   EEPROM.commit();
 
   // Odczytaj dane z pamięci EEPROM
-  EEPROM.get(((MAX_STATIONS * (MAX_LINK_LENGTH + 1)) + 2), station_nr);
-  EEPROM.get(((MAX_STATIONS * (MAX_LINK_LENGTH + 1)) + 4), bank_nr);
+  EEPROM.get(((MAX_STATIONS * (MAX_LINK_LENGTH + 1)) + 4), station_nr);
+  EEPROM.get(((MAX_STATIONS * (MAX_LINK_LENGTH + 1)) + 8), bank_nr);
     
   // Wyświetl odczytane wartości na Serial Monitorze
   Serial.print("Odczytana wartość station_nr po zapisie: ");
   Serial.println(station_nr);
   Serial.print("Odczytana wartość bank_nr po zapisie: ");
-  Serial.println(bank_nr);*/
+  Serial.println(bank_nr);
 
   // Połącz z daną stacją
   audio.connecttohost(station);
@@ -1680,7 +1680,7 @@ void setup()
   Serial.begin(115200);
 
   // Inicjalizuj pamięć EEPROM z odpowiednim rozmiarem
-  EEPROM.begin((MAX_STATIONS * (MAX_LINK_LENGTH + 1)) + 8);
+  EEPROM.begin((MAX_STATIONS * (MAX_LINK_LENGTH + 1)) + 32);
 
   // Oczekaj 250 milisekund na włączenie się wyświetlacza OLED
   delay(250);
@@ -1700,15 +1700,15 @@ void setup()
   configTime(gmtOffset_sec, daylightOffset_sec, ntpServer);
   timer.attach(1, updateTimer);   // Ustaw timer, aby wywoływał funkcję updateTimer co sekundę
   
-  /*
-  EEPROM.get(((MAX_STATIONS * (MAX_LINK_LENGTH + 1)) + 2), station_nr);
-  EEPROM.get(((MAX_STATIONS * (MAX_LINK_LENGTH + 1)) + 4), bank_nr);
+  
+  EEPROM.get(((MAX_STATIONS * (MAX_LINK_LENGTH + 1)) + 4), station_nr);
+  EEPROM.get(((MAX_STATIONS * (MAX_LINK_LENGTH + 1)) + 8), bank_nr);
 
   // Wyświetl odczytane wartości na Serial Monitorze
   Serial.print("Odczytana wartość station_nr przy rozruchu: ");
   Serial.println(station_nr);
   Serial.print("Odczytana wartość bank_nr przy rozruchu: ");
-  Serial.println(bank_nr);*/
+  Serial.println(bank_nr);
 
   fetchStationsFromServer();
   changeStation();
