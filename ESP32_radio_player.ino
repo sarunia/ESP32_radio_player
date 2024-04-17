@@ -1,6 +1,6 @@
 
 #include "Arduino.h"              // Standardowy nagłówek Arduino, który dostarcza podstawowe funkcje i definicje
-#include "WiFiMulti.h"            // Biblioteka do obsługi wielu połączeń WiFi
+//#include "WiFiMulti.h"            // Biblioteka do obsługi wielu połączeń WiFi
 #include "Audio.h"                // Biblioteka do obsługi funkcji związanych z dźwiękiem i audio
 #include "SPI.h"                  // Biblioteka do obsługi komunikacji SPI
 #include "SD.h"                   // Biblioteka do obsługi kart SD
@@ -10,6 +10,7 @@
 #include <HTTPClient.h>           // Biblioteka do wykonywania żądań HTTP
 #include <EEPROM.h>               // Biblioteka do obsługi pamięci EEPROM
 #include <Ticker.h>               // Mechanizm tickera (do odświeżania)
+#include <WiFiManager.h>          // Biblioteka ułatwia zarządzanie konfiguracją sieci WiFi
 
 #define SD_CS         47          // Pin CS (Chip Select) do komunikacji z kartą SD, wybierany jako interfejs SPI
 #define SPI_MOSI      48          // Pin MOSI (Master Out Slave In) dla interfejsu SPI
@@ -67,10 +68,7 @@ int CLK_state1;                   // Aktualny stan CLK enkodera prawego
 int prev_CLK_state1;              // Poprzedni stan CLK enkodera prawego    
 int CLK_state2;                   // Aktualny stan CLK enkodera lewego
 int prev_CLK_state2;              // Poprzedni stan CLK enkodera lewego          
-int licznik_S1 = 0;               // Licznik dla przycisku S1
-int licznik_S2 = 0;               // Licznik dla przycisku S2
-int licznik_S3 = 0;               // Licznik dla przycisku S3
-int licznik_S4 = 0;               // Licznik dla przycisku S4
+int counter = 0;                  // Licznik dla przycisku S1
 int stationsCount = 0;            // Aktualna liczba przechowywanych stacji w tablicy
 int directoryCount = 0;           // Licznik katalogów
 int fileIndex = 0;                // Numer aktualnie wybranego pliku audio ze wskazanego folderu
@@ -97,19 +95,16 @@ bool timeDisplay = true;          // Flaga określająca kiedy pokazać czas na 
 bool listedStations = false;      // Flaga określająca czy na ekranie jest pokazana lista stacji do wyboru
 bool menuEnable = false;          // Flaga określająca czy na ekranie można wyświetlić menu
 bool enterWiFiPassword = false;   // Flaga określająca czy na ekranie można wpisać hasło sieci
-unsigned long lastDebounceTime_S1 = 0;    // Czas ostatniego debouncingu dla przycisku S1.
-unsigned long lastDebounceTime_S2 = 0;    // Czas ostatniego debouncingu dla przycisku S2.
-unsigned long lastDebounceTime_S3 = 0;    // Czas ostatniego debouncingu dla przycisku S3.
-unsigned long lastDebounceTime_S4 = 0;    // Czas ostatniego debouncingu dla przycisku S4.
-unsigned long debounceDelay = 200;        // Czas trwania debouncingu w milisekundach.
-unsigned long displayTimeout = 6000;      // Czas wyświetlania komunikatu na ekranie w milisekundach.
-unsigned long displayStartTime = 0;       // Czas rozpoczęcia wyświetlania komunikatu.
+unsigned long lastDebounceTime = 0;       // Czas ostatniego debouncingu
+unsigned long debounceDelay = 200;        // Czas trwania debouncingu w milisekundach
+unsigned long displayTimeout = 6000;      // Czas wyświetlania komunikatu na ekranie w milisekundach
+unsigned long displayStartTime = 0;       // Czas rozpoczęcia wyświetlania komunikatu
 unsigned long seconds = 0;                // Licznik sekund timera
 
 String directories[MAX_FILES];            // Tablica z indeksami i ścieżkami katalogów
 String currentDirectory = "/";            // Ścieżka bieżącego katalogu
-String stationName;                       // Nazwa aktualnie wybranej stacji radiowej.
-String stationString;                     // Dodatkowe dane stacji radiowej (jeśli istnieją).
+String stationName;                       // Nazwa aktualnie wybranej stacji radiowej
+String stationString;                     // Dodatkowe dane stacji radiowej (jeśli istnieją)
 String bitrateString;                     // Zmienna przechowująca informację o bitrate
 String sampleRateString;                  // Zmienna przechowująca informację o sample rate
 String bitsPerSampleString;               // Zmienna przechowująca informację o liczbie bitów na próbkę
@@ -122,10 +117,10 @@ Adafruit_SH1106G display = Adafruit_SH1106G(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, 
 ezButton button1(SW_PIN1);                // Utworzenie obiektu przycisku z enkodera 1 ezButton, podłączonego do pinu 4
 ezButton button2(SW_PIN2);                // Utworzenie obiektu przycisku z enkodera 1 ezButton, podłączonego do pinu 1
 Audio audio;                              // Obiekt do obsługi funkcji związanych z dźwiękiem i audio
-WiFiMulti wifiMulti;                      // Obiekt do obsługi wielu połączeń WiFi
+//WiFiMulti wifiMulti;                      // Obiekt do obsługi wielu połączeń WiFi
 Ticker timer;                             // Obiekt do obsługi timera
-String ssid =     "brakdostepu";
-String password = "malinowykrul1977comeback";
+//String ssid =     "brakdostepu";
+//String password = "malinowykrul1977comeback";
 char stations[MAX_STATIONS][MAX_LINK_LENGTH + 1];   // Tablica przechowująca linki do stacji radiowych (jedna na stację) +1 dla terminatora null
 
 const char* ntpServer = "pool.ntp.org";      // Adres serwera NTP używany do synchronizacji czasu
@@ -149,36 +144,36 @@ bool isAudioFile(const char *filename)
 
 void IRAM_ATTR zlicz_S1() // funkcja obsługi przerwania z przycisku S1
 {  
-  if ((millis() - lastDebounceTime_S1) > debounceDelay)
+  if ((millis() - lastDebounceTime) > debounceDelay)
   {
-    lastDebounceTime_S1 = millis(); // Zapisujemy czas ostatniego debouncingu
+    lastDebounceTime = millis(); // Zapisujemy czas ostatniego debouncingu
     button_1 = true;
   }
 }
 
 void IRAM_ATTR zlicz_S2() // funkcja obsługi przerwania z przycisku S2
 {    
-  if ((millis() - lastDebounceTime_S2) > debounceDelay)
+  if ((millis() - lastDebounceTime) > debounceDelay)
   {
-    lastDebounceTime_S2 = millis(); // Zapisujemy czas ostatniego debouncingu
+    lastDebounceTime = millis(); // Zapisujemy czas ostatniego debouncingu
     button_2 = true;
   }
 }
 
 void IRAM_ATTR zlicz_S3() // funkcja obsługi przerwania z przycisku S3
 {  
-  if ((millis() - lastDebounceTime_S3) > debounceDelay)
+  if ((millis() - lastDebounceTime) > debounceDelay)
   {
-    lastDebounceTime_S3 = millis(); // Zapisujemy czas ostatniego debouncingu
+    lastDebounceTime = millis(); // Zapisujemy czas ostatniego debouncingu
     button_3 = true;
   }
 }
 
 void IRAM_ATTR zlicz_S4() // funkcja obsługi przerwania z przycisku S4
 {    
-  if ((millis() - lastDebounceTime_S4) > debounceDelay)
+  if ((millis() - lastDebounceTime) > debounceDelay)
   {
-    lastDebounceTime_S4 = millis(); // Zapisujemy czas ostatniego debouncingu
+    lastDebounceTime = millis(); // Zapisujemy czas ostatniego debouncingu
     button_4 = true;
   }
 }
@@ -457,7 +452,7 @@ void sanitizeAndSaveStation(const char* station)
   saveStationToEEPROM(sanitizedStation);
 }
 
-void wifi_setup()
+/*void wifi_setup()
 {
   WiFi.mode(WIFI_STA);  // Ustaw tryb WiFi na klienta (WIFI_STA)
   wifiMulti.addAP(ssid.c_str(), password.c_str());  // Dodaj dostęp do punktu dostępowego (AP) z zadanymi danymi (SSID i hasło)
@@ -477,7 +472,7 @@ void wifi_setup()
   display.setCursor(10, 35);
   display.println("connected");
   display.display();
-}
+}*/
 
 void audio_info(const char *info)
 {
@@ -1071,7 +1066,7 @@ void playFromSelectedFolder()
 
       if (button_1) //Przejście do kolejnego pliku w folderze
       {
-        licznik_S1 = 0;
+        counter = 0;
         button_1 = false;
         isPlaying = false;
         audio.stopSong();
@@ -1087,7 +1082,7 @@ void playFromSelectedFolder()
 
       if (button_2) //Przejście do poprzedniego pliku w folderze
       {
-        licznik_S2 = 0;
+        counter = 0;
         button_2 = false;
         audio.stopSong();
         fileIndex--;
@@ -1696,19 +1691,54 @@ void setup()
   display.setCursor(35, 35);
   display.println("Radio");
   display.display();
-  wifi_setup();
+  // Inicjalizacja WiFiManagera
+  WiFiManager wifiManager;
+
+  // Rozpoczęcie konfiguracji Wi-Fi i połączenie z siecią, jeśli konieczne
+  if (wifiManager.autoConnect("ESP Internet Radio"))
+  {
+    Serial.println("Połączono z siecią WiFi");
+    display.clearDisplay();
+    display.setTextSize(2);
+    display.setTextColor(SH110X_WHITE);
+    display.setCursor(35, 5);
+    display.println("Wi-Fi");
+    display.setTextSize(2);
+    display.setCursor(10, 35);
+    display.println("connected");
+    display.display();
+  }
+  else
+  {
+    Serial.println("Brak połączenia z siecią WiFi");
+    display.clearDisplay();
+    display.setTextSize(2);
+    display.setTextColor(SH110X_WHITE);
+    display.setCursor(35, 5);
+    display.println("Wi-Fi");
+    display.setCursor(40, 25);
+    display.println("not");
+    display.setCursor(10, 45);
+    display.println("connected");
+    display.display();
+  }
+
+
+
+
+  //wifi_setup();
   configTime(gmtOffset_sec, daylightOffset_sec, ntpServer);
   timer.attach(1, updateTimer);   // Ustaw timer, aby wywoływał funkcję updateTimer co sekundę
   
   
-  EEPROM.get(((MAX_STATIONS * (MAX_LINK_LENGTH + 1)) + 4), station_nr);
+  /*EEPROM.get(((MAX_STATIONS * (MAX_LINK_LENGTH + 1)) + 4), station_nr);
   EEPROM.get(((MAX_STATIONS * (MAX_LINK_LENGTH + 1)) + 8), bank_nr);
 
   // Wyświetl odczytane wartości na Serial Monitorze
   Serial.print("Odczytana wartość station_nr przy rozruchu: ");
   Serial.println(station_nr);
   Serial.print("Odczytana wartość bank_nr przy rozruchu: ");
-  Serial.println(bank_nr);
+  Serial.println(bank_nr);*/
 
   fetchStationsFromServer();
   changeStation();
@@ -1888,9 +1918,12 @@ void loop()
         {
           wifiIndex = 1;
         }
-        scrollUp();
-        printWiFiNetworksToOLED();
-        enterWiFiPassword = true;
+        //scrollUp();
+        //printWiFiNetworksToOLED();
+        //enterWiFiPassword = true;
+        Serial.print("Numer sieci WiFi do tyłu: ");
+        Serial.println(wifiIndex);
+        //prev_CLK_state2 = CLK_state2;
       }
       else
       {
@@ -1899,12 +1932,13 @@ void loop()
         {
           wifiIndex = numberOfNetworks;
         }
-        scrollDown();
-        printWiFiNetworksToOLED();
-        enterWiFiPassword = true;
+        //scrollDown();
+        //printWiFiNetworksToOLED();
+        //enterWiFiPassword = true;
+        Serial.print("Numer sieci WiFi do przodu: ");
+        Serial.println(wifiIndex);
+        //prev_CLK_state2 = CLK_state2;
       }
-      Serial.print("Numer sieci WiFi: ");
-      Serial.println(wifiIndex);
     }
   }
   prev_CLK_state2 = CLK_state2;
@@ -2052,7 +2086,7 @@ void loop()
   // Obsługa przycisku S1
   if (button_1)
   {
-    licznik_S1 = 0;
+    counter = 0;
     button_1 = mp3 = aac = flac = false;
     Serial.println("Przycisk S1 został wciśnięty");
     if (currentOption == INTERNET_RADIO)
@@ -2070,7 +2104,7 @@ void loop()
   // Obsługa przycisku S2
   if (button_2)
   {
-    licznik_S2 = 0;
+    counter = 0;
     button_2 = mp3 = aac = flac = false;
     Serial.println("Przycisk S2 został wciśnięty");
     if (currentOption == INTERNET_RADIO)
@@ -2088,7 +2122,7 @@ void loop()
   // Obsługa przycisku S3
   if (button_3)
   {
-    licznik_S3 = 0;
+    counter = 0;
     button_3 = mp3 = aac = flac = false;
     Serial.println("Przycisk S3 został wciśnięty");
     if (currentOption == INTERNET_RADIO)
@@ -2121,7 +2155,7 @@ void loop()
   // Obsługa przycisku S4
   if (button_4)
   {
-    licznik_S4 = 0;
+    counter = 0;
     button_4 = mp3 = aac = flac = false;
     Serial.println("Przycisk S4 został wciśnięty");
     if (currentOption == INTERNET_RADIO)
