@@ -1,6 +1,5 @@
 
 #include "Arduino.h"              // Standardowy nagłówek Arduino, który dostarcza podstawowe funkcje i definicje
-//#include "WiFiMulti.h"            // Biblioteka do obsługi wielu połączeń WiFi
 #include "Audio.h"                // Biblioteka do obsługi funkcji związanych z dźwiękiem i audio
 #include "SPI.h"                  // Biblioteka do obsługi komunikacji SPI
 #include "SD.h"                   // Biblioteka do obsługi kart SD
@@ -10,7 +9,7 @@
 #include <HTTPClient.h>           // Biblioteka do wykonywania żądań HTTP
 #include <EEPROM.h>               // Biblioteka do obsługi pamięci EEPROM
 #include <Ticker.h>               // Mechanizm tickera (do odświeżania)
-#include <WiFiManager.h>          // Biblioteka ułatwia zarządzanie konfiguracją sieci WiFi
+#include <WiFiManager.h>          // Biblioteka do zarządzania konfiguracją sieci WiFi
 
 #define SD_CS         47          // Pin CS (Chip Select) do komunikacji z kartą SD, wybierany jako interfejs SPI
 #define SPI_MOSI      48          // Pin MOSI (Master Out Slave In) dla interfejsu SPI
@@ -117,10 +116,8 @@ Adafruit_SH1106G display = Adafruit_SH1106G(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, 
 ezButton button1(SW_PIN1);                // Utworzenie obiektu przycisku z enkodera 1 ezButton, podłączonego do pinu 4
 ezButton button2(SW_PIN2);                // Utworzenie obiektu przycisku z enkodera 1 ezButton, podłączonego do pinu 1
 Audio audio;                              // Obiekt do obsługi funkcji związanych z dźwiękiem i audio
-//WiFiMulti wifiMulti;                      // Obiekt do obsługi wielu połączeń WiFi
 Ticker timer;                             // Obiekt do obsługi timera
-//String ssid =     "brakdostepu";
-//String password = "malinowykrul1977comeback";
+
 char stations[MAX_STATIONS][MAX_LINK_LENGTH + 1];   // Tablica przechowująca linki do stacji radiowych (jedna na stację) +1 dla terminatora null
 
 const char* ntpServer = "pool.ntp.org";      // Adres serwera NTP używany do synchronizacji czasu
@@ -451,28 +448,6 @@ void sanitizeAndSaveStation(const char* station)
   // Zapisz przetworzoną stację do pamięci EEPROM
   saveStationToEEPROM(sanitizedStation);
 }
-
-/*void wifi_setup()
-{
-  WiFi.mode(WIFI_STA);  // Ustaw tryb WiFi na klienta (WIFI_STA)
-  wifiMulti.addAP(ssid.c_str(), password.c_str());  // Dodaj dostęp do punktu dostępowego (AP) z zadanymi danymi (SSID i hasło)
-  wifiMulti.run();  // Uruchom konfigurację wielokrotnego dostępu WiFi
-  if(WiFi.status() != WL_CONNECTED) // Sprawdź, czy udało się połączyć z którąś z dostępnych sieci
-  {
-    WiFi.disconnect(true);  // Jeśli nie, rozłącz WiFi, ponownie uruchom konfigurację wielokrotnego dostępu i spróbuj ponownie
-    wifiMulti.run();
-  }
-  Serial.println("Połączono z siecią WiFi");
-  display.clearDisplay();
-  display.setTextSize(2);
-  display.setTextColor(SH110X_WHITE);
-  display.setCursor(35, 5);
-  display.println("Wi-Fi");
-  display.setTextSize(2);
-  display.setCursor(10, 35);
-  display.println("connected");
-  display.display();
-}*/
 
 void audio_info(const char *info)
 {
@@ -835,25 +810,25 @@ void displayMenu()
   {
     case PLAY_FILES:
       display.println(">> Odtwarzacz plik" + String((char)0x0F) + "w");
-      display.println("   Lista sieci WiFi ");
+      display.println("   **rezerwa menu** ");
       display.println("   Radio internetowe");
       display.println("   Lista bank"  + String((char)0x0F) + "w");
       break;
     case WIFI_LIST:
       display.println("   Odtwarzacz plik" + String((char)0x0F) + "w");
-      display.println(">> Lista sieci WiFi ");
+      display.println(">> **rezerwa menu** ");
       display.println("   Radio internetowe");
       display.println("   Lista bank"  + String((char)0x0F) + "w");
       break;
     case INTERNET_RADIO:
       display.println("   Odtwarzacz plik" + String((char)0x0F) + "w");
-      display.println("   Lista sieci WiFi ");
+      display.println("   **rezerwa menu** ");
       display.println(">> Radio internetowe");
       display.println("   Lista bank"  + String((char)0x0F) + "w");
       break;
     case BANK_LIST:
       display.println("   Odtwarzacz plik" + String((char)0x0F) + "w");
-      display.println("   Lista sieci WiFi ");
+      display.println("   **rezerwa menu** ");
       display.println("   Radio internetowe");
       display.println(">> Lista bank"  + String((char)0x0F) + "w");
       break;
@@ -992,14 +967,8 @@ int maxSelection()
   {
     return directoryCount - 1;
   }
-  else if (currentOption == WIFI_LIST)
-  {
-    return numberOfNetworks - 1;
-  }
   return 0; // Zwraca 0, jeśli żaden warunek nie jest spełniony
 }
-
-
 
 void playFromSelectedFolder()
 {
@@ -1259,59 +1228,6 @@ void playFromSelectedFolder()
   root.close();
 }
 
-void printWiFiNetworksToOLED()
-{
-  display.clearDisplay();
-  display.setTextSize(1);
-  display.setTextColor(SH110X_WHITE);
-  display.setCursor(0, 0);
-  display.println("  Lista sieci WiFi:  ");
-
-  /*for (int i = 0; i < numberOfNetworks; i++)
-  {
-    Serial.printf("  %s  %d dBm\n", WiFi.SSID(i).c_str(), WiFi.RSSI(i)); // Wyświetl nazwę sieci WiFi i siłę sygnału 
-  }*/
-
-  int displayRow = 1;  // Zaczynamy od drugiego wiersza (pierwszy to nagłówek)
-  for (int i = firstVisibleLine; i < min(firstVisibleLine + 7, numberOfNetworks); i++)
-  {
-    // Podświetlenie zaznaczenia
-    if (i == currentSelection)
-    {
-      display.setTextColor(SH110X_BLACK, SH110X_WHITE);
-    }
-    else
-    {
-      display.setTextColor(SH110X_WHITE);
-    }
-
-    // Wyświetl wiersz
-    display.setCursor(0, displayRow * 9);
-    ssidName = WiFi.SSID(i);
-    if (ssidName.length() > 14)
-    {
-      ssidName = ssidName.substring(0, 14);
-    }
-    display.print(ssidName);
-    display.print(" ");
-    display.print(WiFi.RSSI(i));
-    display.println("dBm");
-    for (int y = 61; y <= 63; y++) // Wygaszenie 2 ostatnich linii wyświetlacza
-    {
-      for (int x = 0; x < 127; x++)
-      {
-        display.drawPixel(x, y, SH110X_BLACK);
-      }
-    }
-    // Przesuń się do kolejnego wiersza
-    displayRow++;
-  }
-  // Przywróć domyślne kolory tekstu
-  display.setTextColor(SH110X_WHITE);
-  display.display();
-  displayActive = false;
-}
-
 // Funkcja do drukowania folderów na ekranie OLED z uwzględnieniem zaznaczenia
 void printFoldersToOLED()
 {
@@ -1486,152 +1402,6 @@ void updateTimer()  // Wywoływana co sekundę przez timer
   }
 }
 
-
-void enterPassword()
-{
-  String password = ""; // Zmienna przechowująca wprowadzone hasło
-  int cursorPosition = 0; // Pozycja kursora (aktualnie wpisywanego znaku)
-  int charactersEntered = 0; // Licznik wprowadzonych znaków
-  char selectedChar = 0x30; // Znak drukowalny, zaczynam od "0"
-  bool buttonPressed = false; // Flaga informująca o naciśnięciu przycisku
-
-  Serial.println("Tryb wprowadzania hasła WiFi...");
-
-  // Wyświetlenie początkowego hasła na ekranie OLED
-  for (int y = 45; y <= 63; y++)
-  {
-    for (int x = 0; x < 127; x++)
-    {
-      display.drawPixel(x, y, SH110X_BLACK);
-    }
-  }
-  display.setTextSize(1);
-  display.setTextColor(SH110X_WHITE);
-  display.setCursor(0, 45);
-  display.print("Haslo: _");
-  display.display();
-
-  while (charactersEntered < 8) // Wyjście z pętli po wprowadzeniu 8 znaków
-  { 
-    CLK_state1 = digitalRead(CLK_PIN1);
-    if (CLK_state1 != prev_CLK_state1 && CLK_state1 == HIGH)
-    {
-      selectedChar = currentSelection + 0x30;
-      if (digitalRead(DT_PIN1) == HIGH)
-      {
-        selectedChar--;
-        if (selectedChar < 0x30)
-        {
-          selectedChar = 0x7F;
-        }
-        Serial.print("Wybrany znak do tyłu: ");
-        Serial.println(selectedChar);
-        // Aktualizacja wyświetlacza OLED po obróceniu enkodera
-        for (int y = 45; y <= 63; y++)
-        {
-          for (int x = 0; x < 127; x++)
-          {
-            display.drawPixel(x, y, SH110X_BLACK);
-          }
-        }
-        display.setTextSize(1);
-        display.setTextColor(SH110X_WHITE);
-        display.setCursor(0, 45);
-        display.print("Haslo: ");
-        display.print(selectedChar);
-        display.print(password.substring(1)); // Wyświetlanie reszty hasła
-        display.display();
-      }
-      else
-      {
-        selectedChar++;
-        if (selectedChar > 0x7F)
-        {
-          selectedChar = 0x30;
-        }
-        Serial.print("Wybrany znak do przodu: ");
-        Serial.println(selectedChar);
-        // Aktualizacja wyświetlacza OLED po obróceniu enkodera
-        for (int y = 45; y <= 63; y++)
-        {
-          for (int x = 0; x < 127; x++)
-          {
-            display.drawPixel(x, y, SH110X_BLACK);
-          }
-        }
-        display.setTextSize(1);
-        display.setTextColor(SH110X_WHITE);
-        display.setCursor(0, 45);
-        display.print("Haslo: ");
-        display.print(selectedChar);
-        display.print(password.substring(1)); // Wyświetlanie reszty hasła
-        display.display();
-      }
-    }
-    prev_CLK_state1 = CLK_state1;
-
-    // Obsługa przycisku enkodera (potwierdzenie wprowadzonego znaku)
-    if (digitalRead(SW_PIN1) == LOW && !buttonPressed)
-    {
-      Serial.println("Przesuń kursor na kolejną pozycję");
-
-      // Dodanie wprowadzonego znaku do hasła na odpowiedniej pozycji
-      if (cursorPosition == password.length() - 1)
-      {
-        password = selectedChar + password;
-      }
-      else
-      {
-        password += selectedChar;
-      }
-
-      // Przesunięcie kursora
-      cursorPosition++;
-
-      // Zwiększenie licznika wprowadzonych znaków
-      charactersEntered++;
-
-      // Ustawienie flagi informującej o naciśnięciu przycisku
-      buttonPressed = true;
-      Serial.println(password);
-      // Aktualizacja wyświetlacza OLED po zatwierdzeniu znaku
-      for (int y = 45; y <= 63; y++)
-        {
-          for (int x = 0; x < 127; x++)
-          {
-            display.drawPixel(x, y, SH110X_BLACK);
-          }
-        }
-      display.setTextSize(1);
-      display.setTextColor(SH110X_WHITE);
-      display.setCursor(0, 45);
-      display.print("Haslo: ");
-      display.print(password);
-      display.print("_");
-      display.display();
-    }
-    else if (digitalRead(SW_PIN1) == HIGH && buttonPressed)
-    {
-      // Wyzerowanie flagi, gdy przycisk zostanie zwolniony
-      buttonPressed = false;
-    }
-
-    if (digitalRead(SW_PIN2) == LOW)  // Przerwanie pętli i wyjście do odtwarzania radia
-    {
-      Serial.println("Przełączam się na radio");
-      currentOption = INTERNET_RADIO;
-      changeStation();
-      timeDisplay = true;
-      menuEnable = false;
-      break;
-    }
-
-  }
-
-  Serial.println("Wyjście z trybu wprowadzania hasła WiFi...");
-}
-
-
 void setup()
 {
   // Ustaw pin CS dla karty SD jako wyjście i ustaw go na wysoki stan
@@ -1723,13 +1493,8 @@ void setup()
     display.display();
   }
 
-
-
-
-  //wifi_setup();
   configTime(gmtOffset_sec, daylightOffset_sec, ntpServer);
   timer.attach(1, updateTimer);   // Ustaw timer, aby wywoływał funkcję updateTimer co sekundę
-  
   
   /*EEPROM.get(((MAX_STATIONS * (MAX_LINK_LENGTH + 1)) + 4), station_nr);
   EEPROM.get(((MAX_STATIONS * (MAX_LINK_LENGTH + 1)) + 8), bank_nr);
@@ -1908,38 +1673,6 @@ void loop()
       display.println(bank_nr);
       display.display();
     }
-
-    if (currentOption == WIFI_LIST) // Przewijanie listy znalezionych sieci WiFi
-    {
-      if (digitalRead(DT_PIN2) == HIGH)
-      {
-        wifiIndex--;
-        if (wifiIndex < 1)
-        {
-          wifiIndex = 1;
-        }
-        //scrollUp();
-        //printWiFiNetworksToOLED();
-        //enterWiFiPassword = true;
-        Serial.print("Numer sieci WiFi do tyłu: ");
-        Serial.println(wifiIndex);
-        //prev_CLK_state2 = CLK_state2;
-      }
-      else
-      {
-        wifiIndex++;
-        if (wifiIndex > numberOfNetworks)
-        {
-          wifiIndex = numberOfNetworks;
-        }
-        //scrollDown();
-        //printWiFiNetworksToOLED();
-        //enterWiFiPassword = true;
-        Serial.print("Numer sieci WiFi do przodu: ");
-        Serial.println(wifiIndex);
-        //prev_CLK_state2 = CLK_state2;
-      }
-    }
   }
   prev_CLK_state2 = CLK_state2;
 
@@ -1980,9 +1713,6 @@ void loop()
     menuEnable = false;
   }
   
-  
-
-
   if ((currentOption == PLAY_FILES) && (button1.isPressed()) && (menuEnable == true))
   {
     if (!SD.begin(SD_CS))
@@ -2008,8 +1738,6 @@ void loop()
     changeStation();
   }
 
-
-  
   if (button1.isPressed())
   {
     timeDisplay = false;
@@ -2035,53 +1763,6 @@ void loop()
     fetchStationsFromServer();
     changeStation();
   }
-
-  if ((currentOption == WIFI_LIST) && (button1.isPressed()))
-  {
-    audio.stopSong();
-    displayActive = false;
-    if (enterWiFiPassword == true)
-    {
-      Serial.println("Wprowadz haslo sieci:");
-      display.clearDisplay();
-      display.setTextSize(1);
-      display.setTextColor(SH110X_WHITE);
-      display.setCursor(0, 0);
-      display.println("Wprowadz haslo sieci:");
-      display.setCursor(0, 20);
-      display.println(ssidName);
-      enterPassword();
-    }
-    else
-    {
-      currentSelection = 0;
-      firstVisibleLine = 0;
-      wifiIndex = 1;
-      display.clearDisplay();
-      display.setTextSize(2);
-      display.setTextColor(SH110X_WHITE);
-      display.setCursor(5, 5);
-      display.println("Skanowanie");
-      display.setTextSize(2);
-      display.setCursor(35, 35);
-      display.println("sieci");
-      display.display();
-      Serial.println("Wyszukiwanie dostępnych sieci WiFi...");
-      numberOfNetworks = WiFi.scanNetworks(); // Skanuj dostępne sieci WiFi
-
-      if (numberOfNetworks == 0)
-      {
-        Serial.println("Nie znaleziono żadnych sieci WiFi.");
-      }
-      else
-      {
-        Serial.printf("Znaleziono %d sieci WiFi.\n", numberOfNetworks);
-        printWiFiNetworksToOLED();
-      }
-    }
-  }
-
-
 
   // Obsługa przycisku S1
   if (button_1)
