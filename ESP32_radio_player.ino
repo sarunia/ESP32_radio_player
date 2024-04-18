@@ -110,7 +110,6 @@ String bitsPerSampleString;               // Zmienna przechowująca informację 
 String artistString;                      // Zmienna przechowująca informację o wykonawcy
 String titleString;                       // Zmienna przechowująca informację o tytule utworu
 String fileNameString;                    // Zmienna przechowująca informację o nazwie pliku
-String ssidName;
 
 Adafruit_SH1106G display = Adafruit_SH1106G(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);    //Inicjalizacja obiektu wyświetlacza OLED
 ezButton button1(SW_PIN1);                // Utworzenie obiektu przycisku z enkodera 1 ezButton, podłączonego do pinu 4
@@ -128,8 +127,7 @@ enum MenuOption
 {
   PLAY_FILES,          // Odtwarzacz plików
   INTERNET_RADIO,      // Radio internetowe
-  BANK_LIST,           // Lista banków stacji radiowych
-  WIFI_LIST            // Wybór sieci wifi
+  BANK_LIST            // Lista banków stacji radiowych
 };
 MenuOption currentOption = INTERNET_RADIO;  // Aktualnie wybrana opcja menu (domyślnie radio internetowe)
 
@@ -279,34 +277,14 @@ void changeStation()
   display.setCursor(0, 0);
   display.println(stationName);
   display.display();
-
-  Serial.print("Wartość station_nr przed zapisem: ");
-  Serial.println(station_nr);
-  Serial.print("Wartość bank_nr przed zapisem: ");
-  Serial.println(bank_nr);
-
-  // Zapisz zmienne do pamięci EEPROM pod adresami
-  EEPROM.put(((MAX_STATIONS * (MAX_LINK_LENGTH + 1)) + 4), station_nr);
-  EEPROM.put(((MAX_STATIONS * (MAX_LINK_LENGTH + 1)) + 8), bank_nr);
-
-  // Oczekiwanie na zakończenie zapisu
-  EEPROM.commit();
-
-  // Odczytaj dane z pamięci EEPROM
-  EEPROM.get(((MAX_STATIONS * (MAX_LINK_LENGTH + 1)) + 4), station_nr);
-  EEPROM.get(((MAX_STATIONS * (MAX_LINK_LENGTH + 1)) + 8), bank_nr);
-    
-  // Wyświetl odczytane wartości na Serial Monitorze
-  Serial.print("Odczytana wartość station_nr po zapisie: ");
-  Serial.println(station_nr);
-  Serial.print("Odczytana wartość bank_nr po zapisie: ");
-  Serial.println(bank_nr);
-
   // Połącz z daną stacją
   audio.connecttohost(station);
   seconds = 0;
   stationFromBuffer = station_nr;
+
 }
+
+
 
 void fetchStationsFromServer()
 {
@@ -810,25 +788,16 @@ void displayMenu()
   {
     case PLAY_FILES:
       display.println(">> Odtwarzacz plik" + String((char)0x0F) + "w");
-      display.println("   **rezerwa menu** ");
-      display.println("   Radio internetowe");
-      display.println("   Lista bank"  + String((char)0x0F) + "w");
-      break;
-    case WIFI_LIST:
-      display.println("   Odtwarzacz plik" + String((char)0x0F) + "w");
-      display.println(">> **rezerwa menu** ");
       display.println("   Radio internetowe");
       display.println("   Lista bank"  + String((char)0x0F) + "w");
       break;
     case INTERNET_RADIO:
       display.println("   Odtwarzacz plik" + String((char)0x0F) + "w");
-      display.println("   **rezerwa menu** ");
       display.println(">> Radio internetowe");
       display.println("   Lista bank"  + String((char)0x0F) + "w");
       break;
     case BANK_LIST:
       display.println("   Odtwarzacz plik" + String((char)0x0F) + "w");
-      display.println("   **rezerwa menu** ");
       display.println("   Radio internetowe");
       display.println(">> Lista bank"  + String((char)0x0F) + "w");
       break;
@@ -1097,7 +1066,7 @@ void playFromSelectedFolder()
       if (fileEnd == true) //Wymuszenie programowego przejścia do odtwarzania następnego pliku
       {
         fileEnd = false;
-        button_2 = true;
+        button_1 = true;
       }
 
       CLK_state1 = digitalRead(CLK_PIN1);
@@ -1445,7 +1414,7 @@ void setup()
   Serial.begin(115200);
 
   // Inicjalizuj pamięć EEPROM z odpowiednim rozmiarem
-  EEPROM.begin((MAX_STATIONS * (MAX_LINK_LENGTH + 1)) + 32);
+  EEPROM.begin((MAX_STATIONS * (MAX_LINK_LENGTH + 1)));
 
   // Oczekaj 250 milisekund na włączenie się wyświetlacza OLED
   delay(250);
@@ -1495,15 +1464,6 @@ void setup()
 
   configTime(gmtOffset_sec, daylightOffset_sec, ntpServer);
   timer.attach(1, updateTimer);   // Ustaw timer, aby wywoływał funkcję updateTimer co sekundę
-  
-  /*EEPROM.get(((MAX_STATIONS * (MAX_LINK_LENGTH + 1)) + 4), station_nr);
-  EEPROM.get(((MAX_STATIONS * (MAX_LINK_LENGTH + 1)) + 8), bank_nr);
-
-  // Wyświetl odczytane wartości na Serial Monitorze
-  Serial.print("Odczytana wartość station_nr przy rozruchu: ");
-  Serial.println(station_nr);
-  Serial.print("Odczytana wartość bank_nr przy rozruchu: ");
-  Serial.println(bank_nr);*/
 
   fetchStationsFromServer();
   changeStation();
@@ -1533,14 +1493,14 @@ void loop()
           }
           else
           {
-            currentOption = WIFI_LIST;
+            currentOption = INTERNET_RADIO;
           }
           break;
           
         case INTERNET_RADIO:
           if (DT_state1 == HIGH)
           {
-            currentOption = WIFI_LIST;
+            currentOption = PLAY_FILES;
           }
           else
           {
@@ -1551,22 +1511,11 @@ void loop()
         case BANK_LIST:
           if (DT_state1 == HIGH)
           {
-            
-          }
-          else
-          {
-            currentOption = PLAY_FILES;
-          }
-          break;
-          
-        case WIFI_LIST:
-          if (DT_state1 == HIGH)
-          {
-            currentOption = PLAY_FILES;
-          }
-          else
-          {
             currentOption = INTERNET_RADIO;
+          }
+          else
+          {
+            currentOption = PLAY_FILES;
           }
           break;
       }
@@ -1624,7 +1573,7 @@ void loop()
         {
           station_nr = 1;
         }
-        Serial.print("Numer stacji: ");
+        Serial.print("Numer stacji do tyłu: ");
         Serial.println(station_nr);
         scrollUp();
         printStationsToOLED();
@@ -1636,7 +1585,7 @@ void loop()
         {
           station_nr = stationsCount;
         }
-        Serial.print("Numer stacji: ");
+        Serial.print("Numer stacji do przodu: ");
         Serial.println(station_nr);
         scrollDown();
         printStationsToOLED();
