@@ -61,6 +61,7 @@ int button_S4 = 16;               // Przycisk S4 podłączony do pinu 16
 int station_nr = 4;               // Numer aktualnie wybranej stacji radiowej z listy, domyślnie stacja nr 4
 int stationFromBuffer = 0;        // Numer stacji radiowej przechowywanej w buforze do przywrocenia na ekran po bezczynności
 int bank_nr = 1;                  // Numer aktualnie wybranego banku stacji z listy, domyślnie bank nr 1
+int bankFromBuffer = 0;           // Numer aktualnie wybranego banku stacji z listy do przywrocenia na ekran po bezczynności
 int CLK_state1;                   // Aktualny stan CLK enkodera prawego
 int prev_CLK_state1;              // Poprzedni stan CLK enkodera prawego    
 int CLK_state2;                   // Aktualny stan CLK enkodera lewego
@@ -279,7 +280,7 @@ void changeStation()
   audio.connecttohost(station);
   seconds = 0;
   stationFromBuffer = station_nr;
-
+  bankFromBuffer = bank_nr;
 }
 
 
@@ -1650,7 +1651,7 @@ void loop()
     }
     
     display.setCursor(0, 47);
-    display.println(bitrateString.substring(1) + "b/s  Bank " + String(bank_nr));
+    display.println(bitrateString.substring(1) + "b/s  Bank " + String(bankFromBuffer));
     display.setCursor(66, 56);
     display.println("Stacja " + String(stationFromBuffer));
     display.display();
