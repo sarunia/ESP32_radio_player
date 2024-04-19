@@ -1659,6 +1659,7 @@ void loop()
     timeDisplay = true;
     listedStations = false;
     menuEnable = false;
+    currentOption = INTERNET_RADIO;
   }
   
   if ((currentOption == PLAY_FILES) && (button1.isPressed()) && (menuEnable == true))
