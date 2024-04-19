@@ -8,7 +8,7 @@
 #include <ezButton.h>             // Biblioteka do obsługi enkodera z przyciskiem
 #include <HTTPClient.h>           // Biblioteka do wykonywania żądań HTTP
 #include <EEPROM.h>               // Biblioteka do obsługi pamięci EEPROM
-#include <Ticker.h>               // Mechanizm tickera (do odświeżania)
+#include <Ticker.h>               // Mechanizm tickera do odświeżania timera 1s
 #include <WiFiManager.h>          // Biblioteka do zarządzania konfiguracją sieci WiFi
 
 #define SD_CS         47          // Pin CS (Chip Select) do komunikacji z kartą SD, wybierany jako interfejs SPI
@@ -61,8 +61,6 @@ int button_S4 = 16;               // Przycisk S4 podłączony do pinu 16
 int station_nr = 4;               // Numer aktualnie wybranej stacji radiowej z listy, domyślnie stacja nr 4
 int stationFromBuffer = 0;        // Numer stacji radiowej przechowywanej w buforze do przywrocenia na ekran po bezczynności
 int bank_nr = 1;                  // Numer aktualnie wybranego banku stacji z listy, domyślnie bank nr 1
-int encoderCounter1 = 0;          // Licznik prawego encodera
-int encoderCounter2 = 0;          // Licznik lewego encodera
 int CLK_state1;                   // Aktualny stan CLK enkodera prawego
 int prev_CLK_state1;              // Poprzedni stan CLK enkodera prawego    
 int CLK_state2;                   // Aktualny stan CLK enkodera lewego
@@ -1063,7 +1061,7 @@ void playFromSelectedFolder()
         }
       } 
 
-      if (fileEnd == true) //Wymuszenie programowego przejścia do odtwarzania następnego pliku
+      if (fileEnd == true) // Przejście do odtwarzania następnego pliku
       {
         fileEnd = false;
         button_1 = true;
@@ -1140,7 +1138,7 @@ void playFromSelectedFolder()
       }
       prev_CLK_state2 = CLK_state2;
 
-      if (displayActive && (millis() - displayStartTime >= displayTimeout))   // Przywracanie poprzedniej zawartości ekranu po 5 sekundach
+      if (displayActive && (millis() - displayStartTime >= displayTimeout))   // Przywracanie poprzedniej zawartości ekranu po 6 sekundach
       {
         display.clearDisplay();
         display.setTextSize(1);
@@ -1404,7 +1402,7 @@ void setup()
   attachInterrupt(LICZNIK_S4, zlicz_S4, RISING);
 
   audio.setPinout(I2S_BCLK, I2S_LRC, I2S_DOUT); // Konfiguruj pinout dla interfejsu I2S audio
-  audio.setVolume(volumeValue); // Ustaw głośność na podstawie wartości zmiennej encoderCounter1 w zakresie 0...21
+  audio.setVolume(volumeValue); // Ustaw głośność na podstawie wartości zmiennej volumeValue w zakresie 0...21
 
   // Inicjalizuj interfejs SPI dla obsługi wyświetlacza OLED
   SPI.begin(SPI_SCK, SPI_MISO, SPI_MOSI);
@@ -1704,7 +1702,6 @@ void loop()
   if ((currentOption == BANK_LIST) && (button2.isPressed()))
   {
     display.clearDisplay();
-    encoderCounter2 = 0;
     currentSelection = 0;
     firstVisibleLine = 0;
     station_nr = 1;
