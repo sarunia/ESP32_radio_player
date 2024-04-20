@@ -107,6 +107,8 @@ String artistString;                      // Zmienna przechowująca informację 
 String titleString;                       // Zmienna przechowująca informację o tytule utworu
 String fileNameString;                    // Zmienna przechowująca informację o nazwie pliku
 
+File myFile; // Uchwyt pliku
+
 Adafruit_SH1106G display = Adafruit_SH1106G(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);    //Inicjalizacja obiektu wyświetlacza OLED
 ezButton button1(SW_PIN1);                // Utworzenie obiektu przycisku z enkodera 1 ezButton, podłączonego do pinu 4
 ezButton button2(SW_PIN2);                // Utworzenie obiektu przycisku z enkodera 1 ezButton, podłączonego do pinu 1
@@ -272,11 +274,13 @@ void changeStation()
   display.setCursor(0, 0);
   display.println(stationName);
   display.display();
+
   // Połącz z daną stacją
   audio.connecttohost(station);
   seconds = 0;
   stationFromBuffer = station_nr;
   bankFromBuffer = bank_nr;
+  saveStationOnSD();
 }
 
 void fetchStationsFromServer()
@@ -1365,6 +1369,136 @@ void updateTimer()  // Wywoływana co sekundę przez timer
   }
 }
 
+void saveStationOnSD()
+{
+  // Sprawdź, czy plik station_nr.txt istnieje
+  if (SD.exists("/station_nr.txt"))
+  {
+    Serial.println("Plik station_nr.txt już istnieje.");
+
+    // Otwórz plik do zapisu i nadpisz aktualną wartość station_nr
+    myFile = SD.open("/station_nr.txt", FILE_WRITE);
+    if (myFile)
+    {
+      myFile.println(station_nr);
+      myFile.close();
+      Serial.println("Aktualizacja station_nr.txt na karcie SD.");
+    }
+    else
+    {
+      Serial.println("Błąd podczas otwierania pliku station_nr.txt.");
+    }
+  }
+  else
+  {
+    Serial.println("Plik station_nr.txt nie istnieje. Tworzenie...");
+
+    // Utwórz plik i zapisz w nim aktualną wartość station_nr
+    myFile = SD.open("/station_nr.txt", FILE_WRITE);
+    if (myFile)
+    {
+      myFile.println(station_nr);
+      myFile.close();
+      Serial.println("Utworzono i zapisano station_nr.txt na karcie SD.");
+    }
+    else
+    {
+      Serial.println("Błąd podczas tworzenia pliku station_nr.txt.");
+    }
+  }
+
+  // Sprawdź, czy plik bank_nr.txt istnieje
+  if (SD.exists("/bank_nr.txt"))
+  {
+    Serial.println("Plik bank_nr.txt już istnieje.");
+
+    // Otwórz plik do zapisu i nadpisz aktualną wartość bank_nr
+    myFile = SD.open("/bank_nr.txt", FILE_WRITE);
+    if (myFile)
+    {
+      myFile.println(bank_nr);
+      myFile.close();
+      Serial.println("Aktualizacja bank_nr.txt na karcie SD.");
+    }
+    else
+    {
+      Serial.println("Błąd podczas otwierania pliku bank_nr.txt.");
+    }
+  }
+  else
+  {
+    Serial.println("Plik bank_nr.txt nie istnieje. Tworzenie...");
+
+    // Utwórz plik i zapisz w nim aktualną wartość bank_nr
+    myFile = SD.open("/bank_nr.txt", FILE_WRITE);
+    if (myFile)
+    {
+      myFile.println(bank_nr);
+      myFile.close();
+      Serial.println("Utworzono i zapisano bank_nr.txt na karcie SD.");
+    }
+    else
+    {
+      Serial.println("Błąd podczas tworzenia pliku bank_nr.txt.");
+    }
+  }
+}
+
+void readStationFromSD()
+{
+  // Sprawdź, czy karta SD jest dostępna
+  if (!SD.begin(47))
+  {
+    Serial.println("Nie można znaleźć karty SD. Ustawiam domyślne wartości.");
+    station_nr = 4;
+    bank_nr = 1;
+    return;
+  }
+
+  // Sprawdź, czy plik station_nr.txt istnieje
+  if (SD.exists("/station_nr.txt"))
+  {
+    myFile = SD.open("/station_nr.txt");
+    if (myFile)
+    {
+      station_nr = myFile.parseInt();
+      myFile.close();
+      Serial.print("Wczytano station_nr z karty SD: ");
+      Serial.println(station_nr);
+    }
+    else
+    {
+      Serial.println("Błąd podczas otwierania pliku station_nr.txt.");
+    }
+  }
+  else
+  {
+    Serial.println("Plik station_nr.txt nie istnieje.");
+  }
+
+  // Sprawdź, czy plik bank_nr.txt istnieje
+  if (SD.exists("/bank_nr.txt"))
+  {
+    myFile = SD.open("/bank_nr.txt");
+    if (myFile)
+    {
+      bank_nr = myFile.parseInt();
+      myFile.close();
+      Serial.print("Wczytano bank_nr z karty SD: ");
+      Serial.println(bank_nr);
+    }
+    else
+    {
+      Serial.println("Błąd podczas otwierania pliku bank_nr.txt.");
+    }
+  }
+  else
+  {
+    Serial.println("Plik bank_nr.txt nie istnieje.");
+  }
+}
+
+
 void setup()
 {
   // Ustaw pin CS dla karty SD jako wyjście i ustaw go na wysoki stan
@@ -1422,6 +1556,8 @@ void setup()
   display.display();
   // Inicjalizacja WiFiManagera
   WiFiManager wifiManager;
+
+  readStationFromSD();
 
   // Rozpoczęcie konfiguracji Wi-Fi i połączenie z siecią, jeśli konieczne
   if (wifiManager.autoConnect("ESP Internet Radio"))
