@@ -10,7 +10,6 @@
 #include <EEPROM.h>               // Biblioteka do obsługi pamięci EEPROM
 #include <Ticker.h>               // Mechanizm tickera do odświeżania timera 1s
 #include <WiFiManager.h>          // Biblioteka do zarządzania konfiguracją sieci WiFi
-#include <Preferences.h>
 
 #define SD_CS         47          // Pin CS (Chip Select) do komunikacji z kartą SD, wybierany jako interfejs SPI
 #define SPI_MOSI      48          // Pin MOSI (Master Out Slave In) dla interfejsu SPI
@@ -113,7 +112,6 @@ ezButton button1(SW_PIN1);                // Utworzenie obiektu przycisku z enko
 ezButton button2(SW_PIN2);                // Utworzenie obiektu przycisku z enkodera 1 ezButton, podłączonego do pinu 1
 Audio audio;                              // Obiekt do obsługi funkcji związanych z dźwiękiem i audio
 Ticker timer;                             // Obiekt do obsługi timera
-Preferences preferences;
 
 char stations[MAX_STATIONS][MAX_LINK_LENGTH + 1];   // Tablica przechowująca linki do stacji radiowych (jedna na stację) +1 dla terminatora null
 
@@ -1379,10 +1377,6 @@ void setup()
   pinMode(CLK_PIN2, INPUT);
   pinMode(DT_PIN2, INPUT);
 
-  // Ustaw czas odbicia dla przycisków enkodera na 50 milisekund
-  //button1.setDebounceTime(50);
-  //button2.setDebounceTime(50);
-
   // Odczytaj początkowy stan pinu CLK enkodera
   prev_CLK_state1 = digitalRead(CLK_PIN1);
   prev_CLK_state2 = digitalRead(CLK_PIN2);
@@ -1405,8 +1399,6 @@ void setup()
   // Inicjalizuj interfejs SPI dla obsługi wyświetlacza OLED
   SPI.begin(SPI_SCK, SPI_MISO, SPI_MOSI);
   SPI.setFrequency(1000000);
-
-  
 
   // Inicjalizuj komunikację szeregową (Serial)
   Serial.begin(115200);
@@ -1444,6 +1436,10 @@ void setup()
     display.setCursor(10, 35);
     display.println("connected");
     display.display();
+    configTime(gmtOffset_sec, daylightOffset_sec, ntpServer);
+    timer.attach(1, updateTimer);   // Ustaw timer, aby wywoływał funkcję updateTimer co sekundę
+    fetchStationsFromServer();
+    changeStation();
   }
   else
   {
@@ -1459,12 +1455,6 @@ void setup()
     display.println("connected");
     display.display();
   }
-
-  configTime(gmtOffset_sec, daylightOffset_sec, ntpServer);
-  timer.attach(1, updateTimer);   // Ustaw timer, aby wywoływał funkcję updateTimer co sekundę
-
-  fetchStationsFromServer();
-  changeStation();
 }
 
 void loop()
