@@ -10,6 +10,7 @@
 #include <EEPROM.h>               // Biblioteka do obsługi pamięci EEPROM
 #include <Ticker.h>               // Mechanizm tickera do odświeżania timera 1s
 #include <WiFiManager.h>          // Biblioteka do zarządzania konfiguracją sieci WiFi
+#include <Preferences.h>
 
 #define SD_CS         47          // Pin CS (Chip Select) do komunikacji z kartą SD, wybierany jako interfejs SPI
 #define SPI_MOSI      48          // Pin MOSI (Master Out Slave In) dla interfejsu SPI
@@ -66,14 +67,12 @@ int CLK_state1;                   // Aktualny stan CLK enkodera prawego
 int prev_CLK_state1;              // Poprzedni stan CLK enkodera prawego    
 int CLK_state2;                   // Aktualny stan CLK enkodera lewego
 int prev_CLK_state2;              // Poprzedni stan CLK enkodera lewego          
-int counter = 0;                  // Licznik dla przycisku S1
+int counter = 0;                  // Licznik dla przycisków
 int stationsCount = 0;            // Aktualna liczba przechowywanych stacji w tablicy
 int directoryCount = 0;           // Licznik katalogów
 int fileIndex = 0;                // Numer aktualnie wybranego pliku audio ze wskazanego folderu
 int folderIndex = 0;              // Numer aktualnie wybranego folderu podczas przełączenia do odtwarzania z karty SD
-int wifiIndex = 0;                // Numer aktualnie wybranej sieci WiFi z listy
 int totalFilesInFolder = 0;       // Zmienna przechowująca łączną liczbę plików w folderze
-int numberOfNetworks = 0;         // Liczba znalezionych sieci WiFi
 int volumeValue = 12;             // Wartość głośności, domyślnie ustawiona na 12
 const int maxVisibleLines = 5;    // Maksymalna liczba widocznych linii na ekranie OLED
 bool button_1 = false;            // Flaga określająca stan przycisku 1
@@ -92,7 +91,6 @@ bool noID3data = false;           // Flaga określająca, czy plik audio posiada
 bool timeDisplay = true;          // Flaga określająca kiedy pokazać czas na wyświetlaczu, domyślnie od razu po starcie
 bool listedStations = false;      // Flaga określająca czy na ekranie jest pokazana lista stacji do wyboru
 bool menuEnable = false;          // Flaga określająca czy na ekranie można wyświetlić menu
-bool enterWiFiPassword = false;   // Flaga określająca czy na ekranie można wpisać hasło sieci
 unsigned long lastDebounceTime = 0;       // Czas ostatniego debouncingu
 unsigned long debounceDelay = 200;        // Czas trwania debouncingu w milisekundach
 unsigned long displayTimeout = 6000;      // Czas wyświetlania komunikatu na ekranie w milisekundach
@@ -115,6 +113,7 @@ ezButton button1(SW_PIN1);                // Utworzenie obiektu przycisku z enko
 ezButton button2(SW_PIN2);                // Utworzenie obiektu przycisku z enkodera 1 ezButton, podłączonego do pinu 1
 Audio audio;                              // Obiekt do obsługi funkcji związanych z dźwiękiem i audio
 Ticker timer;                             // Obiekt do obsługi timera
+Preferences preferences;
 
 char stations[MAX_STATIONS][MAX_LINK_LENGTH + 1];   // Tablica przechowująca linki do stacji radiowych (jedna na stację) +1 dla terminatora null
 
@@ -126,7 +125,7 @@ enum MenuOption
 {
   PLAY_FILES,          // Odtwarzacz plików
   INTERNET_RADIO,      // Radio internetowe
-  BANK_LIST            // Lista banków stacji radiowych
+  BANK_LIST,           // Lista banków stacji radiowych
 };
 MenuOption currentOption = INTERNET_RADIO;  // Aktualnie wybrana opcja menu (domyślnie radio internetowe)
 
@@ -251,7 +250,6 @@ void changeStation()
     station[j] = EEPROM.read((station_nr - 1) * (MAX_LINK_LENGTH + 1) + 1 + j);
   }
 
-
   // Ręczne przycinanie znaków na końcu linku
   int lastValidCharIndex = length - 1;
   while (lastValidCharIndex >= 0 && (station[lastValidCharIndex] < 33 || station[lastValidCharIndex] > 126))
@@ -282,8 +280,6 @@ void changeStation()
   stationFromBuffer = station_nr;
   bankFromBuffer = bank_nr;
 }
-
-
 
 void fetchStationsFromServer()
 {
@@ -1117,7 +1113,7 @@ void playFromSelectedFolder()
           {
             folderIndex = 1;
           }
-          Serial.print("Numer folderu: ");
+          Serial.print("Numer folderu do tyłu: ");
           Serial.println(folderIndex);
           scrollUp();
           printFoldersToOLED();
@@ -1129,7 +1125,7 @@ void playFromSelectedFolder()
           {
             folderIndex = directoryCount - 1;
           }
-          Serial.print("Numer folderu: ");
+          Serial.print("Numer folderu przodu: ");
           Serial.println(folderIndex);
           scrollDown();
           printFoldersToOLED();
@@ -1169,6 +1165,7 @@ void playFromSelectedFolder()
         display.display();
         displayActive = false;
         timeDisplay = true;
+        currentOption == PLAY_FILES;
       }
 
       if (button2.isPressed())
@@ -1408,6 +1405,8 @@ void setup()
   // Inicjalizuj interfejs SPI dla obsługi wyświetlacza OLED
   SPI.begin(SPI_SCK, SPI_MISO, SPI_MOSI);
   SPI.setFrequency(1000000);
+
+  
 
   // Inicjalizuj komunikację szeregową (Serial)
   Serial.begin(115200);
