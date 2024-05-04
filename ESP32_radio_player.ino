@@ -1259,7 +1259,7 @@ void printStationsToOLED()
   display.setTextSize(1);
   display.setTextColor(SH110X_WHITE);
   display.setCursor(0, 0);
-  display.println("   STACJE RADIOWE    ");
+  display.println("STACJE RADIOWE " + String(station_nr) + "/" + String(stationsCount));
 
   int displayRow = 1;  // Zaczynamy od drugiego wiersza (pierwszy to nagłówek)
 
@@ -1697,10 +1697,9 @@ void loop()
         {
           station_nr = 1;
         }
-        Serial.print("Numer stacji do tyłu: ");
-        Serial.println(station_nr);
+        //Serial.print("Numer stacji do tyłu: ");
+        //Serial.println(station_nr);
         scrollUp();
-        printStationsToOLED();
       }
       else
       {
@@ -1709,11 +1708,11 @@ void loop()
         {
           station_nr = stationsCount;
         }
-        Serial.print("Numer stacji do przodu: ");
-        Serial.println(station_nr);
+        //Serial.print("Numer stacji do przodu: ");
+        //Serial.println(station_nr);
         scrollDown();
-        printStationsToOLED();
       }
+      printStationsToOLED();
     }
 
     if (currentOption == BANK_LIST) // Przewijanie listy banków stacji radiowych
@@ -1723,7 +1722,7 @@ void loop()
         bank_nr--;
         if (bank_nr < 1)
         {
-          bank_nr = 1;
+          bank_nr = 16;
         }
       } 
       else
@@ -1731,7 +1730,7 @@ void loop()
         bank_nr++;
         if (bank_nr > 16)
         {
-          bank_nr = 16;
+          bank_nr = 1;
         }
       }
       Serial.print("Numer banku: ");
