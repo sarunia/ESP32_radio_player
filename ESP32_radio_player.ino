@@ -58,7 +58,7 @@ int button_S1 = 17;               // Przycisk S1 podłączony do pinu 17
 int button_S2 = 18;               // Przycisk S2 podłączony do pinu 18
 int button_S3 = 15;               // Przycisk S3 podłączony do pinu 15
 int button_S4 = 16;               // Przycisk S4 podłączony do pinu 16
-int station_nr = 4;               // Numer aktualnie wybranej stacji radiowej z listy, domyślnie stacja nr 4
+int station_nr = 9;               // Numer aktualnie wybranej stacji radiowej z listy, domyślnie stacja nr 9
 int stationFromBuffer = 0;        // Numer stacji radiowej przechowywanej w buforze do przywrocenia na ekran po bezczynności
 int bank_nr = 1;                  // Numer aktualnie wybranego banku stacji z listy, domyślnie bank nr 1
 int bankFromBuffer = 0;           // Numer aktualnie wybranego banku stacji z listy do przywrocenia na ekran po bezczynności
@@ -1364,7 +1364,7 @@ void updateTimer()  // Wywoływana co sekundę przez timer
       display.print(timeString);
       display.display();
     }
-    if (currentOption == INTERNET_RADIO)
+    if ((currentOption == INTERNET_RADIO) && ((mp3 == true) || (flac == true) || (aac == true)))
     {
       printLocalTime();
     }
@@ -1452,7 +1452,7 @@ void readStationFromSD()
   if (!SD.begin(47))
   {
     Serial.println("Nie można znaleźć karty SD. Ustawiam domyślne wartości.");
-    station_nr = 4;
+    station_nr = 9;
     bank_nr = 1;
     return;
   }
