@@ -235,6 +235,7 @@ void saveStationToEEPROM(const char* station)
 // Funkcja odpowiedzialna za zmianę aktualnie wybranej stacji radiowej.
 void changeStation()
 {  
+  mp3 = flac = aac = false;
   stationString.remove(0);  // Usunięcie wszystkich znaków z obiektu stationString
 
   // Odczytaj link stacji o aktualnym numerze station_nr
@@ -486,8 +487,9 @@ void audio_info(const char *info)
     mp3 = false;
   }
 
-  if (currentOption == INTERNET_RADIO)
+  if ((currentOption == INTERNET_RADIO) && ((mp3 == true) || (flac == true) || (aac == true)))
   {
+    
     display.setTextSize(1);
     display.setTextColor(SH110X_WHITE);
     for (int y = 37; y <= 54; y++)
@@ -511,7 +513,7 @@ void audio_info(const char *info)
     }
     display.setCursor(66, 56);
     display.println("Stacja " + String(station_nr));
-    display.display();
+    //display.display();
   }
 
   if (currentOption == PLAY_FILES)
