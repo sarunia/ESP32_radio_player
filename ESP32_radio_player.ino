@@ -1349,7 +1349,7 @@ void updateTimer()  // Wywoływana co sekundę przez timer
     }
 
     display.setCursor(0, 56);
-    for (int y = 56; y <= 63; y++)
+    for (int y = 55; y <= 63; y++)
     {
       for (int x = 0; x < 50; x++)
       {
