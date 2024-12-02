@@ -504,7 +504,7 @@ void audio_info(const char *info)
     
     display.setCursor(0, 47);
     display.println(bitrateString.substring(1) + "b/s  Bank " + String(bank_nr));
-    for (int y = 56; y <= 63; y++)
+    for (int y = 55; y <= 63; y++)
     {
       for (int x = 51; x < 127; x++)
       {
