@@ -251,6 +251,9 @@ void changeStation()
     station[j] = EEPROM.read((station_nr - 1) * (MAX_LINK_LENGTH + 1) + 1 + j);
   }
 
+  // Skopiuj pierwsze 21 znaków do zmiennej stationName - będzie to wyświetlone w pierwszej linii na wyświetlaczu
+  stationName = String(station).substring(0, 21);
+
   // Ręczne przycinanie znaków na końcu linku
   int lastValidCharIndex = length - 1;
   while (lastValidCharIndex >= 0 && (station[lastValidCharIndex] < 33 || station[lastValidCharIndex] > 126))
@@ -259,29 +262,43 @@ void changeStation()
     lastValidCharIndex--;
   }
 
-  // Wydrukuj nazwę stacji i link na serialu
-  Serial.print("Aktualnie wybrana stacja: ");
-  Serial.println(station_nr);
-  Serial.print("Link do stacji: ");
-  Serial.println(station);
+  // Weryfikacja, czy w linku znajduje się "http" lub "https"
+  char* validLink = strstr(station, "http://");
+  if (validLink == NULL)
+  {
+    validLink = strstr(station, "https://");
+  }
 
-  // Skopiuj pierwsze 21 znaków do zmiennej stationName
-  stationName = String(station).substring(0, 21);
+  if (validLink != NULL) 
+  {
+    // Ustawienie station na początek właściwego linku
+    strcpy(station, validLink);
 
-  // Wyświetl informacje na ekranie OLED
-  display.clearDisplay();
-  display.setTextSize(1);
-  display.setTextColor(SH110X_WHITE);
-  display.setCursor(0, 0);
-  display.println(stationName);
-  display.display();
+    // Wydrukuj nazwę stacji i link na serialu
+    Serial.print("Aktualnie wybrana stacja: ");
+    Serial.println(station_nr);
+    Serial.print("Link do stacji: ");
+    Serial.println(station);
 
-  // Połącz z daną stacją
-  audio.connecttohost(station);
-  seconds = 0;
-  stationFromBuffer = station_nr;
-  bankFromBuffer = bank_nr;
-  saveStationOnSD();
+    // Wyświetl informacje na ekranie OLED
+    display.clearDisplay();
+    display.setTextSize(1);
+    display.setTextColor(SH110X_WHITE);
+    display.setCursor(0, 0);
+    display.println(stationName);
+    display.display();
+
+    // Połącz z daną stacją
+    audio.connecttohost(station);
+    seconds = 0;
+    stationFromBuffer = station_nr;
+    bankFromBuffer = bank_nr;
+    saveStationOnSD();
+  }
+  else
+  {
+    Serial.println("Błąd: link stacji nie zawiera 'http' lub 'https'");
+  }
 }
 
 void fetchStationsFromServer()
