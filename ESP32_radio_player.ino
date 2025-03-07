@@ -15,9 +15,6 @@
 // Definicje pinów dla I2C wyświetlacza OLED 
 #define SDA_PIN 8
 #define SCL_PIN 9
-#define OLED_RESET_PIN 7
-
-#define OLED_I2C_ADDRESS 0x3C
 
 // Definicje pinów dla SPI czytnika kart SD
 #define SD_CS         47          // Pin CS (Chip Select) do komunikacji z kartą SD
@@ -33,8 +30,8 @@
 #define CLK_PIN1 6                // Podłączenie z pinu 6 do CLK na enkoderze prawym
 #define DT_PIN1  5                // Podłączenie z pinu 5 do DT na enkoderze prawym
 #define SW_PIN1  4                // Podłączenie z pinu 4 do SW na enkoderze prawym (przycisk)
-#define CLK_PIN2 11               // Podłączenie z pinu 10 do CLK na enkoderze
-#define DT_PIN2  10               // Podłączenie z pinu 11 do DT na enkoderze lewym
+#define CLK_PIN2 10               // Podłączenie z pinu 10 do CLK na enkoderze
+#define DT_PIN2  11               // Podłączenie z pinu 11 do DT na enkoderze lewym
 #define SW_PIN2  1                // Podłączenie z pinu 1 do SW na enkoderze lewym (przycisk)
 #define MAX_STATIONS 99           // Maksymalna liczba stacji radiowych, które mogą być przechowywane w jednym banku
 #define STATION_NAME_LENGTH 42    // Nazwa stacji wraz z bankiem i numerem stacji do wyświetlenia w pierwszej linii na ekranie
