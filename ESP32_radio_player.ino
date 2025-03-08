@@ -1707,7 +1707,7 @@ void playFile()
 // Wyświetlanie przewijalnej listy plików z podświetleniem wybranego pliku
 void displayFiles()
 { 
-  String text = "ODTWARZACZ PLIKÓW - LISTA PLIKÓW";
+  String text = "    LISTA PLIKÓW:    ";
   processText(text);  // Zamiana polskich znaków
   u8g2.clearBuffer();
   u8g2.setFont(spleen6x12PL);
@@ -1808,13 +1808,6 @@ void displayRadio()
     u8g2.drawStr(0, yPosition, currentLine.c_str());
   }
 
-  u8g2.sendBuffer();
-  // Ponowne wysłanie buforu zawartości ekranu, eliminowanie przypadkowych krzaczków
-  if (millis() - lastCheckTime >= 100)
-  {
-    u8g2.sendBuffer();
-    lastCheckTime = millis(); // Zaktualizuj czas ostatniego sprawdzenia
-  }
 }
 
 // Obsługa wyświetlacza dla odtwarzanego pliku z karty SD
@@ -1826,18 +1819,18 @@ void displayPlayer()
     u8g2.clearBuffer();
     u8g2.setFont(spleen6x12PL);
     u8g2.setCursor(0, 10);
-    u8g2.print("PLIK ");
+    u8g2.print("PLK ");
     u8g2.print(previous_fileIndex + 1); // Liczymy od 1, nie od 0 na wyświetlaczu
     u8g2.print("/");
     u8g2.print(filesCount);
-    u8g2.print(" FOLD ");
+    u8g2.print(" FLD ");
     u8g2.print(previous_folderIndex + 1); // Liczymy od 1, nie od 0 na wyświetlaczu
     u8g2.print("/");
     u8g2.print(folderCount);
 
-    if (artistString.length() > 33)
+    if (artistString.length() > 21)
     {
-      artistString = artistString.substring(0, 33); // Ogranicz długość tekstu do 33 znaków
+      artistString = artistString.substring(0, 21); // Ogranicz długość tekstu do 21 znaków
     }
 
     // Pomocnicza pętla w celu wyłapania bajtów titleString na serial terminalu
@@ -1855,13 +1848,13 @@ void displayPlayer()
     Serial.println();*/
 
     u8g2.setCursor(0, 21);
-    u8g2.print("Artysta: ");
+    //u8g2.print("Artysta: ");
     processText(artistString);  // Podstawienie polskich znaków diakrytycznych
     u8g2.print(artistString);
 
-    if (titleString.length() > 35)
+    if (titleString.length() > 21)
     {
-      titleString = titleString.substring(0, 35); // Ogranicz długość tekstu do 35 znaków
+      titleString = titleString.substring(0, 21); // Ogranicz długość tekstu do 21 znaków
     }
 
     // Pomocnicza pętla w celu wyłapania bajtów titleString na serial terminalu
@@ -1879,9 +1872,9 @@ void displayPlayer()
     Serial.println();*/
 
     u8g2.setCursor(0, 31);
-    String text = "Tytuł: ";
-    processText(text);  // Podstawienie polskich znaków diakrytycznych
-    u8g2.print(text);
+    //String text = "Tytuł: ";
+    //processText(text);  // Podstawienie polskich znaków diakrytycznych
+    //u8g2.print(text);
     processText(titleString);  // Podstawienie polskich znaków diakrytycznych
     u8g2.print(titleString);
 
@@ -1891,9 +1884,13 @@ void displayPlayer()
     }
 
     u8g2.setCursor(0, 41);
-    u8g2.print("Folder: ");
+    //u8g2.print("Folder: ");
     String folder = folderNameString;
     processText(folder);  // Podstawienie polskich znaków diakrytycznych
+    if (folder.length() > 21)
+    {
+      folder = folder.substring(0, 21); // Ogranicz długość tekstu do 21 znaków
+    }
     u8g2.print(folder);
     u8g2.sendBuffer();
     Serial.println("Tagi ID3 artysty, tytułu i folderu gotowe do wyświetlenia");
@@ -1906,21 +1903,21 @@ void displayPlayer()
     u8g2.clearBuffer();
     u8g2.setFont(spleen6x12PL);
     u8g2.setCursor(0, 10);
-    u8g2.print("PLIK ");
+    u8g2.print("PLK ");
     u8g2.print(previous_fileIndex + 1);  // Liczymy od 1, nie od 0 na wyświetlaczu
     u8g2.print("/");
     u8g2.print(filesCount);
-    u8g2.print(" FOLD ");
+    u8g2.print(" FLD ");
     u8g2.print(previous_folderIndex + 1);  // Liczymy od 1, nie od 0 na wyświetlaczu
     u8g2.print("/");
     u8g2.print(folderCount);
     u8g2.drawStr(0, 21, "Brak danych ID3 utworu, nazwa pliku:");
     processText(fileNameString);  // Podstawienie polskich znaków diakrytycznych
 
-    // Jeśli długość nazwy pliku przekracza 42 znaki na wiersz
+    // Jeśli długość nazwy pliku przekracza 21 znaków na wiersz
     if (fileNameString.length() > maxLineLength)
     {
-      // Pierwszy wiersz - pierwsze 42 znaki
+      // Pierwszy wiersz - pierwsze 21 znaków
       String firstLine = fileNameString.substring(0, maxLineLength);
       // Drugi wiersz - pozostałe znaki
       String secondLine = fileNameString.substring(maxLineLength);
@@ -2084,7 +2081,7 @@ void scrollDownFiles()
 // Funkcja do wyświetlania folderów na ekranie OLED z uwzględnieniem zaznaczenia
 void displayFolders()
 {
-  String text = "ODTWARZACZ PLIKÓW - LISTA KATALOGÓW";
+  String text = "   LISTA KATALOGÓW:  ";
   processText(text);  // Podstawienie polskich znaków diakrytycznych
   u8g2.clearBuffer();
   u8g2.setFont(spleen6x12PL);
@@ -2207,7 +2204,7 @@ void updateTimer()
     }
     if (flac == true)
     {
-      u8g2.drawStr(500, 63, "FLAC");
+      u8g2.drawStr(50, 63, "FLAC");
     }
     if (aac == true)
     {
