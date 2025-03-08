@@ -73,7 +73,6 @@ int folderIndex = 0;              // Numer aktualnie wybranego folderu podczas p
 int previous_folderIndex = 0;     // Numer aktualnie wybranego folderu do przywrócenia na ekran po bezczynności
 int volumeValue = 12;             // Wartość głośności, domyślnie ustawiona na 12
 int volumeArray[100];             // Wartości głośności dla 100 stacji w każdym banku
-int cycle = 0;                    // Numer cyklu do danych pogodowych wyświetlanych w trzech rzutach co 10 sekund
 int maxVisibleLines = 4;          // Maksymalna liczba widocznych linii na ekranie OLED
 
 bool encoderButton1 = false;      // Flaga określająca, czy przycisk enkodera 1 został wciśnięty
@@ -117,6 +116,15 @@ unsigned char *psramData;                 // Wskaźnik do przechowywania danych 
 unsigned int PSRAM_lenght = MAX_STATIONS * (STATION_NAME_LENGTH) + MAX_STATIONS; // Deklaracja długości pamięci PSRAM
 unsigned long lastCheckTime = 0;          // Zmienna do śledzenia ostatniego czasu wyświetlenia komunikatu
 
+static unsigned long buttonPressTime1 = 0;  // Zmienna do przechowywania czasu naciśnięcia przycisku enkodera 1
+static bool isButton1Pressed = false;       // Flaga do śledzenia, czy przycisk enkodera 1 jest wciśnięty
+static bool action1Taken = false;           // Flaga do śledzenia, czy akcja dla enkodera 1 została wykonana
+static unsigned long buttonPressTime2 = 0;  // Zmienna do przechowywania czasu naciśnięcia przycisku enkodera 2
+static bool isButton2Pressed = false;       // Flaga do śledzenia, czy przycisk enkodera 2 jest wciśnięty
+static bool action2Taken = false;           // Flaga do śledzenia, czy akcja dla enkodera 2 została wykonana
+static unsigned long lastPressTime = 0;     // Zmienna do kontrolowania debouncingu (ostatni czas naciśnięcia)
+const unsigned long debounceDelayEncoder = 50;     // Opóźnienie debouncingu
+
 String directories[MAX_DIRECTORIES];      // Tablica do przechowywania nazw folderów
 String files[MAX_FILES];                  // Tablica do przechowywania nazw plików
 String currentDirectory = "/";            // Ścieżka bieżącego katalogu
@@ -157,7 +165,7 @@ MenuOption currentOption = INTERNET_RADIO;  // Aktualnie wybrana opcja menu (dom
 
 
 /*===============    Definicja portu i deklaracje zmiennych do obsługi odbiornika IR    =============*/
-int recv_pin = 15;                          // Pin odbiornika IR
+int recv_pin = 2;                           // Pin odbiornika IR
 int bit_count = 0;                          // Licznik bitów w odebranym kodzie
 
 volatile bool pulse_ready = false;          // Flaga sygnału gotowości
@@ -566,24 +574,13 @@ bool isAudioFile(const char *fileNameString)
 // Funkcja do obsługi przycisków enkoderów, odpowiedzialna za debouncing i wykrywanie długiego naciśnięcia
 void handleButtons()  
 {
-  static unsigned long buttonPressTime1 = 0;  // Zmienna do przechowywania czasu naciśnięcia przycisku enkodera 1
-  static bool isButton1Pressed = false;       // Flaga do śledzenia, czy przycisk enkodera 1 jest wciśnięty
-  static bool action1Taken = false;           // Flaga do śledzenia, czy akcja dla enkodera 1 została wykonana
-
-  static unsigned long buttonPressTime2 = 0;  // Zmienna do przechowywania czasu naciśnięcia przycisku enkodera 2
-  static bool isButton2Pressed = false;       // Flaga do śledzenia, czy przycisk enkodera 2 jest wciśnięty
-  static bool action2Taken = false;           // Flaga do śledzenia, czy akcja dla enkodera 2 została wykonana
-  
-  static unsigned long lastPressTime = 0;     // Zmienna do kontrolowania debouncingu (ostatni czas naciśnięcia)
-  const unsigned long debounceDelay = 50;     // Opóźnienie debouncingu
-
   // ===== Obsługa przycisku enkodera 1 =====
   int reading1 = digitalRead(SW_PIN1);
 
   // Debouncing dla przycisku enkodera 1
   if (reading1 == LOW)  // Przycisk jest wciśnięty (stan niski)
   {
-    if (millis() - lastPressTime > debounceDelay)
+    if (millis() - lastPressTime > debounceDelayEncoder)
     {
       lastPressTime = millis();  // Aktualizujemy czas ostatniego naciśnięcia
 
@@ -623,7 +620,7 @@ void handleButtons()
   // Debouncing dla przycisku enkodera 2
   if (reading2 == LOW)  // Przycisk jest wciśnięty (stan niski)
   {
-    if (millis() - lastPressTime > debounceDelay)
+    if (millis() - lastPressTime > debounceDelayEncoder)
     {
       lastPressTime = millis();  // Aktualizujemy czas ostatniego naciśnięcia
 
@@ -1904,7 +1901,7 @@ void displayPlayer()
   else
   {
     // Maksymalna długość wiersza (21 znaków)
-    int maxLineLength = 21;
+    int maxLineLength = 20;
     timeDisplay = true;
     u8g2.clearBuffer();
     u8g2.setFont(spleen6x12PL);
@@ -2261,6 +2258,8 @@ void updateTimer()
 
       String displayString = sampleRateString.substring(1) + "Hz " + bitsPerSampleString + "bit " + bitrateString;
       u8g2.drawStr(0, 52, displayString.c_str());
+      String displayString1 = "B" + String(bank_nr) + " S" + String(station_nr);
+      u8g2.drawStr(0, 63, displayString1.c_str());
       u8g2.drawStr(78, 63, timeString);
       u8g2.sendBuffer();
 
@@ -2796,6 +2795,7 @@ void SDinit()
   }
 }
 
+// ############################################################################# SETUP ############################################################################# //
 
 void setup()
 {
@@ -2827,8 +2827,8 @@ void setup()
 
   // Inicjalizacja SPI dla karty SD
   SPI.begin(SD_SCLK, SD_MISO, SD_MOSI, SD_CS);
+  SPI.setFrequency(1000000);  // Ustawienie prędkości SPI
 
-  // SPI.setFrequency(1000000);
   Wire.begin(SDA_PIN, SCL_PIN);
   Wire.setClock(400000);  // Ustawienie prędkości I2C
 
@@ -2880,10 +2880,6 @@ void setup()
   // Inicjalizacja WiFiManagera
   WiFiManager wifiManager;
 
-  // Odczytaj numer banku i numer stacji z karty SD
-  readStationFromSD();
-  previous_bank_nr = bank_nr; // Wyrównanie numerów banku przy starcie
-
   // Rozpoczęcie konfiguracji Wi-Fi i połączenie z siecią
   if (wifiManager.autoConnect("ESP Internet Radio"))
   {
@@ -2894,6 +2890,8 @@ void setup()
     u8g2.sendBuffer();
     configTime(gmtOffset_sec, daylightOffset_sec, ntpServer);
     timer1.attach(1, updateTimer);   // Ustaw timer, aby wywoływał funkcję updateTimer co sekundę
+    readStationFromSD(); // Odczytaj numer banku i numer stacji z karty SD
+    previous_bank_nr = bank_nr; // Wyrównanie numerów banku przy starcie
     fetchStationsFromServer();
     changeStation();
   }
