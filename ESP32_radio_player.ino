@@ -54,6 +54,19 @@
 #define STATIONS_URL14  "https://raw.githubusercontent.com/sarunia/ESP32_stream/main/radio_v2_bank_15"      // Adres URL do pliku z listą stacji radiowych
 #define STATIONS_URL15  "https://raw.githubusercontent.com/sarunia/ESP32_stream/main/radio_v2_bank_16"      // Adres URL do pliku z listą stacji radiowych
 
+#define BUTTON_S1 17             // Numer pinu dla enkodera/licznika S1
+#define BUTTON_S2 18             // Numer pinu dla enkodera/licznika S2
+#define BUTTON_S3 15             // Numer pinu dla enkodera/licznika S3
+#define BUTTON_S4 16             // Numer pinu dla enkodera/licznika S4
+int button_S1 = 17;               // Przycisk S1 podłączony do pinu 17
+int button_S2 = 18;               // Przycisk S2 podłączony do pinu 18
+int button_S3 = 15;               // Przycisk S3 podłączony do pinu 15
+int button_S4 = 16;               // Przycisk S4 podłączony do pinu 16
+bool button_1 = false;            // Flaga określająca stan przycisku 1
+bool button_2 = false;            // Flaga określająca stan przycisku 2
+bool button_3 = false;            // Flaga określająca stan przycisku 3
+bool button_4 = false;            // Flaga określająca stan przycisku 4
+
 int currentSelection = 0;         // Numer aktualnego wyboru na ekranie OLED
 int firstVisibleLine = 0;         // Numer pierwszej widocznej linii na ekranie OLED
 int station_nr;                   // Numer aktualnie wybranej stacji radiowej z listy
@@ -74,6 +87,7 @@ int previous_folderIndex = 0;     // Numer aktualnie wybranego folderu do przywr
 int volumeValue = 12;             // Wartość głośności, domyślnie ustawiona na 12
 int volumeArray[100];             // Wartości głośności dla 100 stacji w każdym banku
 int maxVisibleLines = 4;          // Maksymalna liczba widocznych linii na ekranie OLED
+int counter = 0;                  // Licznik dla przycisków
 
 bool encoderButton1 = false;      // Flaga określająca, czy przycisk enkodera 1 został wciśnięty
 bool encoderButton2 = false;      // Flaga określająca, czy przycisk enkodera 2 został wciśnięty
@@ -108,6 +122,7 @@ bool IRvolumeDown = false;        // Flaga określająca użycie zdalnego sterow
 bool IRbankUp = false;            // Flaga określająca użycie zdalnego sterowania z pilota IR - przycisk FAV+
 bool IRbankDown = false;          // Flaga określająca użycie zdalnego sterowania z pilota IR - przycisk FAV-
 
+unsigned long lastDebounceTime = 0;       // Czas ostatniego debouncingu
 unsigned long debounceDelay = 300;        // Czas trwania debouncingu w milisekundach
 unsigned long displayTimeout = 6000;      // Czas wyświetlania komunikatu na ekranie w milisekundach
 unsigned long displayStartTime = 0;       // Czas rozpoczęcia wyświetlania komunikatu
@@ -217,6 +232,43 @@ const int LOW_THRESHOLD = 600;      // Sygnał "0"
 #define rcCmdKey9         0x0005   // Przycisk "9"
 #define rcCmdBankUp       0x0018   // Przycisk FAV+ - lista banków / lista folderów - krok w dół na przewijanej liście
 #define rcCmdBankDown     0x0019   // Przycisk FAV- lista banków / lista folderów - krok do góry na przewijanej liście
+
+
+void IRAM_ATTR count_S1() // funkcja obsługi przerwania z przycisku S1
+{  
+  if ((millis() - lastDebounceTime) > debounceDelay)
+  {
+    lastDebounceTime = millis(); // Zapisujemy czas ostatniego debouncingu
+    button_1 = true;
+  }
+}
+
+void IRAM_ATTR count_S2() // funkcja obsługi przerwania z przycisku S2
+{    
+  if ((millis() - lastDebounceTime) > debounceDelay)
+  {
+    lastDebounceTime = millis(); // Zapisujemy czas ostatniego debouncingu
+    button_2 = true;
+  }
+}
+
+void IRAM_ATTR count_S3() // funkcja obsługi przerwania z przycisku S3
+{  
+  if ((millis() - lastDebounceTime) > debounceDelay)
+  {
+    lastDebounceTime = millis(); // Zapisujemy czas ostatniego debouncingu
+    button_3 = true;
+  }
+}
+
+void IRAM_ATTR count_S4() // funkcja obsługi przerwania z przycisku S4
+{    
+  if ((millis() - lastDebounceTime) > debounceDelay)
+  {
+    lastDebounceTime = millis(); // Zapisujemy czas ostatniego debouncingu
+    button_4 = true;
+  }
+}
 
 
 // Funkcja obsługująca przerwanie (reakcja na zmianę stanu pinu)
@@ -2819,6 +2871,18 @@ void setup()
   prev_CLK_state1 = digitalRead(CLK_PIN1);
   prev_CLK_state2 = digitalRead(CLK_PIN2);
 
+  // Ustaw pin S1, S2, S3, S4 jako wejścia z rezystorem pull-up
+  pinMode(button_S1, INPUT_PULLUP);
+  pinMode(button_S2, INPUT_PULLUP);
+  pinMode(button_S3, INPUT_PULLUP);
+  pinMode(button_S4, INPUT_PULLUP);
+
+  // Przypnij przerwania do przycisków (wywołanie funkcji count_S1 -- count_S4 przy narastającym zboczu)
+  attachInterrupt(BUTTON_S1, count_S1, RISING);
+  attachInterrupt(BUTTON_S2, count_S2, RISING);
+  attachInterrupt(BUTTON_S3, count_S3, RISING);
+  attachInterrupt(BUTTON_S4, count_S4, RISING);
+
   audio.setPinout(I2S_BCLK, I2S_LRC, I2S_DOUT); // Konfiguruj pinout dla interfejsu I2S audio
   audio.setVolume(volumeValue); // Ustaw głośność na podstawie wartości zmiennej volumeValue w zakresie 0...21
 
@@ -3129,7 +3193,7 @@ void loop()
     displayMenu();
   }
 
-  if (IRdownArrow == true)  // Dolny przycisk kierunkowy w pilocie
+  if (IRdownArrow == true) // Dolny przycisk kierunkowy w pilocie
   {
     IRdownArrow = false;
     bank_nr = previous_bank_nr;
@@ -3148,7 +3212,7 @@ void loop()
     displayStations();
   }
 
-  if (IRupArrow == true)  // Górny przycisk kierunkowy w pilocie
+  if (IRupArrow == true) // Górny przycisk kierunkowy w pilocie
   {
     IRupArrow = false;
     bank_nr = previous_bank_nr;
@@ -3209,6 +3273,30 @@ void loop()
       bank_nr = 16;
     }
     displayBank();
+  }
+
+  if (button_1 == true)
+  {
+    counter = 0;
+    button_1 = false;
+    station_nr++;
+    if (station_nr > stationsCount) 
+    {
+      station_nr = 1;
+    }
+    changeStation();
+  }
+
+  if (button_2 == true)
+  {
+    counter = 0;
+    button_2 = false;
+    station_nr--;
+    if (station_nr < 1) 
+    {
+      station_nr = stationsCount;
+    }
+    changeStation();
   }
 
 
