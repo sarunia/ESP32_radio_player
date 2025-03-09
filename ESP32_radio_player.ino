@@ -156,7 +156,7 @@ String folderNameString;                  // Zmienna przechowująca informację 
 File myFile; // Uchwyt pliku
 
 // Inicjalizacja sprzętowego I2C dla wyświetlacza OLED
-U8G2_SH1106_128X64_NONAME_F_HW_I2C u8g2(U8G2_R0, /* reset=*/ U8X8_PIN_NONE);
+U8G2_SSD1306_128X64_NONAME_F_HW_I2C u8g2(/* rotation=*/ U8G2_R0, /* reset=*/ U8X8_PIN_NONE, /* clock=*/ SCL_PIN, /* data=*/ SDA_PIN);
 
 ezButton button1(SW_PIN1);                // Utworzenie obiektu przycisku z enkodera 1 ezButton, podłączonego do pinu 4
 ezButton button2(SW_PIN2);                // Utworzenie obiektu przycisku z enkodera 1 ezButton, podłączonego do pinu 1
@@ -1225,18 +1225,21 @@ void displayMenu()
 {
   timeDisplay = false;
   menuEnable = true;
+  String text = "   WYBIERZ ŹRÓDŁO:   ";
+  processText(text);  // Podstawienie polskich znaków diakrytycznych
   u8g2.clearBuffer();
   u8g2.setFont(spleen6x12PL);
-  u8g2.drawStr(65, 20, "MENU");
+  u8g2.setCursor(0, 20);
+  u8g2.print(text);
 
   switch (currentOption)
   {
     case PLAY_FILES:
-      u8g2.drawStr(0, 40, ">> Odtwarzacz plikow");
+      u8g2.drawStr(0, 40, ">> Odtwarzacz audio ");
       u8g2.drawStr(0, 60, "   Radio internetowe");
       break;
     case INTERNET_RADIO:
-      u8g2.drawStr(0, 40, "   Odtwarzacz plikow");
+      u8g2.drawStr(0, 40, "   Odtwarzacz audio ");
       u8g2.drawStr(0, 60, ">> Radio internetowe");
       break;
   }
@@ -1586,7 +1589,7 @@ void playFromSelectedFolder()
         audio.stopSong();
         playNextFolder = true;
         id3tag = false;
-        String text = "  ŁADOWANIE PLIKÓW Z WYBRANEGO FOLDERU... ";
+        String text = "ŁADOWANIE PLIKÓW.....";
         processText(text);  // Podstawienie polskich znaków diakrytycznych
         u8g2.clearBuffer();
         u8g2.setFont(spleen6x12PL);
@@ -1661,7 +1664,7 @@ void playFromSelectedFolder()
         audio.stopSong();
         playNextFolder = true;
         id3tag = false;
-        String text = "  ŁADOWANIE PLIKÓW Z WYBRANEGO FOLDERU... ";
+        String text = "ŁADOWANIE PLIKÓW.....";
         processText(text);  // Podstawienie polskich znaków diakrytycznych
         u8g2.clearBuffer();
         u8g2.setFont(spleen6x12PL);
@@ -2189,8 +2192,8 @@ void displayStations()
   u8g2.clearBuffer();  // Wyczyść bufor przed rysowaniem, aby przygotować ekran do nowej 
   u8g2.setFont(spleen6x12PL);
   u8g2.setCursor(0, 10);  // Ustaw pozycję kursora (x=60, y=10) dla nagłówka
-  u8g2.print("   STACJE RADIOWE:   ");  // Wyświetl nagłówek "STACJE RADIOWE"
-  u8g2.print(String(station_nr) + " / " + String(stationsCount));  // Dodaj numer aktualnej stacji i licznik wszystkich stacji
+  u8g2.print("STACJE RADIOWE: ");  // Wyświetl nagłówek "STACJE RADIOWE"
+  u8g2.print(String(station_nr) + "/" + String(stationsCount));  // Dodaj numer aktualnej stacji i licznik wszystkich stacji
   
   int displayRow = 1;  // Zmienna dla numeru wiersza, zaczynając od drugiego (pierwszy to nagłówek)
 
@@ -2238,7 +2241,7 @@ void updateTimer()
 {
   u8g2.setDrawColor(1);
   u8g2.setFont(spleen6x12PL);
-  u8g2.drawStr(0, 63, "                     ");
+  u8g2.drawStr(0, 63, "                      ");
 
   // Zwiększ licznik sekund
   seconds++;
@@ -2280,7 +2283,7 @@ void updateTimer()
       
       String displayString = sampleRateString.substring(1) + "Hz " + bitsPerSampleString + "bit " + bitrateString;
       u8g2.drawStr(0, 52, displayString.c_str());
-      u8g2.drawStr(82, 63, timeString);
+      u8g2.drawStr(85, 63, timeString);
       u8g2.sendBuffer();
     }
 
@@ -2309,7 +2312,7 @@ void updateTimer()
       u8g2.drawStr(0, 52, displayString.c_str());
       String displayString1 = "B" + String(bank_nr) + " S" + String(station_nr);
       u8g2.drawStr(0, 63, displayString1.c_str());
-      u8g2.drawStr(78, 63, timeString);
+      u8g2.drawStr(81, 63, timeString);
       u8g2.sendBuffer();
 
     }
@@ -2335,7 +2338,7 @@ void updateTimer()
     // Pulsujący co 1 sekundę napis o braku strumienia audio z radia
     if (millis() - lastCheckTime >= 1000)
     {
-      u8g2.drawStr(0, 51, ".... Brak strumienia audio ! ....");
+      u8g2.drawStr(0, 51, "Brak strumienia audio");
       lastCheckTime = millis(); // Zaktualizuj czas ostatniego sprawdzenia
     }
     u8g2.drawStr(78, 63, timeString);
@@ -3109,7 +3112,7 @@ void loop()
     folderIndex = 0;
     currentSelection = 0;
     firstVisibleLine = 1;
-    String text = "  ŁADOWANIE FOLDERÓW Z KARTY SD, CZEKAJ... ";
+    String text = "ŁADOWANIE FOLDERÓW...";
     processText(text);  // Podstawienie polskich znaków diakrytycznych
     u8g2.clearBuffer();
     u8g2.setFont(spleen6x12PL);
@@ -3275,7 +3278,7 @@ void loop()
     displayBank();
   }
 
-  if (button_1 == true)
+  if (button_1 == true) // Przycisk S1 - przełączanie do kolejnej stacji w banku
   {
     counter = 0;
     button_1 = false;
@@ -3287,7 +3290,7 @@ void loop()
     changeStation();
   }
 
-  if (button_2 == true)
+  if (button_2 == true) // Przycisk S2 - przełączanie do poprzedniej stacji w banku
   {
     counter = 0;
     button_2 = false;
@@ -3296,6 +3299,34 @@ void loop()
     {
       station_nr = stationsCount;
     }
+    changeStation();
+  }
+
+  if (button_3 == true) // Przycisk S3 - przełączanie do kolejnego banku
+  {
+    counter = 0;
+    button_3 = false;
+    bank_nr++;
+    if (bank_nr > 16)
+    {
+      bank_nr = 1;
+    }
+    station_nr = 1;
+    fetchStationsFromServer();
+    changeStation();
+  }
+
+  if (button_4 == true) // Przycisk S4 - przełączanie do poprzedniego banku
+  {
+    counter = 0;
+    button_4 = false;
+    bank_nr--;
+    if (bank_nr < 1)
+    {
+      bank_nr = 16;
+    }
+    station_nr = 1;
+    fetchStationsFromServer();
     changeStation();
   }
 
