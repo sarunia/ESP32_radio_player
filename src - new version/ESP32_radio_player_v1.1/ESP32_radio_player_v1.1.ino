@@ -168,8 +168,8 @@ WiFiClient client;                        // Obiekt do obsługi połączenia WiF
 char stations[MAX_STATIONS][STATION_NAME_LENGTH];   // Tablica przechowująca nazwy stacji wraz z bankiem i numerem stacji
 
 const char* ntpServer = "pool.ntp.org";      // Adres serwera NTP używany do synchronizacji czasu
-const long  gmtOffset_sec = 3600;            // Przesunięcie czasu UTC w sekundach
-const int   daylightOffset_sec = 3600;       // Przesunięcie czasu letniego w sekundach, dla Polski to 1 godzina
+//const long  gmtOffset_sec = 3600;            // Przesunięcie czasu UTC w sekundach
+//const int   daylightOffset_sec = 3600;       // Przesunięcie czasu letniego w sekundach, dla Polski to 1 godzina
 
 enum MenuOption
 {
@@ -2952,7 +2952,8 @@ void setup()
     u8g2.setFont(spleen6x12PL);
     u8g2.drawStr(0, 30, "   WI-FI CONNECTED   ");
     u8g2.sendBuffer();
-    configTime(gmtOffset_sec, daylightOffset_sec, ntpServer);
+    //configTime(gmtOffset_sec, daylightOffset_sec, ntpServer);
+    configTzTime("CET-1CEST,M3.5.0,M10.5.0/3", ntpServer); // Konfiguracja strefy czasowej dla Polski z czasem letnim
     timer1.attach(1, updateTimer);   // Ustaw timer, aby wywoływał funkcję updateTimer co sekundę
     readStationFromSD(); // Odczytaj numer banku i numer stacji z karty SD
     previous_bank_nr = bank_nr; // Wyrównanie numerów banku przy starcie
